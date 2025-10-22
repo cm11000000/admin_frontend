@@ -1,0 +1,111 @@
+name: Deploy to Staging (S3 + CloudFront)
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-south-1
+  NODE_VERSION: '18'
+
+jobs:
+  deploy:
+    name: Build and Deploy to Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static export
+        run: npm run build:static
+        env:
+          NEXT_PUBLIC_STATIC_EXPORT: 'true'
+          NODE_ENV: production
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create S3 bucket if not exists
+        run: |
+          if ! aws s3api head-bucket --bucket "${{ secrets.STAGING_S3_BUCKET }}" 2>/dev/null; then
+            echo "Creating S3 bucket..."
+            aws s3api create-bucket \
+              --bucket "${{ secrets.STAGING_S3_BUCKET }}" \
+              --region ${{ env.AWS_REGION }} \
+              --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }}
+
+            # Enable static website hosting
+            aws s3 website "s3://${{ secrets.STAGING_S3_BUCKET }}" \
+              --index-document index.html \
+              --error-document 404.html
+          fi
+
+      - name: Deploy static files to S3
+        run: |
+          # Upload JS/CSS/JSON with immutable cache (1 year)
+          aws s3 sync out/ s3://${{ secrets.STAGING_S3_BUCKET }}/ \
+            --delete \
+            --exclude "*.html" \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # Upload HTML files with no-cache
+          aws s3 sync out/ s3://${{ secrets.STAGING_S3_BUCKET }}/ \
+            --delete \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "public, max-age=0, must-revalidate"
+
+      - name: Create CloudFront distribution if needed
+        id: cloudfront
+        run: |
+          DISTRIBUTION_ID="${{ secrets.STAGING_CLOUDFRONT_DISTRIBUTION_ID }}"
+
+          if [ -z "$DISTRIBUTION_ID" ]; then
+            echo "No CloudFront distribution ID found in secrets."
+            echo "Please create a CloudFront distribution manually and add the ID to GitHub secrets as STAGING_CLOUDFRONT_DISTRIBUTION_ID"
+            echo "Or run this command to create one:"
+            echo ""
+            echo "aws cloudfront create-distribution --origin-domain-name ${{ secrets.STAGING_S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com ..."
+          else
+            echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Invalidate CloudFront cache
+        if: steps.cloudfront.outputs.distribution_id != ''
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cloudfront.outputs.distribution_id }} \
+            --paths "/*"
+
+      - name: Deployment Summary
+        run: |
+          echo "## Deployment Complete! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** ${{ secrets.STAGING_S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### URLs:" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Website:** http://${{ secrets.STAGING_S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "${{ steps.cloudfront.outputs.distribution_id }}" ]; then
+            echo "- **CloudFront:** Check your CloudFront console for HTTPS URL" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⏳ CloudFront cache invalidation in progress (1-2 minutes)" >> $GITHUB_STEP_SUMMARY
+          fi
