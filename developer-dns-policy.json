@@ -1,0 +1,69 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListZonesReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ListHostedZones",
+        "route53:GetHostedZone"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ViewRecordsInZone",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ListResourceRecordSets"
+      ],
+      "Resource": "arn:aws:route53:::hostedzone/Z06541923RERTQXE41XSI"
+    },
+    {
+      "Sid": "CreateSubdomainsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": "arn:aws:route53:::hostedzone/Z06541923RERTQXE41XSI",
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+            "*.rnd.sabpaisa.in"
+          ]
+        },
+        "ForAllValues:StringEquals": {
+          "route53:ChangeResourceRecordSetsActions": [
+            "UPSERT"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyRootDomainChanges",
+      "Effect": "Deny",
+      "Action": "route53:ChangeResourceRecordSets",
+      "Resource": "arn:aws:route53:::hostedzone/Z06541923RERTQXE41XSI",
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+            "rnd.sabpaisa.in",
+            "rnd.sabpaisa.in."
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyDeleteActions",
+      "Effect": "Deny",
+      "Action": "route53:ChangeResourceRecordSets",
+      "Resource": "arn:aws:route53:::hostedzone/Z06541923RERTQXE41XSI",
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "route53:ChangeResourceRecordSetsActions": [
+            "DELETE"
+          ]
+        }
+      }
+    }
+  ]
+}

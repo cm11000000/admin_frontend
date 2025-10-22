@@ -1,0 +1,15 @@
+{
+  "Id": "S3-sabpaisa-admin-v5-20251010",
+  "DomainName": "sabpaisa-admin-v5-20251010.s3-website.ap-south-1.amazonaws.com",
+  "CustomOriginConfig": {
+    "HTTPPort": 80,
+    "HTTPSPort": 443,
+    "OriginProtocolPolicy": "http-only",
+    "OriginSslProtocols": {
+      "Quantity": 3,
+      "Items": ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    },
+    "OriginReadTimeout": 30,
+    "OriginKeepaliveTimeout": 5
+  }
+}

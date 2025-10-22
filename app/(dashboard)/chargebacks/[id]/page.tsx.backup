@@ -1,0 +1,594 @@
+/**
+ * Chargeback Details Page
+ * Comprehensive view of single chargeback with evidence management
+ */
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useChargebackStore } from '@/stores/chargebackStore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ChargebackStatusBadge, ChargebackPriorityBadge, OverdueBadge } from '@/components/chargebacks/ChargebackStatusBadge';
+import { DueDateCountdown } from '@/components/chargebacks/DueDateCountdown';
+import { formatCurrency, formatDateTime, formatFileSize } from '@/lib/utils';
+import {
+  Upload,
+  Download,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Send,
+  Archive,
+  AlertTriangle,
+  Trash2,
+  Eye,
+} from 'lucide-react';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+
+export default function ChargebackDetailsPage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const {
+    selectedChargeback,
+    isLoading,
+    isUploadingEvidence,
+    isSubmittingEvidence,
+    fetchChargebackById,
+    uploadEvidence,
+    submitEvidence,
+    deleteEvidence,
+    downloadAllEvidence,
+    acceptChargeback,
+    contestChargeback,
+    closeChargeback,
+    addNote,
+  } = useChargebackStore();
+
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [evidenceType, setEvidenceType] = useState<string>('invoice');
+  const [evidenceDescription, setEvidenceDescription] = useState('');
+  const [noteContent, setNoteContent] = useState('');
+  const [actionReason, setActionReason] = useState('');
+  const [actionNotes, setActionNotes] = useState('');
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      fetchChargebackById(id);
+    }
+  }, [id]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only PDF, JPG, and PNG files are allowed');
+        return;
+      }
+      setEvidenceFile(file);
+    }
+  };
+
+  const handleUploadEvidence = async () => {
+    if (!evidenceFile || !selectedChargeback) return;
+
+    try {
+      await uploadEvidence(selectedChargeback.id, evidenceType as any, evidenceDescription, evidenceFile);
+      toast.success('Evidence uploaded successfully');
+      setEvidenceFile(null);
+      setEvidenceDescription('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload evidence');
+    }
+  };
+
+  const handleSubmitEvidence = async () => {
+    if (!selectedChargeback) return;
+
+    const pendingEvidence = selectedChargeback.evidence.filter(e => e.status === 'pending');
+    if (pendingEvidence.length === 0) {
+      toast.error('No pending evidence to submit');
+      return;
+    }
+
+    try {
+      await submitEvidence(
+        selectedChargeback.id,
+        pendingEvidence.map(e => e.id),
+        'Evidence submitted for review'
+      );
+      toast.success('Evidence submitted to bank');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit evidence');
+    }
+  };
+
+  const handleAccept = async () => {
+    if (!selectedChargeback || !actionReason) {
+      toast.error('Please provide a reason');
+      return;
+    }
+
+    try {
+      await acceptChargeback(selectedChargeback.id, actionReason, actionNotes);
+      toast.success('Chargeback accepted');
+      setActionReason('');
+      setActionNotes('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to accept chargeback');
+    }
+  };
+
+  const handleContest = async () => {
+    if (!selectedChargeback || !actionReason) {
+      toast.error('Please provide a reason');
+      return;
+    }
+
+    try {
+      await contestChargeback(selectedChargeback.id, actionReason, actionNotes);
+      toast.success('Chargeback contested');
+      setActionReason('');
+      setActionNotes('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to contest chargeback');
+    }
+  };
+
+  const handleClose = async () => {
+    if (!selectedChargeback) return;
+
+    try {
+      await closeChargeback(selectedChargeback.id, actionNotes);
+      toast.success('Chargeback closed');
+      setActionNotes('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to close chargeback');
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!selectedChargeback || !noteContent.trim()) return;
+
+    try {
+      await addNote(selectedChargeback.id, noteContent, true);
+      toast.success('Note added');
+      setNoteContent('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add note');
+    }
+  };
+
+  const handleDownloadAllEvidence = async () => {
+    if (!selectedChargeback) return;
+
+    // Check if there is evidence to download
+    if (selectedChargeback.evidence.length === 0) {
+      toast.error('No evidence available to download');
+      return;
+    }
+
+    setIsDownloadingAll(true);
+    try {
+      await downloadAllEvidence(selectedChargeback.id);
+      toast.success('All evidence downloaded successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to download evidence');
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+            <p className="mt-4 text-muted-foreground">Loading chargeback details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedChargeback) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Chargeback Not Found</h2>
+            <p className="text-muted-foreground mb-4">
+              The requested chargeback could not be found.
+            </p>
+            <Link href="/chargebacks">
+              <Button>Back to Chargebacks</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Chargeback #{selectedChargeback.chargebackId}</h1>
+          <p className="text-muted-foreground">Transaction: {selectedChargeback.transactionId}</p>
+        </div>
+        <Link href="/chargebacks">
+          <Button variant="outline">Back to List</Button>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chargeback Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Amount</p>
+                  <p className="text-2xl font-bold">{formatCurrency(selectedChargeback.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <div className="mt-1">
+                    <ChargebackStatusBadge status={selectedChargeback.status} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Priority</p>
+                  <div className="mt-1">
+                    <ChargebackPriorityBadge priority={selectedChargeback.priority} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Overdue Status</p>
+                  {selectedChargeback.isOverdue ? (
+                    <OverdueBadge className="mt-1" />
+                  ) : (
+                    <Badge variant="outline" className="mt-1">On Time</Badge>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <p className="text-sm font-medium mb-2">Reason</p>
+                <div className="bg-muted p-3 rounded-lg">
+                  <p className="font-semibold">{selectedChargeback.reasonCode}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedChargeback.reasonDescription}
+                  </p>
+                </div>
+              </div>
+
+              {selectedChargeback.customerDisputeReason && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Customer Dispute Reason</p>
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-sm">{selectedChargeback.customerDisputeReason}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Due Date Countdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DueDateCountdown dueDate={selectedChargeback.dueDate} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Evidence Documents</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadAllEvidence}
+                  disabled={isDownloadingAll || selectedChargeback.evidence.length === 0}
+                  title={selectedChargeback.evidence.length === 0 ? 'No evidence available' : 'Download all evidence as ZIP'}
+                >
+                  {isDownloadingAll ? (
+                    <>
+                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download All ({selectedChargeback.evidence.length})
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-2 border-dashed rounded-lg p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Evidence Type</label>
+                    <select
+                      value={evidenceType}
+                      onChange={(e) => setEvidenceType(e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      <option value="invoice">Invoice</option>
+                      <option value="proof_of_delivery">Proof of Delivery</option>
+                      <option value="communication">Communication</option>
+                      <option value="terms_conditions">Terms & Conditions</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Description</label>
+                    <Textarea
+                      placeholder="Describe this evidence..."
+                      value={evidenceDescription}
+                      onChange={(e) => setEvidenceDescription(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">File (PDF, JPG, PNG - Max 10MB)</label>
+                    <Input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileChange}
+                    />
+                    {evidenceFile && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Selected: {evidenceFile.name} ({formatFileSize(evidenceFile.size)})
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={handleUploadEvidence}
+                    disabled={!evidenceFile || isUploadingEvidence}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploadingEvidence ? 'Uploading...' : 'Upload Evidence'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {selectedChargeback.evidence.map((evidence) => (
+                  <div
+                    key={evidence.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{evidence.fileName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {evidence.description} • {formatFileSize(evidence.fileSize)} • {formatDateTime(evidence.uploadedAt)}
+                        </p>
+                      </div>
+                      <Badge variant={evidence.status === 'accepted' ? 'default' : 'secondary'}>
+                        {evidence.status}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <a
+                        href={evidence.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center h-9 px-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-transparent text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteEvidence(selectedChargeback.id, evidence.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {selectedChargeback.evidence.some(e => e.status === 'pending') && (
+                <Button
+                  onClick={handleSubmitEvidence}
+                  disabled={isSubmittingEvidence}
+                  className="w-full"
+                  variant="primary"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {isSubmittingEvidence ? 'Submitting...' : 'Submit Evidence to Bank'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Timeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {selectedChargeback.timeline.map((event, index) => (
+                  <div key={event.id} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3 h-3 rounded-full bg-primary" />
+                      {index < selectedChargeback.timeline.length - 1 && (
+                        <div className="w-0.5 h-full bg-border" />
+                      )}
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-medium">{event.action}</p>
+                        <p className="text-xs text-muted-foreground">{formatDateTime(event.timestamp)}</p>
+                      </div>
+                      {event.notes && (
+                        <p className="text-sm text-muted-foreground">{event.notes}</p>
+                      )}
+                      {event.user && (
+                        <p className="text-xs text-muted-foreground mt-1">By: {event.user}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Reason</label>
+                <Input
+                  placeholder="Enter reason..."
+                  value={actionReason}
+                  onChange={(e) => setActionReason(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Notes (Optional)</label>
+                <Textarea
+                  placeholder="Additional notes..."
+                  value={actionNotes}
+                  onChange={(e) => setActionNotes(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Button
+                  className="w-full"
+                  variant="primary"
+                  onClick={handleContest}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Contest Chargeback
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="danger"
+                  onClick={handleAccept}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Accept Chargeback
+                </Button>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={handleClose}
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Close Case
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Internal Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Textarea
+                  placeholder="Add internal note..."
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                />
+              </div>
+              <Button onClick={handleAddNote} className="w-full">
+                Add Note
+              </Button>
+              <Separator />
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {selectedChargeback.notes.map((note) => (
+                  <div key={note.id} className="bg-muted p-3 rounded-lg text-sm">
+                    <p>{note.content}</p>
+                    <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                      <span>{note.createdBy}</span>
+                      <span>{formatDateTime(note.createdAt)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {selectedChargeback.resolution && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Resolution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Outcome:</span>
+                    <Badge
+                      variant={selectedChargeback.resolution.outcome === 'won' ? 'success' : 'danger'}
+                    >
+                      {selectedChargeback.resolution.outcome.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Amount:</span>
+                    <span className="font-semibold">
+                      {formatCurrency(selectedChargeback.resolution.amount)}
+                    </span>
+                  </div>
+                  {selectedChargeback.resolution.recoveredAmount && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Recovered:</span>
+                      <span className="font-semibold text-green-600">
+                        {formatCurrency(selectedChargeback.resolution.recoveredAmount)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Resolved:</span>
+                    <span className="text-sm">{formatDateTime(selectedChargeback.resolution.resolvedAt)}</span>
+                  </div>
+                  {selectedChargeback.resolution.notes && (
+                    <div className="mt-2 p-2 bg-muted rounded">
+                      <p className="text-sm">{selectedChargeback.resolution.notes}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

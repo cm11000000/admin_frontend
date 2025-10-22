@@ -1,0 +1,296 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs } from '@/components/ui/tabs';
+import { ActivityTimeline } from '@/components/merchants/ActivityTimeline';
+import { useMerchantStore } from '@/stores/merchantStore';
+import { toast } from 'react-hot-toast';
+import { formatDistanceToNow } from 'date-fns';
+
+export default function MerchantProfilePage() {
+  const params = useParams();
+  const router = useRouter();
+  const merchantId = params.id as string;
+
+  const {
+    selectedMerchant,
+    activityLog,
+    merchantNotes,
+    documents,
+    isLoading,
+    fetchMerchantById,
+    fetchActivityLog,
+    fetchNotes,
+    fetchDocuments,
+    updateMerchantStatus,
+  } = useMerchantStore();
+
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    if (merchantId) {
+      fetchMerchantById(merchantId);
+      fetchActivityLog(merchantId);
+      fetchNotes(merchantId);
+      fetchDocuments(merchantId);
+    }
+  }, [merchantId]);
+
+  const handleStatusChange = async (status: string) => {
+    try {
+      await updateMerchantStatus(merchantId, status);
+      toast.success('Merchant status updated successfully');
+    } catch (error) {
+      toast.error('Failed to update merchant status');
+    }
+  };
+
+  if (isLoading || !selectedMerchant) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-slate-700/30 rounded w-1/4"></div>
+          <div className="h-64 bg-slate-700/30 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const statusColors: Record<string, string> = {
+    active: 'bg-green-500',
+    inactive: 'bg-slate-900/600',
+    suspended: 'bg-red-500',
+    pending_approval: 'bg-yellow-500',
+    under_review: 'bg-blue-500',
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+        ← Back to Merchants
+      </Button>
+
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {selectedMerchant.businessName}
+          </h1>
+          <p className="text-slate-400">{selectedMerchant.merchantCode}</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Badge className={`${statusColors[selectedMerchant.status]} text-white`}>
+            {selectedMerchant.status.replace('_', ' ')}
+          </Badge>
+          <Button variant="outline" size="sm">
+            Edit
+          </Button>
+          <Button variant="outline" size="sm">
+            More Actions
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+          <p className="text-sm text-slate-400 mb-1">Total Transactions</p>
+          <p className="text-2xl font-bold">{selectedMerchant.totalTransactions?.toLocaleString()}</p>
+        </Card>
+        <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+          <p className="text-sm text-slate-400 mb-1">Total Volume</p>
+          <p className="text-2xl font-bold">
+            {new Intl.NumberFormat('en-IN', {
+              style: 'currency',
+              currency: 'INR',
+              minimumFractionDigits: 0,
+            }).format(selectedMerchant.totalVolume || 0)}
+          </p>
+        </Card>
+        <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+          <p className="text-sm text-slate-400 mb-1">Success Rate</p>
+          <p className="text-2xl font-bold text-green-600">
+            {selectedMerchant.successRate?.toFixed(1)}%
+          </p>
+        </Card>
+        <Card className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+          <p className="text-sm text-slate-400 mb-1">Avg Ticket Size</p>
+          <p className="text-2xl font-bold">
+            {new Intl.NumberFormat('en-IN', {
+              style: 'currency',
+              currency: 'INR',
+              minimumFractionDigits: 0,
+            }).format(selectedMerchant.averageTicketSize || 0)}
+          </p>
+        </Card>
+      </div>
+
+      <Card className="mb-8">
+        <div className="border-b border-slate-700/50">
+          <nav className="flex -mb-px">
+            {['Overview', 'Transactions', 'Settlements', 'Documents', 'Activity Log', 'Notes'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '_'))}
+                className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                  activeTab === tab.toLowerCase().replace(' ', '_')
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-400 hover:border-slate-600/50'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Business Information</h3>
+                <dl className="grid grid-cols-2 gap-4">
+                  <div>
+                    <dt className="text-sm text-slate-400">Business Type</dt>
+                    <dd className="text-sm font-medium">{selectedMerchant.businessType}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-slate-400">Category</dt>
+                    <dd className="text-sm font-medium">{selectedMerchant.category}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-slate-400">PAN Number</dt>
+                    <dd className="text-sm font-medium">{selectedMerchant.panNumber}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-slate-400">GST Number</dt>
+                    <dd className="text-sm font-medium">{selectedMerchant.gstNumber || 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-slate-400">Onboarded</dt>
+                    <dd className="text-sm font-medium">
+                      {formatDistanceToNow(new Date(selectedMerchant.onboardingDate), { addSuffix: true })}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-slate-400">Website</dt>
+                    <dd className="text-sm font-medium">
+                      {selectedMerchant.website ? (
+                        <a href={selectedMerchant.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          {selectedMerchant.website}
+                        </a>
+                      ) : (
+                        'N/A'
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                {selectedMerchant.contacts.map((contact, idx) => (
+                  <div key={idx} className="mb-4 p-4 bg-slate-900/60 rounded-lg">
+                    <p className="font-medium">{contact.name} {contact.isPrimary && <span className="text-xs text-blue-600">(Primary)</span>}</p>
+                    <p className="text-sm text-slate-400">{contact.designation}</p>
+                    <p className="text-sm text-slate-400">{contact.email}</p>
+                    <p className="text-sm text-slate-400">{contact.phone}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Bank Accounts</h3>
+                {selectedMerchant.bankAccounts.map((account, idx) => (
+                  <div key={idx} className="mb-4 p-4 bg-slate-900/60 rounded-lg">
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="font-medium">{account.bankName} - {account.branch}</p>
+                        <p className="text-sm text-slate-400">Account: {account.accountNumber}</p>
+                        <p className="text-sm text-slate-400">IFSC: {account.ifscCode}</p>
+                        <p className="text-sm text-slate-400">Type: {account.accountType}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {account.isPrimary && <Badge className="h-fit bg-blue-500">Primary</Badge>}
+                        {account.isVerified && <Badge className="h-fit bg-green-500">Verified</Badge>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'transactions' && (
+            <div className="text-center py-8 text-slate-500">
+              Transaction history will be displayed here
+            </div>
+          )}
+
+          {activeTab === 'settlements' && (
+            <div className="text-center py-8 text-slate-500">
+              Settlement history will be displayed here
+            </div>
+          )}
+
+          {activeTab === 'documents' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Documents</h3>
+                <Button onClick={() => router.push(`/clients/merchants/${merchantId}/documents`)}>
+                  Manage Documents
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {documents.map((doc) => (
+                  <Card key={doc.id} className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl p-4 hover:shadow-orange-500/5 transition-shadow duration-300">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{doc.type}</p>
+                        <p className="text-sm text-slate-400">{doc.fileName}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Uploaded {formatDistanceToNow(new Date(doc.uploadedAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <Badge className={doc.status === 'verified' ? 'bg-green-500' : 'bg-yellow-500'}>
+                        {doc.status}
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'activity_log' && (
+            <ActivityTimeline activities={activityLog} />
+          )}
+
+          {activeTab === 'notes' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Notes</h3>
+                <Button size="sm">Add Note</Button>
+              </div>
+              {merchantNotes.map((note) => (
+                <Card key={note.id} className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl p-4 hover:shadow-orange-500/5 transition-shadow duration-300">
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="font-medium">{note.createdByName}</p>
+                    <p className="text-xs text-slate-500">
+                      {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                  <p className="text-sm text-slate-400">{note.note}</p>
+                  <Badge className="mt-2" variant="outline">{note.category}</Badge>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+

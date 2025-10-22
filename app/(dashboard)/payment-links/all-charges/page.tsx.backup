@@ -1,0 +1,649 @@
+'use client';
+
+/**
+ * All Charges Page - Complete Charge List
+ * Comprehensive view of all PayLink charges with advanced filtering
+ */
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Search,
+  RefreshCw,
+  Download,
+  Filter,
+  Eye,
+  Calendar,
+  IndianRupee,
+  CheckCircle,
+  XCircle,
+  Clock,
+  TrendingUp,
+  Loader2,
+  MoreVertical,
+  FileText,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
+
+interface Charge {
+  id: string;
+  chargeId: string;
+  clientName: string;
+  clientCode: string;
+  paymentLinkId: string;
+  amount: number;
+  chargeType: string;
+  description: string;
+  status: 'pending' | 'processed' | 'failed' | 'cancelled';
+  transactionDate: string;
+  processedDate?: string;
+  createdBy: string;
+  referenceNumber?: string;
+}
+
+export default function AllChargesPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [charges, setCharges] = useState<Charge[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [chargeTypeFilter, setChargeTypeFilter] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [amountFrom, setAmountFrom] = useState('');
+  const [amountTo, setAmountTo] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Mock data - replace with actual API call
+  useEffect(() => {
+    loadCharges();
+  }, []);
+
+  const loadCharges = async () => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const mockCharges: Charge[] = [
+        {
+          id: '1',
+          chargeId: 'CHG001',
+          clientName: 'ABC Corporation',
+          clientCode: 'CLI001',
+          paymentLinkId: 'PL001',
+          amount: 5000,
+          chargeType: 'Transaction Fee',
+          description: 'Monthly transaction processing fee',
+          status: 'processed',
+          transactionDate: '2024-01-15T10:30:00',
+          processedDate: '2024-01-15T11:00:00',
+          createdBy: 'Admin User',
+          referenceNumber: 'REF001',
+        },
+        {
+          id: '2',
+          chargeId: 'CHG002',
+          clientName: 'XYZ Enterprises',
+          clientCode: 'CLI002',
+          paymentLinkId: 'PL002',
+          amount: 3500,
+          chargeType: 'Service Fee',
+          description: 'Annual service maintenance charge',
+          status: 'pending',
+          transactionDate: '2024-01-14T14:20:00',
+          createdBy: 'Admin User',
+        },
+        {
+          id: '3',
+          chargeId: 'CHG003',
+          clientName: 'Tech Solutions Ltd',
+          clientCode: 'CLI003',
+          paymentLinkId: 'PL003',
+          amount: 7500,
+          chargeType: 'Setup Fee',
+          description: 'Initial setup and configuration',
+          status: 'processed',
+          transactionDate: '2024-01-13T09:15:00',
+          processedDate: '2024-01-13T10:00:00',
+          createdBy: 'Admin User',
+          referenceNumber: 'REF002',
+        },
+        {
+          id: '4',
+          chargeId: 'CHG004',
+          clientName: 'Global Trading Co',
+          clientCode: 'CLI004',
+          paymentLinkId: 'PL004',
+          amount: 2000,
+          chargeType: 'Transaction Fee',
+          description: 'Gateway processing charges',
+          status: 'failed',
+          transactionDate: '2024-01-12T16:45:00',
+          createdBy: 'System',
+        },
+        {
+          id: '5',
+          chargeId: 'CHG005',
+          clientName: 'Retail Mart',
+          clientCode: 'CLI005',
+          paymentLinkId: 'PL005',
+          amount: 1500,
+          chargeType: 'Platform Fee',
+          description: 'Monthly platform usage fee',
+          status: 'cancelled',
+          transactionDate: '2024-01-11T12:00:00',
+          createdBy: 'Admin User',
+        },
+      ];
+
+      setCharges(mockCharges);
+    } catch (error) {
+      toast.error('Failed to load charges');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadCharges();
+    setIsRefreshing(false);
+    toast.success('Charges refreshed');
+  };
+
+  const handleExport = async (format: 'csv' | 'xlsx' | 'pdf') => {
+    setIsExporting(true);
+    try {
+      // Simulate export
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success(`Exported as ${format.toUpperCase()}`);
+    } catch (error) {
+      toast.error('Failed to export charges');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleView = (charge: Charge) => {
+    router.push(`/payment-links/${charge.paymentLinkId}`);
+  };
+
+  const getStatusBadge = (status: Charge['status']) => {
+    const variants = {
+      pending: 'bg-yellow-100 text-yellow-700',
+      processed: 'bg-green-100 text-green-700',
+      failed: 'bg-red-100 text-red-700',
+      cancelled: 'bg-gray-100 text-gray-700',
+    };
+
+    const icons = {
+      pending: <Clock className="h-3 w-3 mr-1" />,
+      processed: <CheckCircle className="h-3 w-3 mr-1" />,
+      failed: <XCircle className="h-3 w-3 mr-1" />,
+      cancelled: <XCircle className="h-3 w-3 mr-1" />,
+    };
+
+    return (
+      <Badge className={`${variants[status]} flex items-center`}>
+        {icons[status]}
+        {status}
+      </Badge>
+    );
+  };
+
+  const filteredCharges = charges.filter(charge => {
+    const matchesSearch = !searchQuery ||
+      charge.chargeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      charge.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      charge.clientCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      charge.paymentLinkId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (charge.referenceNumber && charge.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesStatus = statusFilter === 'all' || charge.status === statusFilter;
+    const matchesChargeType = chargeTypeFilter === 'all' || charge.chargeType === chargeTypeFilter;
+
+    const matchesAmount = (!amountFrom || charge.amount >= parseFloat(amountFrom)) &&
+                          (!amountTo || charge.amount <= parseFloat(amountTo));
+
+    return matchesSearch && matchesStatus && matchesChargeType && matchesAmount;
+  });
+
+  const totalAmount = filteredCharges.reduce((sum, c) => sum + c.amount, 0);
+  const processedCount = filteredCharges.filter(c => c.status === 'processed').length;
+  const pendingCount = filteredCharges.filter(c => c.status === 'pending').length;
+  const failedCount = filteredCharges.filter(c => c.status === 'failed').length;
+
+  return (
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">All Charges</h1>
+          <p className="text-gray-500 mt-1">
+            Complete list of all PayLink charges
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isExporting}>
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total Charges</span>
+            <FileText className="h-4 w-4 text-gray-400" />
+          </div>
+          <div className="text-2xl font-bold text-gray-900">
+            {filteredCharges.length}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {formatCurrency(totalAmount)}
+          </div>
+        </Card>
+
+        <Card className="p-4 border-green-200 bg-green-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Processed</span>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </div>
+          <div className="text-2xl font-bold text-gray-900">
+            {processedCount}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {((processedCount / filteredCharges.length) * 100 || 0).toFixed(1)}% of total
+          </div>
+        </Card>
+
+        <Card className="p-4 border-yellow-200 bg-yellow-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Pending</span>
+            <Clock className="h-4 w-4 text-yellow-600" />
+          </div>
+          <div className="text-2xl font-bold text-gray-900">
+            {pendingCount}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Awaiting process
+          </div>
+        </Card>
+
+        <Card className="p-4 border-red-200 bg-red-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Failed</span>
+            <XCircle className="h-4 w-4 text-red-600" />
+          </div>
+          <div className="text-2xl font-bold text-gray-900">
+            {failedCount}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Requires action
+          </div>
+        </Card>
+
+        <Card className="p-4 border-blue-200 bg-blue-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Avg Charge</span>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
+          </div>
+          <div className="text-2xl font-bold text-gray-900">
+            {formatCurrency(totalAmount / filteredCharges.length || 0)}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Per transaction
+          </div>
+        </Card>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by charge ID, client, payment link, or reference..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="processed">Processed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <Card className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Charge Type</label>
+              <Select value={chargeTypeFilter} onValueChange={setChargeTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="Transaction Fee">Transaction Fee</SelectItem>
+                  <SelectItem value="Service Fee">Service Fee</SelectItem>
+                  <SelectItem value="Setup Fee">Setup Fee</SelectItem>
+                  <SelectItem value="Platform Fee">Platform Fee</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Date From</label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Date To</label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Amount Range</label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  placeholder="Min"
+                  value={amountFrom}
+                  onChange={(e) => setAmountFrom(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Max"
+                  value={amountTo}
+                  onChange={(e) => setAmountTo(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDateFrom('');
+                setDateTo('');
+                setAmountFrom('');
+                setAmountTo('');
+                setStatusFilter('all');
+                setChargeTypeFilter('all');
+              }}
+            >
+              Clear All
+            </Button>
+            <Button size="sm">Apply Filters</Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Desktop Table */}
+      <Card className="hidden lg:block">
+        {isLoading ? (
+          <div className="p-6 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        ) : filteredCharges.length === 0 ? (
+          <div className="p-12 text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No charges found</h3>
+            <p className="text-gray-600">
+              {searchQuery ? 'Try adjusting your search criteria' : 'No charges available'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Charge ID</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Payment Link</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Transaction Date</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCharges.map((charge) => (
+                  <TableRow key={charge.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      {charge.chargeId}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{charge.clientName}</div>
+                        <div className="text-xs text-gray-500">{charge.clientCode}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{charge.paymentLinkId}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-green-600">
+                        {formatCurrency(charge.amount)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{charge.chargeType}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(charge.status)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {formatDateTime(charge.transactionDate)}
+                      </div>
+                      {charge.processedDate && (
+                        <div className="text-xs text-gray-500">
+                          Processed: {formatDateTime(charge.processedDate)}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {charge.referenceNumber ? (
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {charge.referenceNumber}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleView(charge)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Invoice
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+
+      {/* Mobile View - Cards */}
+      <div className="lg:hidden space-y-4">
+        {isLoading ? (
+          [...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-48 w-full" />
+          ))
+        ) : filteredCharges.length === 0 ? (
+          <Card className="p-12 text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No charges found</h3>
+            <p className="text-gray-600">
+              {searchQuery ? 'Try adjusting your search criteria' : 'No charges available'}
+            </p>
+          </Card>
+        ) : (
+          filteredCharges.map((charge) => (
+            <Card key={charge.id} className="p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 mb-1">
+                    {charge.chargeId}
+                  </div>
+                  <div className="text-sm text-gray-600">{charge.clientName}</div>
+                </div>
+                {getStatusBadge(charge.status)}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <p className="text-xs text-gray-600">Amount</p>
+                  <p className="font-semibold text-green-600">
+                    {formatCurrency(charge.amount)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600">Type</p>
+                  <p className="text-sm">{charge.chargeType}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600">Payment Link</p>
+                  <Badge variant="outline" className="text-xs">{charge.paymentLinkId}</Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600">Date</p>
+                  <p className="text-sm">{formatDateTime(charge.transactionDate)}</p>
+                </div>
+              </div>
+
+              {charge.referenceNumber && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600">Reference</p>
+                  <Badge variant="outline" className="font-mono text-xs mt-1">
+                    {charge.referenceNumber}
+                  </Badge>
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleView(charge)}
+                className="w-full"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

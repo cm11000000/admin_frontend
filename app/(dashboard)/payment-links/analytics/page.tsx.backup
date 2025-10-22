@@ -1,0 +1,297 @@
+'use client';
+
+/**
+ * Payment Link Analytics Page - Mobile-First Design
+ * Comprehensive analytics and insights for payment links
+ */
+import React, { useEffect, useState } from 'react';
+import { usePaymentLinkStore } from '@/stores/paymentLinkStore';
+import {
+  TrendingUp,
+  TrendingDown,
+  Eye,
+  MousePointerClick,
+  DollarSign,
+  Link as LinkIcon,
+  Calendar,
+  Download,
+  RefreshCw,
+  BarChart3,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { formatCurrency } from '@/lib/utils';
+
+export default function PaymentLinkAnalyticsPage() {
+  const {
+    analytics,
+    isLoading,
+    fetchAnalytics,
+  } = usePaymentLinkStore();
+
+  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [dateRange]);
+
+  const loadAnalytics = () => {
+    fetchAnalytics({ range: dateRange });
+  };
+
+  const handleExport = () => {
+    toast.info('Export functionality coming soon');
+  };
+
+  if (isLoading || !analytics) {
+    return (
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  const overview = analytics.overview;
+
+  return (
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Payment Link Analytics</h1>
+          <p className="text-gray-500 mt-1">
+            Insights and performance metrics
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+              <SelectItem value="all">All time</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={loadAnalytics}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        </div>
+      </div>
+
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total Links</span>
+            <LinkIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {overview.totalLinks}
+          </div>
+          <div className="text-xs text-gray-600">
+            {overview.activeLinks} active
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total Amount</span>
+            <DollarSign className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {formatCurrency(overview.totalAmount)}
+          </div>
+          <div className="text-xs text-green-600 flex items-center gap-1">
+            <TrendingUp className="h-3 w-3" />
+            {formatCurrency(overview.totalPaidAmount)} paid
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Conversion Rate</span>
+            <BarChart3 className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {overview.conversionRate.toFixed(1)}%
+          </div>
+          <div className="text-xs text-gray-600">
+            {overview.paidLinks} / {overview.totalLinks} links paid
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-600">Total Views</span>
+            <Eye className="h-5 w-5 text-gray-400" />
+          </div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            {overview.totalViews.toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-600">
+            {overview.totalClicks.toLocaleString()} clicks
+          </div>
+        </Card>
+      </div>
+
+      {/* Status Breakdown */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-4">Status Breakdown</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {analytics.statusBreakdown.map((item) => (
+            <div key={item.status} className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 capitalize mb-2">{item.status}</p>
+              <p className="text-2xl font-bold text-gray-900">{item.count}</p>
+              <p className="text-xs text-gray-600 mt-1">
+                {formatCurrency(item.amount)}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {item.percentage.toFixed(1)}% of total
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Top Performing Links */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-4">Top Performing Links</h2>
+        <div className="space-y-3">
+          {analytics.topPerformingLinks.slice(0, 5).map((item, index) => (
+            <div
+              key={item.link.id}
+              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-semibold text-sm">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 truncate">
+                    {item.link.title}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(item.link.amount)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6 text-sm">
+                <div className="text-center">
+                  <p className="font-semibold text-gray-900">{item.views}</p>
+                  <p className="text-xs text-gray-600">views</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-gray-900">{item.clicks}</p>
+                  <p className="text-xs text-gray-600">clicks</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-green-600">
+                    {item.conversionRate.toFixed(1)}%
+                  </p>
+                  <p className="text-xs text-gray-600">conversion</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Payment Method Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Payment Methods</h2>
+          <div className="space-y-3">
+            {analytics.paymentMethodBreakdown.map((item) => (
+              <div key={item.method} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-gray-900">{item.method}</span>
+                  <span className="text-gray-600">{item.percentage.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all"
+                    style={{ width: `${item.percentage}%` }}
+                  ></div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-600">
+                  <span>{item.count} transactions</span>
+                  <span>{formatCurrency(item.amount)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Channel Performance</h2>
+          <div className="space-y-4">
+            {analytics.channelPerformance.map((item) => (
+              <div key={item.channel} className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-medium text-gray-900 capitalize">
+                    {item.channel}
+                  </span>
+                  <span className="text-sm font-semibold text-green-600">
+                    {item.conversionRate.toFixed(1)}% conversion
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">{item.sent}</p>
+                    <p className="text-xs text-gray-600">Sent</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">{item.opened}</p>
+                    <p className="text-xs text-gray-600">Opened</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-gray-900">{item.clicked}</p>
+                    <p className="text-xs text-gray-600">Clicked</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold text-green-600">{item.paid}</p>
+                    <p className="text-xs text-gray-600">Paid</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Time Series Chart Placeholder */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-4">Performance Over Time</h2>
+        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+            <p>Chart visualization coming soon</p>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}

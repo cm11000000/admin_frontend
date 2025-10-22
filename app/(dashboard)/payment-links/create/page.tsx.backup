@@ -1,0 +1,725 @@
+'use client';
+
+/**
+ * Payment Link Generation Page - Mobile-First Design
+ * Create payment links with QR codes, templates, and sharing options
+ */
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { usePaymentLinkStore } from '@/stores/paymentLinkStore';
+import {
+  ArrowLeft,
+  Link as LinkIcon,
+  QrCode,
+  Mail,
+  MessageSquare,
+  Send,
+  Copy,
+  Check,
+  Loader2,
+  Calendar,
+  IndianRupee,
+  User,
+  Phone,
+  FileText,
+  Sparkles,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from '@/lib/toast';
+import { formatCurrency, copyToClipboard } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface FormData {
+  title: string;
+  description: string;
+  amount: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  expiresAt: string;
+  acceptPartialPayments: boolean;
+  minPartialAmount: string;
+  sendNotification: boolean;
+  notificationChannels: string[];
+  customFields: Record<string, string>;
+}
+
+export default function CreatePaymentLinkPage() {
+  const router = useRouter();
+  const {
+    templates,
+    selectedTemplate,
+    isCreating,
+    fetchTemplates,
+    selectTemplate,
+    createPaymentLink,
+  } = usePaymentLinkStore();
+
+  const [step, setStep] = useState<'template' | 'details' | 'preview'>('template');
+  const [formData, setFormData] = useState<FormData>({
+    title: '',
+    description: '',
+    amount: '',
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    expiresAt: '',
+    acceptPartialPayments: false,
+    minPartialAmount: '',
+    sendNotification: true,
+    notificationChannels: ['email'],
+    customFields: {},
+  });
+
+  const [createdLink, setCreatedLink] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      setFormData(prev => ({
+        ...prev,
+        title: selectedTemplate.name,
+        description: selectedTemplate.description,
+        amount: selectedTemplate.amount?.toString() || '',
+      }));
+      setStep('details');
+    }
+  }, [selectedTemplate]);
+
+  const handleInputChange = (field: keyof FormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleTemplateSelect = (template: any) => {
+    selectTemplate(template);
+  };
+
+  const handleSkipTemplate = () => {
+    setStep('details');
+  };
+
+  const handleBack = () => {
+    if (step === 'details') {
+      setStep('template');
+      selectTemplate(null);
+    } else if (step === 'preview') {
+      setStep('details');
+    }
+  };
+
+  const handleNext = () => {
+    if (step === 'details') {
+      if (!formData.title || !formData.amount) {
+        toast.error('Please fill in required fields');
+        return;
+      }
+      setStep('preview');
+    }
+  };
+
+  const handleCreate = async () => {
+    try {
+      const data = {
+        title: formData.title,
+        description: formData.description,
+        amount: parseFloat(formData.amount),
+        customerName: formData.customerName || undefined,
+        customerEmail: formData.customerEmail || undefined,
+        customerPhone: formData.customerPhone || undefined,
+        expiresAt: formData.expiresAt || undefined,
+        acceptPartialPayments: formData.acceptPartialPayments,
+        minPartialAmount: formData.minPartialAmount ? parseFloat(formData.minPartialAmount) : undefined,
+        sendNotification: formData.sendNotification,
+        notificationChannels: formData.sendNotification ? formData.notificationChannels : undefined,
+        customFields: Object.keys(formData.customFields).length > 0 ? formData.customFields : undefined,
+      };
+
+      const link = await createPaymentLink(data);
+
+      if (link) {
+        setCreatedLink(link);
+        toast.success('Payment link created successfully');
+      } else {
+        toast.error('Failed to create payment link');
+      }
+    } catch (error) {
+      toast.error('Failed to create payment link');
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (createdLink) {
+      const success = await copyToClipboard(createdLink.linkUrl);
+      if (success) {
+        setCopied(true);
+        toast.success('Link copied to clipboard');
+        setTimeout(() => setCopied(false), 2000);
+      }
+    }
+  };
+
+  const handleShare = (channel: string) => {
+    if (!createdLink) return;
+
+    const text = `Payment Link: ${createdLink.title}\nAmount: ${formatCurrency(createdLink.amount)}\n${createdLink.linkUrl}`;
+
+    switch (channel) {
+      case 'email':
+        window.open(`mailto:?subject=${encodeURIComponent(createdLink.title)}&body=${encodeURIComponent(text)}`);
+        break;
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        break;
+      case 'sms':
+        window.open(`sms:?body=${encodeURIComponent(text)}`);
+        break;
+    }
+  };
+
+  const handleViewLink = () => {
+    if (createdLink) {
+      router.push(`/payment-links/${createdLink.id}`);
+    }
+  };
+
+  const handleCreateAnother = () => {
+    setCreatedLink(null);
+    setFormData({
+      title: '',
+      description: '',
+      amount: '',
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      expiresAt: '',
+      acceptPartialPayments: false,
+      minPartialAmount: '',
+      sendNotification: true,
+      notificationChannels: ['email'],
+      customFields: {},
+    });
+    setStep('template');
+    selectTemplate(null);
+  };
+
+  if (createdLink) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-6"
+        >
+          {/* Success Icon */}
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4">
+            <Check className="h-10 w-10 text-green-600" />
+          </div>
+
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Link Created!</h1>
+            <p className="text-gray-600">Your payment link is ready to share</p>
+          </div>
+
+          {/* Payment Link Card */}
+          <Card className="p-6 text-left space-y-4">
+            <div>
+              <Label className="text-sm text-gray-600">Link URL</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={createdLink.linkUrl}
+                  readOnly
+                  className="flex-1 font-mono text-sm"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyLink}
+                >
+                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {createdLink.qrCodeUrl && (
+              <div className="flex flex-col items-center py-4">
+                <Label className="text-sm text-gray-600 mb-3">QR Code</Label>
+                <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <QrCode className="h-24 w-24 text-gray-400" />
+                </div>
+                <Button variant="link" className="mt-2">
+                  Download QR Code
+                </Button>
+              </div>
+            )}
+
+            <Separator />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-gray-600">Amount</Label>
+                <p className="text-lg font-semibold">{formatCurrency(createdLink.amount)}</p>
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600">Status</Label>
+                <Badge className="mt-1">{createdLink.status}</Badge>
+              </div>
+            </div>
+          </Card>
+
+          {/* Share Options */}
+          <Card className="p-6">
+            <Label className="text-sm text-gray-600 mb-3 block">Share via</Label>
+            <div className="grid grid-cols-3 gap-3">
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-4"
+                onClick={() => handleShare('email')}
+              >
+                <Mail className="h-6 w-6 mb-2" />
+                <span className="text-xs">Email</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-4"
+                onClick={() => handleShare('whatsapp')}
+              >
+                <MessageSquare className="h-6 w-6 mb-2" />
+                <span className="text-xs">WhatsApp</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-4"
+                onClick={() => handleShare('sms')}
+              >
+                <Send className="h-6 w-6 mb-2" />
+                <span className="text-xs">SMS</span>
+              </Button>
+            </div>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleCreateAnother}
+            >
+              Create Another Link
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleViewLink}
+            >
+              View Link Details
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => step === 'template' ? router.back() : handleBack()}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create Payment Link</h1>
+          <p className="text-gray-600 text-sm mt-1">
+            {step === 'template' && 'Choose a template or start from scratch'}
+            {step === 'details' && 'Enter payment link details'}
+            {step === 'preview' && 'Review and create'}
+          </p>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+            step === 'template' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+          }`}>
+            1
+          </div>
+          <div className="w-12 sm:w-20 h-0.5 bg-gray-200"></div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+            step === 'details' ? 'bg-blue-600 text-white' : step === 'preview' ? 'bg-gray-400 text-white' : 'bg-gray-200 text-gray-600'
+          }`}>
+            2
+          </div>
+          <div className="w-12 sm:w-20 h-0.5 bg-gray-200"></div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+            step === 'preview' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
+          }`}>
+            3
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {/* Step 1: Template Selection */}
+        {step === 'template' && (
+          <motion.div
+            key="template"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-6">
+              <Sparkles className="h-12 w-12 text-blue-600 mx-auto mb-3" />
+              <h2 className="text-xl font-semibold mb-2">Choose a Template</h2>
+              <p className="text-gray-600 text-sm">
+                Start with a pre-built template or create from scratch
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {templates.map(template => (
+                <Card
+                  key={template.id}
+                  className="p-4 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all"
+                  onClick={() => handleTemplateSelect(template)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                    {template.isDefault && (
+                      <Badge variant="secondary" className="text-xs">Default</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                  {template.amount && (
+                    <div className="text-sm font-medium text-blue-600">
+                      {formatCurrency(template.amount)}
+                    </div>
+                  )}
+                </Card>
+              ))}
+
+              {templates.length === 0 && (
+                <div className="col-span-2 text-center py-8 text-gray-500">
+                  <p>No templates available</p>
+                </div>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleSkipTemplate}
+            >
+              Skip & Create from Scratch
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Step 2: Details Form */}
+        {step === 'details' && (
+          <motion.div
+            key="details"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <Card className="p-6 space-y-6">
+              {/* Basic Details */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Basic Details
+                </h3>
+
+                <div>
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    placeholder="e.g., Product Purchase, Service Fee"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Optional description for this payment link"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="amount">Amount *</Label>
+                  <div className="relative">
+                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      className="pl-9"
+                      value={formData.amount}
+                      onChange={(e) => handleInputChange('amount', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="expiresAt">Expires At</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="expiresAt"
+                      type="datetime-local"
+                      className="pl-9"
+                      value={formData.expiresAt}
+                      onChange={(e) => handleInputChange('expiresAt', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Customer Details */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Customer Details (Optional)
+                </h3>
+
+                <div>
+                  <Label htmlFor="customerName">Customer Name</Label>
+                  <Input
+                    id="customerName"
+                    placeholder="John Doe"
+                    value={formData.customerName}
+                    onChange={(e) => handleInputChange('customerName', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="customerEmail">Customer Email</Label>
+                  <Input
+                    id="customerEmail"
+                    type="text"
+                    placeholder="customer@example.com"
+                    value={formData.customerEmail}
+                    onChange={(e) => handleInputChange('customerEmail', e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="customerPhone">Customer Phone</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="customerPhone"
+                      type="tel"
+                      placeholder="9876543210"
+                      className="pl-9"
+                      value={formData.customerPhone}
+                      onChange={(e) => handleInputChange('customerPhone', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Advanced Settings */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Advanced Settings</h3>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Accept Partial Payments</Label>
+                    <p className="text-sm text-gray-600">Allow customers to pay in installments</p>
+                  </div>
+                  <Switch
+                    checked={formData.acceptPartialPayments}
+                    onCheckedChange={(checked) => handleInputChange('acceptPartialPayments', checked)}
+                  />
+                </div>
+
+                {formData.acceptPartialPayments && (
+                  <div>
+                    <Label htmlFor="minPartialAmount">Minimum Partial Amount</Label>
+                    <Input
+                      id="minPartialAmount"
+                      type="number"
+                      placeholder="Minimum amount per payment"
+                      value={formData.minPartialAmount}
+                      onChange={(e) => handleInputChange('minPartialAmount', e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Send Notification</Label>
+                    <p className="text-sm text-gray-600">Notify customer via email/SMS</p>
+                  </div>
+                  <Switch
+                    checked={formData.sendNotification}
+                    onCheckedChange={(checked) => handleInputChange('sendNotification', checked)}
+                  />
+                </div>
+              </div>
+            </Card>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleBack}
+              >
+                Back
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleNext}
+              >
+                Continue to Preview
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Preview & Create */}
+        {step === 'preview' && (
+          <motion.div
+            key="preview"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <Card className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg">Review Payment Link</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-gray-600">Title</Label>
+                  <p className="font-medium">{formData.title}</p>
+                </div>
+
+                <div>
+                  <Label className="text-sm text-gray-600">Amount</Label>
+                  <p className="font-medium text-lg text-green-600">
+                    {formatCurrency(parseFloat(formData.amount) || 0)}
+                  </p>
+                </div>
+
+                {formData.description && (
+                  <div className="col-span-2">
+                    <Label className="text-sm text-gray-600">Description</Label>
+                    <p className="text-gray-700">{formData.description}</p>
+                  </div>
+                )}
+
+                {formData.customerName && (
+                  <div>
+                    <Label className="text-sm text-gray-600">Customer Name</Label>
+                    <p className="font-medium">{formData.customerName}</p>
+                  </div>
+                )}
+
+                {formData.customerEmail && (
+                  <div>
+                    <Label className="text-sm text-gray-600">Customer Email</Label>
+                    <p className="font-medium">{formData.customerEmail}</p>
+                  </div>
+                )}
+
+                {formData.customerPhone && (
+                  <div>
+                    <Label className="text-sm text-gray-600">Customer Phone</Label>
+                    <p className="font-medium">{formData.customerPhone}</p>
+                  </div>
+                )}
+
+                {formData.expiresAt && (
+                  <div>
+                    <Label className="text-sm text-gray-600">Expires At</Label>
+                    <p className="font-medium">
+                      {new Date(formData.expiresAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {formData.acceptPartialPayments && (
+                  <div className="col-span-2">
+                    <Label className="text-sm text-gray-600">Payment Options</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary">Partial Payments Enabled</Badge>
+                      {formData.minPartialAmount && (
+                        <span className="text-sm text-gray-600">
+                          Min: {formatCurrency(parseFloat(formData.minPartialAmount))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleBack}
+                disabled={isCreating}
+              >
+                Back
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleCreate}
+                disabled={isCreating}
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    Create Payment Link
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

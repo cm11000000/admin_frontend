@@ -1,0 +1,329 @@
+/**
+ * Chargeback Analytics Dashboard
+ * Comprehensive analytics and insights for chargebacks
+ */
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useChargebackStore } from '@/stores/chargebackStore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { formatCurrency } from '@/lib/utils';
+import { RefreshCw, Download, TrendingUp, DollarSign, PieChart } from 'lucide-react';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+
+export default function ChargebackAnalyticsPage() {
+  const {
+    analytics,
+    isLoading,
+    fetchAnalytics,
+  } = useChargebackStore();
+
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [selectedRange, setSelectedRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
+
+  useEffect(() => {
+    fetchAnalytics(dateFrom, dateTo, undefined, selectedRange);
+  }, [selectedRange]);
+
+  const handleRefresh = () => {
+    fetchAnalytics(dateFrom, dateTo, undefined, selectedRange);
+  };
+
+  const handleExport = () => {
+    toast.success('Analytics export started');
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Chargeback Analytics</h1>
+          <p className="text-muted-foreground">
+            Insights and trends for chargeback management
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Link href="/chargebacks">
+            <Button variant="outline">Back to Chargebacks</Button>
+          </Link>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex gap-4 items-end">
+            <div className="flex gap-2">
+              <Button
+                variant={selectedRange === '7d' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedRange('7d')}
+              >
+                7 Days
+              </Button>
+              <Button
+                variant={selectedRange === '30d' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedRange('30d')}
+              >
+                30 Days
+              </Button>
+              <Button
+                variant={selectedRange === '90d' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedRange('90d')}
+              >
+                90 Days
+              </Button>
+              <Button
+                variant={selectedRange === '1y' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedRange('1y')}
+              >
+                1 Year
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                placeholder="From"
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                placeholder="To"
+              />
+              <Button onClick={handleRefresh}>Apply</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw className="h-12 w-12 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading analytics...</p>
+          </div>
+        </div>
+      ) : analytics ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Total Chargeback Amount
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(analytics.totalChargebackAmount)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Across all chargebacks
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                  Recovered Amount
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {formatCurrency(analytics.totalRecoveredAmount)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Successfully recovered
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <PieChart className="h-4 w-4" />
+                  Win Rate
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {analytics.winLossRatio.percentage}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {analytics.winLossRatio.won} won, {analytics.winLossRatio.lost} lost
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Chargeback Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {analytics.chargebackRate.toFixed(2)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Of total transactions
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Reason Codes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {analytics.topReasonCodes.slice(0, 5).map((reason, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{reason.code}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {reason.count} cases ({reason.percentage}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full"
+                            style={{ width: `${reason.percentage}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{reason.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Gateway Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analytics.gatewayStats.map((gateway, index) => (
+                    <div key={index} className="border-b pb-3 last:border-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{gateway.gateway}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {gateway.chargebacks} chargebacks
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Won</p>
+                          <p className="font-semibold text-green-600">{gateway.won}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Lost</p>
+                          <p className="font-semibold text-red-600">{gateway.lost}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Amount</p>
+                          <p className="font-semibold">{formatCurrency(gateway.amount)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Trend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {analytics.monthlyTrend.map((month, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="font-medium">{month.month}</div>
+                    <div className="flex gap-6 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Total: </span>
+                        <span className="font-semibold">{month.totalChargebacks}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Won: </span>
+                        <span className="font-semibold text-green-600">{month.wonChargebacks}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Lost: </span>
+                        <span className="font-semibold text-red-600">{month.lostChargebacks}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Amount: </span>
+                        <span className="font-semibold">{formatCurrency(month.amount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Metrics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-4">Status Distribution</h3>
+                  <div className="space-y-2">
+                    {Object.entries(analytics.statusDistribution).map(([status, count]) => (
+                      <div key={status} className="flex items-center justify-between">
+                        <span className="text-sm capitalize">{status.replace('_', ' ')}</span>
+                        <span className="font-semibold">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-4">Response Time</h3>
+                  <div className="text-center p-6 bg-muted rounded-lg">
+                    <div className="text-4xl font-bold mb-2">
+                      {analytics.averageResponseTime.toFixed(1)}
+                    </div>
+                    <p className="text-muted-foreground">Hours (Average)</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-muted-foreground">No analytics data available</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

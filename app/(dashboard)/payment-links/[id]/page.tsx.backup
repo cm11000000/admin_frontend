@@ -1,0 +1,428 @@
+'use client';
+
+/**
+ * Payment Link Details Page - Mobile-First Design
+ * Comprehensive view of payment link with analytics and actions
+ */
+import React, { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { usePaymentLinkStore } from '@/stores/paymentLinkStore';
+import {
+  ArrowLeft,
+  Copy,
+  Check,
+  Share2,
+  Mail,
+  MessageSquare,
+  Send,
+  QrCode as QrCodeIcon,
+  Download,
+  Eye,
+  MousePointerClick,
+  TrendingUp,
+  Calendar,
+  User,
+  Phone,
+  XCircle,
+  Edit,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/lib/toast';
+import { formatCurrency, formatDateTime, copyToClipboard } from '@/lib/utils';
+
+export default function PaymentLinkDetailsPage() {
+  const router = useRouter();
+  const params = useParams();
+  const linkId = params.id as string;
+
+  const {
+    selectedPaymentLink: link,
+    isLoading,
+    fetchPaymentLinkById,
+    sharePaymentLink,
+    deactivatePaymentLink,
+    fetchLinkAnalytics,
+  } = usePaymentLinkStore();
+
+  const [copied, setCopied] = useState(false);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  useEffect(() => {
+    if (linkId) {
+      fetchPaymentLinkById(linkId);
+      loadAnalytics();
+    }
+  }, [linkId]);
+
+  const loadAnalytics = async () => {
+    setLoadingAnalytics(true);
+    try {
+      const data = await fetchLinkAnalytics(linkId);
+      setAnalytics(data);
+    } catch (error) {
+      toast.error('Failed to load analytics');
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (link) {
+      const success = await copyToClipboard(link.linkUrl);
+      if (success) {
+        setCopied(true);
+        toast.success('Link copied to clipboard');
+        setTimeout(() => setCopied(false), 2000);
+      }
+    }
+  };
+
+  const handleShare = async (channel: 'email' | 'sms' | 'whatsapp') => {
+    if (!link) return;
+
+    try {
+      await sharePaymentLink(link.id, [channel], {
+        customerEmail: link.customerEmail,
+        customerPhone: link.customerPhone,
+        customerName: link.customerName,
+      });
+      toast.success(`Sent via ${channel}`);
+    } catch (error) {
+      toast.error('Failed to send notification');
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!link) return;
+
+    try {
+      await deactivatePaymentLink(link.id, 'Deactivated by admin');
+      toast.success('Payment link deactivated');
+      router.push('/payment-links');
+    } catch (error) {
+      toast.error('Failed to deactivate link');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, string> = {
+      active: 'bg-blue-100 text-blue-700',
+      paid: 'bg-green-100 text-green-700',
+      expired: 'bg-gray-100 text-gray-700',
+      cancelled: 'bg-red-100 text-red-700',
+    };
+
+    return (
+      <Badge className={variants[status] || 'bg-gray-100 text-gray-700'}>
+        {status}
+      </Badge>
+    );
+  };
+
+  if (isLoading || !link) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <Skeleton className="h-10 w-48 mb-6" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-64" />
+            <Skeleton className="h-96" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-48" />
+            <Skeleton className="h-64" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {link.title}
+          </h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Payment Link Details
+          </p>
+        </div>
+        {getStatusBadge(link.status)}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Link Details Card */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Link Details</h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyLink}
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 mr-2 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  Copy Link
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/payment-links/${link.id}/edit`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-600">Payment URL</label>
+                <div className="flex items-center gap-2 mt-1 p-3 bg-gray-50 rounded-lg">
+                  <code className="flex-1 text-sm font-mono truncate">
+                    {link.linkUrl}
+                  </code>
+                </div>
+              </div>
+
+              {link.description && (
+                <div>
+                  <label className="text-sm text-gray-600">Description</label>
+                  <p className="text-gray-900 mt-1">{link.description}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-600">Amount</label>
+                  <p className="text-2xl font-bold text-green-600 mt-1">
+                    {formatCurrency(link.amount)}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-600">Currency</label>
+                  <p className="text-lg font-medium mt-1">{link.currency}</p>
+                </div>
+              </div>
+
+              {link.acceptPartialPayments && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    Partial payments enabled
+                    {link.minPartialAmount && ` (Min: ${formatCurrency(link.minPartialAmount)})`}
+                  </p>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-gray-600">Created At</label>
+                  <p className="font-medium mt-1">{formatDateTime(link.createdAt)}</p>
+                </div>
+
+                {link.expiresAt && (
+                  <div>
+                    <label className="text-sm text-gray-600">Expires At</label>
+                    <p className="font-medium mt-1">{formatDateTime(link.expiresAt)}</p>
+                  </div>
+                )}
+              </div>
+
+              {link.paidAt && (
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <label className="text-sm text-green-900">Paid At</label>
+                  <p className="font-medium text-green-900 mt-1">
+                    {formatDateTime(link.paidAt)}
+                  </p>
+                  {link.transactionId && (
+                    <p className="text-xs text-green-700 mt-1">
+                      Transaction ID: {link.transactionId}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Customer Details Card */}
+          {(link.customerName || link.customerEmail || link.customerPhone) && (
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4">Customer Details</h2>
+              <div className="space-y-3">
+                {link.customerName && (
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-600">Name</p>
+                      <p className="font-medium">{link.customerName}</p>
+                    </div>
+                  </div>
+                )}
+
+                {link.customerEmail && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="font-medium">{link.customerEmail}</p>
+                    </div>
+                  </div>
+                )}
+
+                {link.customerPhone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="font-medium">{link.customerPhone}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Analytics Tabs */}
+          <Card className="p-6">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-4 mt-4">
+                {loadingAnalytics ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  </div>
+                ) : analytics ? (
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <Eye className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                      <p className="text-2xl font-bold text-gray-900">{analytics.views}</p>
+                      <p className="text-xs text-gray-600">Views</p>
+                    </div>
+
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <MousePointerClick className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                      <p className="text-2xl font-bold text-gray-900">{analytics.clicks}</p>
+                      <p className="text-xs text-gray-600">Clicks</p>
+                    </div>
+
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                      <p className="text-2xl font-bold text-gray-900">
+                        {analytics.conversionRate.toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-gray-600">Conversion</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center py-8 text-gray-500">
+                    No analytics data available
+                  </p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="activity" className="mt-4">
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">Recent activity will appear here</p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* QR Code Card */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">QR Code</h2>
+            <div className="flex flex-col items-center">
+              <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                <QrCodeIcon className="h-24 w-24 text-gray-400" />
+              </div>
+              <Button variant="outline" size="sm" className="w-full">
+                <Download className="h-4 w-4 mr-2" />
+                Download QR Code
+              </Button>
+            </div>
+          </Card>
+
+          {/* Share Card */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Share Link</h2>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleShare('email')}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Share via Email
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleShare('whatsapp')}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Share via WhatsApp
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleShare('sms')}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Share via SMS
+              </Button>
+            </div>
+          </Card>
+
+          {/* Actions Card */}
+          {link.status === 'active' && (
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-4">Actions</h2>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-red-600 hover:text-red-700"
+                  onClick={handleDeactivate}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Deactivate Link
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

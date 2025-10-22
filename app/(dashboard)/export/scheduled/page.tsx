@@ -1,0 +1,193 @@
+/**
+ * Scheduled Exports Page
+ * Manage automated export schedules
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Plus, Calendar, Play, Pause, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ScheduleExportForm from '@/components/bulk/ScheduleExportForm';
+import { useBulkOperationsStore } from '@/stores/bulkOperationsStore';
+import BulkOperationsApiService from '@/services/api/BulkOperationsApiService';
+import toast from 'react-hot-toast';
+import { parseCronExpression } from '@/utils/fileProcessing';
+import { cn } from '@/lib/utils';
+
+export default function ScheduledExportsPage() {
+  if (typeof window === 'undefined') return null;
+  const [showForm, setShowForm] = useState(false);
+  const { scheduledExports, setScheduledExports, removeScheduledExport } = useBulkOperationsStore();
+
+  useEffect(() => {
+    loadScheduledExports();
+  }, []);
+
+  const loadScheduledExports = async () => {
+    try {
+      const exports = await BulkOperationsApiService.getScheduledExports();
+      setScheduledExports(exports);
+    } catch (error) {
+      toast.error('Failed to load scheduled exports');
+    }
+  };
+
+  const handleCreateSchedule = async (data: any) => {
+    try {
+      await BulkOperationsApiService.createScheduledExport(data);
+      toast.success('Schedule created successfully');
+      setShowForm(false);
+      loadScheduledExports();
+    } catch (error) {
+      toast.error('Failed to create schedule');
+    }
+  };
+
+  const handleToggle = async (id: string, enabled: boolean) => {
+    try {
+      await BulkOperationsApiService.toggleScheduledExport(id, enabled);
+      toast.success(enabled ? 'Schedule enabled' : 'Schedule disabled');
+      loadScheduledExports();
+    } catch (error) {
+      toast.error('Failed to toggle schedule');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this schedule?')) return;
+
+    try {
+      await BulkOperationsApiService.deleteScheduledExport(id);
+      removeScheduledExport(id);
+      toast.success('Schedule deleted');
+    } catch (error) {
+      toast.error('Failed to delete schedule');
+    }
+  };
+
+  const handleRunNow = async (id: string) => {
+    try {
+      await BulkOperationsApiService.runScheduledExportNow(id);
+      toast.success('Export started');
+    } catch (error) {
+      toast.error('Failed to start export');
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Scheduled Exports</h1>
+          <p className="text-gray-600 mt-1">Automate your data exports</p>
+        </div>
+        <Button onClick={() => setShowForm(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Schedule
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white border border-slate-700/50 rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Create Scheduled Export</h2>
+          <ScheduleExportForm
+            onSubmit={handleCreateSchedule}
+            onCancel={() => setShowForm(false)}
+          />
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {scheduledExports.length === 0 ? (
+          <div className="p-12 text-center bg-gray-50 border border-gray-200 rounded-lg">
+            <Calendar className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <p className="text-gray-600 mb-4">No scheduled exports yet</p>
+            <Button onClick={() => setShowForm(true)}>Create Your First Schedule</Button>
+          </div>
+        ) : (
+          scheduledExports.map((schedule) => (
+            <div
+              key={schedule.id}
+              className="p-6 bg-white border border-slate-700/50 rounded-lg hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-semibold">
+                      {schedule.exportConfig?.name || 'Unnamed Export'}
+                    </h3>
+                    <span
+                      className={cn(
+                        'px-2 py-1 rounded text-xs font-medium',
+                        schedule.enabled
+                          ? 'bg-green-500/20 text-green-600 border border-green-500/40'
+                          : 'bg-gray-100 text-gray-600'
+                      )}
+                    >
+                      {schedule.enabled ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {parseCronExpression(schedule.schedule)} ({schedule.timezone})
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggle(schedule.id, !schedule.enabled)}
+                  >
+                    {schedule.enabled ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRunNow(schedule.id)}
+                  >
+                    <Play className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(schedule.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">Next Run</p>
+                  <p className="font-medium">
+                    {new Date(schedule.nextRunTime).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Last Run</p>
+                  <p className="font-medium">
+                    {schedule.lastRunTime
+                      ? new Date(schedule.lastRunTime).toLocaleString()
+                      : 'Never'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Last Status</p>
+                  <p className="font-medium capitalize">
+                    {schedule.lastRunStatus || 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

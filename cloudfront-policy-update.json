@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RegionalServices",
+      "Effect": "Allow",
+      "Action": ["*"],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "ap-south-1"
+        }
+      }
+    },
+    {
+      "Sid": "GlobalServices",
+      "Effect": "Allow",
+      "Action": [
+        "iam:*",
+        "sts:*",
+        "s3:*",
+        "ecr:*",
+        "cloudfront:*",
+        "acm:*",
+        "route53:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

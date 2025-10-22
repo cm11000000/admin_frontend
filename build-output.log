@@ -1,0 +1,112 @@
+
+> sabpaisa-admin-v5@5.0.0 build
+> next build
+
+   ▲ Next.js 14.1.0
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./app/(dashboard)/refunds/history/page.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4m/Users/chaitanyamalik/Desktop/admin_full_proper_v2/sabpaisa_admin_v5/app/(dashboard)/refunds/history/page.tsx[0m:232:1]
+ [2m232[0m |     .reduce((sum, r) => sum + (parseFloat(r.udf2 || '0')), 0);
+ [2m233[0m | 
+ [2m234[0m |   return (
+ [2m235[0m |     <div className="space-y-6">
+     : [31;1m     ^^^[0m
+ [2m236[0m |       {/* Page Header - Dark theme with gradient */}
+ [2m237[0m |       <div className="pb-4 border-b border-slate-700/50 flex items-center justify-between">
+ [2m238[0m |         <div>
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/(dashboard)/refunds/history/page.tsx
+
+./app/(dashboard)/refunds/page.tsx
+Error: 
+  [31mx[0m Expected ',', got '{'
+     ,-[[36;1;4m/Users/chaitanyamalik/Desktop/admin_full_proper_v2/sabpaisa_admin_v5/app/(dashboard)/refunds/page.tsx[0m:646:1]
+ [2m646[0m | 
+ [2m647[0m |       </div>
+ [2m648[0m | 
+ [2m649[0m |       {/* Refund Processing Modal */}
+     : [31;1m      ^[0m
+ [2m650[0m |       {showRefundModal && (
+ [2m651[0m |         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+ [2m652[0m |           <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 max-w-md w-full">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/(dashboard)/refunds/page.tsx
+
+./app/(dashboard)/refunds/sbi/page.tsx
+Error: 
+  [31mx[0m Expected ',', got '{'
+     ,-[[36;1;4m/Users/chaitanyamalik/Desktop/admin_full_proper_v2/sabpaisa_admin_v5/app/(dashboard)/refunds/sbi/page.tsx[0m:307:1]
+ [2m307[0m |           </div>
+ [2m308[0m |         </div>
+ [2m309[0m | 
+ [2m310[0m |         {/* Filters Section - Glass morphism card */}
+     : [31;1m        ^[0m
+ [2m311[0m |         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+ [2m312[0m |           <div className="space-y-4">
+ [2m313[0m |             {/* Client and Dates - Match Angular's layout */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/(dashboard)/refunds/sbi/page.tsx
+
+./app/(dashboard)/reports/endpoint/page.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+    ,-[[36;1;4m/Users/chaitanyamalik/Desktop/admin_full_proper_v2/sabpaisa_admin_v5/app/(dashboard)/reports/endpoint/page.tsx[0m:84:1]
+ [2m84[0m |   const paginatedData = mockData.slice(startIndex, startIndex + itemsPerPage);
+ [2m85[0m | 
+ [2m86[0m |   return (
+ [2m87[0m |     <div className="min-h-screen bg-slate-900 p-4 md:p-6 lg:p-8">
+    : [31;1m     ^^^[0m
+ [2m88[0m |       <div className="mx-auto max-w-[1600px] space-y-6">
+ [2m89[0m |       {/* Header */}
+ [2m90[0m |       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/(dashboard)/reports/endpoint/page.tsx
+
+./app/(dashboard)/transactions/analysis/page.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4m/Users/chaitanyamalik/Desktop/admin_full_proper_v2/sabpaisa_admin_v5/app/(dashboard)/transactions/analysis/page.tsx[0m:359:1]
+ [2m359[0m |   };
+ [2m360[0m | 
+ [2m361[0m |   return (
+ [2m362[0m |     <div className="space-y-6">
+     : [31;1m     ^^^[0m
+ [2m363[0m |       {/* Header - Dark theme with gradient */}
+ [2m364[0m |       <div className="pb-4 border-b border-slate-700/50">
+ [2m365[0m |         <h4 className="text-3xl font-bold text-white flex items-center gap-2">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/(dashboard)/transactions/analysis/page.tsx
+
+
+> Build failed because of webpack errors

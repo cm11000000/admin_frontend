@@ -1,0 +1,385 @@
+'use client';
+// Client-only page; safe for static export
+
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog } from '@/components/ui/dialog';
+import { useMerchantStore } from '@/stores/merchantStore';
+import { toast } from 'react-hot-toast';
+import { formatDistanceToNow } from 'date-fns';
+
+export default function ApprovalsPage() {
+  const router = useRouter();
+  const {
+    pendingApprovals = [],
+    isLoading = false,
+    isSubmitting = false,
+    fetchPendingApprovals = () => Promise.resolve(),
+    approveMerchant = async () => {},
+    rejectMerchant = async () => {},
+    requestChanges = async () => {},
+  } = useMerchantStore() as any;
+
+  const [selectedApproval, setSelectedApproval] = useState<any>(null);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showChangesDialog, setShowChangesDialog] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [requestedChanges, setRequestedChanges] = useState('');
+
+  useEffect(() => {
+    fetchPendingApprovals();
+  }, []);
+
+  const handleApprove = async () => {
+    if (!selectedApproval) return;
+
+    try {
+      await approveMerchant(selectedApproval.merchantId, notes);
+      toast.success('Merchant approved successfully');
+      setShowApproveDialog(false);
+      setNotes('');
+      setSelectedApproval(null);
+      fetchPendingApprovals();
+    } catch (error) {
+      toast.error('Failed to approve merchant');
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedApproval || !rejectionReason) {
+      toast.error('Please provide a rejection reason');
+      return;
+    }
+
+    try {
+      await rejectMerchant(selectedApproval.merchantId, rejectionReason, notes);
+      toast.success('Merchant rejected');
+      setShowRejectDialog(false);
+      setRejectionReason('');
+      setNotes('');
+      setSelectedApproval(null);
+      fetchPendingApprovals();
+    } catch (error) {
+      toast.error('Failed to reject merchant');
+    }
+  };
+
+  const handleRequestChanges = async () => {
+    if (!selectedApproval || !requestedChanges) {
+      toast.error('Please specify the required changes');
+      return;
+    }
+
+    try {
+      const changes = requestedChanges.split('\n').filter(c => c.trim());
+      await requestChanges(selectedApproval.merchantId, changes, notes);
+      toast.success('Change request sent to merchant');
+      setShowChangesDialog(false);
+      setRequestedChanges('');
+      setNotes('');
+      setSelectedApproval(null);
+      fetchPendingApprovals();
+    } catch (error) {
+      toast.error('Failed to request changes');
+    }
+  };
+
+  const priorityColors = {
+    high: 'bg-red-500',
+    medium: 'bg-yellow-500',
+    low: 'bg-green-500',
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Merchant Approvals</h1>
+          <p className="text-gray-600 mt-1">
+            {(pendingApprovals || []).length} merchants pending approval
+          </p>
+        </div>
+      </div>
+
+      {(pendingApprovals || []).length === 0 ? (
+        <Card className="p-12 text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-500 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-800 mb-2">All caught up!</h3>
+          <p className="text-gray-600">No pending merchant approvals at the moment</p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {(pendingApprovals || []).map((approval) => (
+            <Card key={approval.id} className="bg-white backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-semibold">{approval.merchantName}</h3>
+                    <Badge className={`${priorityColors[approval.priority]} text-gray-900`}>
+                      {approval.priority}
+                    </Badge>
+                    {approval.daysPending > 3 && (
+                      <Badge className="bg-orange-500 text-gray-900">
+                        {approval.daysPending} days pending
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Merchant Code</p>
+                      <p className="text-sm font-medium">{approval.merchantCode}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Business Type</p>
+                      <p className="text-sm font-medium">{approval.businessType}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Category</p>
+                      <p className="text-sm font-medium">{approval.category}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Submitted</p>
+                      <p className="text-sm font-medium">
+                        {formatDistanceToNow(new Date(approval.submittedAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-2">Verification Checklist</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {Object.entries(approval.verificationChecklist).map(([key, value]) => (
+                        <div key={key} className="flex items-center gap-2 text-sm">
+                          {value ? (
+                            <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          <span className={value ? 'text-gray-600' : 'text-gray-500'}>
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {approval.comments && approval.comments.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium mb-2">Recent Comments</p>
+                      <div className="bg-gray-50 p-3 rounded text-sm">
+                        <p className="text-gray-600">{approval.comments[approval.comments.length - 1].comment}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          by {approval.comments[approval.comments.length - 1].userName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 ml-4">
+                  <Button
+                    size="sm"
+                    onClick={() => router.push(`/clients/merchants/${approval.merchantId}`)}
+                    variant="outline"
+                  >
+                    View Details
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setSelectedApproval(approval);
+                      setShowApproveDialog(true);
+                    }}
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setSelectedApproval(approval);
+                      setShowChangesDialog(true);
+                    }}
+                    variant="outline"
+                    disabled={isSubmitting}
+                  >
+                    Request Changes
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setSelectedApproval(approval);
+                      setShowRejectDialog(true);
+                    }}
+                    variant="outline"
+                    disabled={isSubmitting}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {showApproveDialog && (
+        <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-4">Approve Merchant</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Are you sure you want to approve {selectedApproval?.merchantName}?
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Notes (Optional)</label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any notes about this approval..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleApprove} disabled={isSubmitting}>
+                  {isSubmitting ? 'Approving...' : 'Confirm Approval'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Dialog>
+      )}
+
+      {showRejectDialog && (
+        <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-4">Reject Merchant</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Please provide a reason for rejecting {selectedApproval?.merchantName}
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Rejection Reason *</label>
+                <Textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Enter rejection reason..."
+                  rows={3}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Additional Notes (Optional)</label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any additional notes..."
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleReject}
+                  disabled={isSubmitting || !rejectionReason}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  {isSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Dialog>
+      )}
+
+      {showChangesDialog && (
+        <Dialog open={showChangesDialog} onOpenChange={setShowChangesDialog}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-4">Request Changes</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Specify what changes are required from {selectedApproval?.merchantName}
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Required Changes * (one per line)</label>
+                <Textarea
+                  value={requestedChanges}
+                  onChange={(e) => setRequestedChanges(e.target.value)}
+                  placeholder="Update PAN card document&#10;Verify bank account details&#10;Complete KYC verification"
+                  rows={5}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Additional Notes (Optional)</label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any additional notes..."
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowChangesDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRequestChanges}
+                  disabled={isSubmitting || !requestedChanges}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Request'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Dialog>
+      )}
+    </div>
+  );
+}
