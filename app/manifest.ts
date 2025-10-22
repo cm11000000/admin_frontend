@@ -1,5 +1,8 @@
 import { MetadataRoute } from "next";
 
+// Required for static export in Next.js 15+
+export const dynamic = "force-static";
+
 /**
  * Dynamic PWA manifest generation for Next.js 14
  * This provides better TypeScript support and dynamic manifest generation
