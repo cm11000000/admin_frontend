@@ -45,7 +45,9 @@ export function getApiConfig(): ApiConfig {
     // COB API (Auth) - External service
     cobBaseURL: process.env.NEXT_PUBLIC_COB_API_URL || 'https://stgcobapi.sabpaisa.in/',
 
-    timeout: 30000,
+    // Global request timeout (ms) for all Admin/Report API calls
+    // Increased to 5 minutes to support heavy reports/exports
+    timeout: 300000,
     retryAttempts: 3,
     retryDelay: 1000,
     performance: {

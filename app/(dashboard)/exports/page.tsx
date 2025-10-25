@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import ReportApiService from '@/services/api/ReportApiService';
 import { resolveUserName } from '@/lib/utils';
 import { toast } from '@/lib/toast';
-import { RefreshCw, Download, Clock, CheckCircle2, XCircle, FileSpreadsheet } from 'lucide-react';
+import { RefreshCw, Download, Clock, CheckCircle2, XCircle, FileSpreadsheet, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface ExportRow {
   id: number;
@@ -31,31 +32,49 @@ export default function ExportsPage() {
   const [rows, setRows] = useState<ExportRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Processing' | 'Completed' | 'Failure'>('All');
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const load = React.useCallback(async () => {
-    if (!userName) return;
+    if (!userName || !fromDate || !toDate) return;
     setLoading(true);
     try {
-      const resp = await ReportApiService.listTxnReportS3Details({ created_by: userName, limit: 100 });
+      const params: any = {
+        created_by: userName,
+        from_date: fromDate,
+        to_date: toDate,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      };
+      if (statusFilter !== 'All') params.status = statusFilter;
+      const resp = await ReportApiService.listTxnReportS3Details(params);
       const list = Array.isArray(resp?.results) ? resp.results : [];
       setRows(list as ExportRow[]);
+      setTotalCount(Number(resp?.count || 0));
     } catch (e) {
       console.error('[Exports] Failed to load list', e);
       toast.error('Failed to load exports');
     } finally {
       setLoading(false);
     }
-  }, [userName]);
+  }, [userName, fromDate, toDate, statusFilter, page, pageSize]);
 
-  // Resolve user and load
+  // Resolve user and default dates (Today), then load
   useEffect(() => {
     const u = resolveUserName();
     if (u) setUserName(u);
+    const today = new Date();
+    const d = today.toISOString().split('T')[0];
+    setFromDate(d);
+    setToDate(d);
   }, []);
 
   useEffect(() => {
-    if (userName) load();
-  }, [userName, load]);
+    if (userName && fromDate && toDate) load();
+  }, [userName, fromDate, toDate, statusFilter, page, pageSize, load]);
 
   // Auto refresh every 5s while Processing exists
   useEffect(() => {
@@ -103,6 +122,39 @@ export default function ExportsPage() {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+        <div className="mb-3 md:mb-4">
+          <h3 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Filters</h3>
+          <p className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>Filter by created date and status</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 items-end">
+          <div>
+            <label className="block text-sm font-extrabold text-gray-700 mb-2" style={{ letterSpacing: '-0.02em' }}>
+              <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" />
+              From Date
+            </label>
+            <DatePicker value={fromDate} onChange={(v) => { setFromDate(v); setPage(1); }} placeholder="YYYY-MM-DD" />
+          </div>
+          <div>
+            <label className="block text-sm font-extrabold text-gray-700 mb-2" style={{ letterSpacing: '-0.02em' }}>
+              <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" />
+              To Date
+            </label>
+            <DatePicker value={toDate} onChange={(v) => { setToDate(v); setPage(1); }} placeholder="YYYY-MM-DD" />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setPage(1); load(); }}
+              disabled={loading}
+              className="flex-1 min-h-[44px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-medium rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Table */}
       <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
@@ -138,7 +190,7 @@ export default function ExportsPage() {
                   <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">{r.id}</td>
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{r.source || '-'}</td>
-                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600">{r.created_on || '-'}</td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600">{r.created_on ? new Date(r.created_on).toLocaleString() : '-'}</td>
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
                       <div className="inline-flex items-center gap-2">
                         {statusIcon(r.file_gen_status)}
@@ -170,6 +222,40 @@ export default function ExportsPage() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 md:gap-3">
+        <p className="text-xs md:text-sm text-gray-700 font-light" style={{ letterSpacing: '-0.01em' }}>
+          Page <span className="font-extrabold text-gray-900">{page}</span> of{' '}
+          <span className="font-extrabold text-orange-600">{Math.max(1, Math.ceil(totalCount / pageSize))}</span>
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">Rows per page:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+            className="min-h-[36px] px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs md:text-sm text-gray-700 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-colors"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page <= 1 || loading}
+            className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= Math.max(1, Math.ceil(totalCount / pageSize)) || loading}
+            className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>

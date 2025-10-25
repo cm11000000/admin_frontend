@@ -136,7 +136,8 @@ export default function TransactionAnalysisPage() {
         },
         params: {
           login_by: userName
-        }
+        },
+        timeout: 300000,
       };
 
       const response = await axios.get(

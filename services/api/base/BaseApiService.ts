@@ -133,7 +133,18 @@ export abstract class BaseApiService implements IService {
     body?: any,
     config?: RequestConfig
   ): Promise<T> {
-    const fullUrl = this.buildFullUrl(url);
+    let fullUrl = this.buildFullUrl(url);
+    // Ensure trailing slash for Admin/Report API hosts
+    try {
+      const cfg = this.config;
+      const u = new URL(fullUrl);
+      const adminHost = new URL(cfg.baseURL).host;
+      const reportHost = new URL(cfg.reportBaseURL).host;
+      if ((u.host === adminHost || u.host === reportHost) && !u.pathname.endsWith('/')) {
+        u.pathname = `${u.pathname}/`;
+        fullUrl = u.toString();
+      }
+    } catch {}
     const startTime = Date.now();
 
     // Create abort controller for timeout
@@ -343,11 +354,15 @@ export abstract class BaseApiService implements IService {
           console.log('[BaseApiService] Refreshing access token...');
 
           // Match Angular's exact endpoint and payload structure
+          const ctrl = new AbortController();
+          const tid = setTimeout(() => ctrl.abort(), this.config.timeout);
           const response = await fetch('https://stgcobapi.sabpaisa.in/auth-service/auth/refresh-token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh: refreshToken }),
+            signal: ctrl.signal,
           });
+          clearTimeout(tid);
 
           if (response.ok) {
             const data: any = await response.json();
@@ -724,18 +739,32 @@ export abstract class BaseApiService implements IService {
       throw new ApiError(500, `Endpoint configuration not found: ${endpointKey}`);
     }
 
-    const fullUrl = this.buildFullUrl(endpointConfig.url);
+    let fullUrl = this.buildFullUrl(endpointConfig.url);
+    try {
+      const cfg = this.config;
+      const u = new URL(fullUrl);
+      const adminHost = new URL(cfg.baseURL).host;
+      const reportHost = new URL(cfg.reportBaseURL).host;
+      if ((u.host === adminHost || u.host === reportHost) && !u.pathname.endsWith('/')) {
+        u.pathname = `${u.pathname}/`;
+        fullUrl = u.toString();
+      }
+    } catch {}
     const headers = this.getRequestHeaders();
     // Remove Content-Type to let browser set it with boundary
     delete headers['Content-Type'];
 
     // Note: Fetch API doesn't support upload progress natively
     // For progress tracking, you'd need to use XMLHttpRequest or a library
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), this.config.timeout);
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers,
       body: formData,
+      signal: ctrl.signal,
     });
+    clearTimeout(tid);
 
     if (!response.ok) {
       await this.handleErrorResponse(response, {
@@ -758,13 +787,27 @@ export abstract class BaseApiService implements IService {
     onProgress?: (progress: number) => void
   ): Promise<void> {
     const url = this.getEndpointConfig(endpointKey, params);
-    const fullUrl = this.buildFullUrl(url);
+    let fullUrl = this.buildFullUrl(url);
+    try {
+      const cfg = this.config;
+      const u = new URL(fullUrl);
+      const adminHost = new URL(cfg.baseURL).host;
+      const reportHost = new URL(cfg.reportBaseURL).host;
+      if ((u.host === adminHost || u.host === reportHost) && !u.pathname.endsWith('/')) {
+        u.pathname = `${u.pathname}/`;
+        fullUrl = u.toString();
+      }
+    } catch {}
     const headers = this.getRequestHeaders();
 
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), this.config.timeout);
     const response = await fetch(fullUrl, {
       method: 'GET',
       headers,
+      signal: ctrl.signal,
     });
+    clearTimeout(tid);
 
     if (!response.ok) {
       await this.handleErrorResponse(response, {
