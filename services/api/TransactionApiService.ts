@@ -815,8 +815,8 @@ export class TransactionApiService extends ReportBaseApiService {
   }
 
   /**
-   * Get Success Transaction Summary - Matches Angular getSuccessTxnSummaryParner
-   * API: POST transactions/SuccessTxnSummary
+   * Get Success Transaction Summary - v6 (AdminSuccessTxnSummary)
+   * API: POST v6/transactions/AdminSuccessTxnSummary/
    * BASE URL: https://reportapi.sabpaisa.in/
    * Used in: consolidated.component.ts line 151
    */
@@ -827,8 +827,8 @@ export class TransactionApiService extends ReportBaseApiService {
     loginBy: string;
   }): Promise<any[]> {
     try {
-      // Match Angular API exactly - reportapi.sabpaisa.in/transactions/SuccessTxnSummary
-      const response = await this.post<any[]>('transactions/SuccessTxnSummary', filter);
+      // Use v6 optimized endpoint under the same report base
+      const response = await this.post<any[]>('v6/transactions/AdminSuccessTxnSummary/', filter);
       return response || [];
     } catch (error) {
       console.error('getSuccessTxnSummary error:', error);
