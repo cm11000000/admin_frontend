@@ -61,7 +61,7 @@ export function Combobox({
     // Use getBoundingClientRect directly for fixed positioning
     const top = rect.bottom + 4 // Add small gap between trigger and dropdown
     const left = rect.left
-    setDropdownStyle({ position: 'fixed', top, left, width: rect.width, zIndex: 9999, maxHeight })
+    setDropdownStyle({ position: 'fixed', top, left, width: rect.width, zIndex: 9999 })
   }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -138,9 +138,9 @@ export function Combobox({
 
       {open && portalRoot && (
         ReactDOM.createPortal(
-        <div ref={dropdownRef} className="bg-white border border-gray-300 rounded-md shadow-lg animate-in fade-in-0 zoom-in-95" style={dropdownStyle}>
+        <div ref={dropdownRef} className="bg-white border border-gray-300 rounded-md shadow-lg animate-in fade-in-0 zoom-in-95 flex flex-col" style={dropdownStyle}>
           {/* Search Input */}
-          <div className="p-2 border-b border-gray-200">
+          <div className="p-2 border-b border-gray-200 flex-shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input
@@ -156,8 +156,8 @@ export function Combobox({
 
           {/* Options List */}
           <div
-            className="overflow-auto p-1"
-            style={{ maxHeight }}
+            className="overflow-auto p-1 flex-1"
+            style={{ maxHeight: '250px' }}
           >
             {filteredOptions.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500 text-center">

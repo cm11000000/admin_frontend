@@ -64,20 +64,43 @@ export function DatePicker({
     })
   }
 
+  // Compute position for fixed dropdown
+  const computePosition = React.useCallback(() => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const calendarWidth = 320 // approximate calendar width
+    const spaceOnRight = window.innerWidth - rect.left
+    const shouldAlignRight = spaceOnRight < calendarWidth
+
+    // For fixed positioning, use getBoundingClientRect directly (no scroll offsets)
+    const top = rect.bottom + 4 // 4px gap
+    const left = shouldAlignRight
+      ? rect.right - calendarWidth
+      : rect.left
+
+    setDropdownStyle({ position: 'fixed', top, left, width: calendarWidth, zIndex: 9999 })
+    setAlignRight(shouldAlignRight)
+  }, [])
+
   // Check if calendar should align to the right to avoid overflow
   React.useEffect(() => {
-    if (open && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
-      const spaceOnRight = window.innerWidth - rect.left
-      const calendarWidth = 320 // approximate calendar width
-      setAlignRight(spaceOnRight < calendarWidth)
-      const top = rect.bottom + (window.scrollY || window.pageYOffset)
-      const left = alignRight
-        ? rect.right - calendarWidth + (window.scrollX || window.pageXOffset)
-        : rect.left + (window.scrollX || window.pageXOffset)
-      setDropdownStyle({ position: 'fixed', top, left, width: calendarWidth, zIndex: 9999 })
+    if (open) {
+      computePosition()
     }
-  }, [open, alignRight])
+  }, [open, computePosition])
+
+  // Recompute position on scroll and resize
+  React.useEffect(() => {
+    if (!open) return
+    const onScroll = () => computePosition()
+    const onResize = () => computePosition()
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [open, computePosition])
 
   // Close when clicking outside (account for portal dropdown as "inside")
   React.useEffect(() => {
