@@ -61,7 +61,7 @@ export function Combobox({
     // Use getBoundingClientRect directly for fixed positioning
     const top = rect.bottom + 4 // Add small gap between trigger and dropdown
     const left = rect.left
-    setDropdownStyle({ position: 'fixed', top, left, width: rect.width, zIndex: 9999 })
+    setDropdownStyle({ position: 'fixed', top, left, width: rect.width, zIndex: 9999, maxHeight })
   }
 
   const handleOpenChange = (newOpen: boolean) => {

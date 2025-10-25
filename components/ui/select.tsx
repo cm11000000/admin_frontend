@@ -207,7 +207,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden",
+        "relative z-[9999] max-h-96 min-w-[8rem] overflow-hidden",
         "rounded-2xl border border-gray-200",
         "bg-white/95 backdrop-blur-xl",
         "text-gray-900",
@@ -224,6 +224,7 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
+      sideOffset={4}
       {...props}
     >
       <motion.div
