@@ -203,8 +203,8 @@ export default function LoginPage() {
 
       {/* Left Side - Professional Branding Panel */}
       <div className="hidden lg:flex lg:flex-1 relative overflow-hidden z-10">
-        {/* Refined gradient background with more vibrant colors */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#5CBBF6] via-[#4BA0D8] to-[#3B8BC0]" />
+        {/* Refined gradient background with orange theme matching dashboard */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600" />
 
         {/* More vibrant animated orbs */}
         <div className="absolute top-32 right-24 w-[32rem] h-[32rem] bg-gradient-to-br from-[#FF9933]/20 to-[#FF6600]/15 rounded-full blur-3xl animate-pulse" />
@@ -223,13 +223,17 @@ export default function LoginPage() {
         <div className="relative z-10 px-16 py-12 flex flex-col justify-between h-full">
           {/* Top Section - Logo and Header */}
           <div className="space-y-16">
-            {/* Logo */}
-            <div>
-              <img
-                src="/sabpaisa-logo.png"
-                alt="SabPaisa"
-                className="h-12 w-auto"
-              />
+            {/* Logo with dark background - matching sidebar style */}
+            <div className="inline-block">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 p-4 border border-slate-700/50 shadow-lg">
+                {/* Subtle glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#FF9933]/5 via-transparent to-[#5CBBF6]/5"></div>
+                <img
+                  src="/sabpaisa-logo.png"
+                  alt="SabPaisa"
+                  className="relative h-10 w-auto"
+                />
+              </div>
             </div>
 
             {/* Main Headline */}
@@ -273,9 +277,9 @@ export default function LoginPage() {
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#5CBBF6]/20 to-[#4BA0D8]/10 rounded-full blur-3xl"></div>
           <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-[#FF9933]/20 to-[#FF6600]/10 rounded-full blur-3xl"></div>
 
-          {/* Mobile Logo - More vibrant */}
+          {/* Mobile Logo - Orange theme matching dashboard */}
           <div className="lg:hidden mb-8 flex justify-center">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#5CBBF6] via-[#4BA0D8] to-[#3B8BC0] rounded-full shadow-lg shadow-[#5CBBF6]/30 ring-2 ring-white/50">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full shadow-lg shadow-orange-500/30 ring-2 ring-white/50">
               <Sparkles className="w-4 h-4 text-white animate-pulse" />
               <span className="text-sm font-bold text-white tracking-tight">SabPaisa Admin</span>
             </div>
@@ -313,8 +317,8 @@ export default function LoginPage() {
                       ? 'Welcome back! Please enter your details.'
                       : 'Check your email for the 6-digit code'}
                   </p>
-                  {/* Colorful accent line */}
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-[#5CBBF6] via-[#FF9933] to-[#5CBBF6] rounded-full"></div>
+                  {/* Orange accent line matching dashboard theme */}
+                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full"></div>
                 </div>
 
                 {/* Error Alert */}
@@ -352,13 +356,13 @@ export default function LoginPage() {
                           Username
                         </label>
                         <div className="relative group">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#5CBBF6]/20 via-[#4BA0D8]/20 to-[#5CBBF6]/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur-xl"></div>
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#5CBBF6] transition-colors z-10" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-orange-500/20 to-orange-600/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur-xl"></div>
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-orange-500 transition-colors z-10" />
                           <input
                             type="text"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="relative w-full pl-12 pr-4 py-3.5 bg-gray-50/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-[#5CBBF6] focus:shadow-lg focus:shadow-[#5CBBF6]/20 transition-all text-gray-900 font-medium"
+                            className="relative w-full pl-12 pr-4 py-3.5 bg-gray-50/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-orange-500 focus:shadow-lg focus:shadow-orange-500/20 transition-all text-gray-900 font-medium"
                             placeholder="Enter your username"
                             autoComplete="username"
                           />
@@ -371,21 +375,21 @@ export default function LoginPage() {
                           Password
                         </label>
                         <div className="relative group">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#FF9933]/20 via-[#FF7722]/20 to-[#FF9933]/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur-xl"></div>
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#FF9933] transition-colors z-10" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-orange-500/20 to-orange-600/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur-xl"></div>
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-orange-500 transition-colors z-10" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             onKeyUp={checkCapsLock}
-                            className="relative w-full pl-12 pr-12 py-3.5 bg-gray-50/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-[#FF9933] focus:shadow-lg focus:shadow-[#FF9933]/20 transition-all text-gray-900 font-medium"
+                            className="relative w-full pl-12 pr-12 py-3.5 bg-gray-50/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-orange-500 focus:shadow-lg focus:shadow-orange-500/20 transition-all text-gray-900 font-medium"
                             placeholder="Enter your password"
                             autoComplete="current-password"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF9933] transition-colors z-10"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors z-10"
                           >
                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -405,20 +409,20 @@ export default function LoginPage() {
                             type="checkbox"
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
-                            className="w-4 h-4 rounded border-2 border-gray-300 text-[#5CBBF6] focus:ring-2 focus:ring-[#5CBBF6] focus:ring-offset-0"
+                            className="w-4 h-4 rounded border-2 border-gray-300 text-orange-500 focus:ring-2 focus:ring-orange-500 focus:ring-offset-0"
                           />
                           <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Remember me</span>
                         </label>
-                        <a href="/login/forgot" className="text-sm font-semibold text-[#5CBBF6] hover:text-[#4BA0D8] transition-colors">
+                        <a href="/login/forgot" className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors">
                           Forgot password?
                         </a>
                       </div>
 
-                      {/* Submit - Professional */}
+                      {/* Submit - Orange theme matching dashboard */}
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3.5 px-4 bg-gradient-to-r from-[#5CBBF6] to-[#4BA0D8] hover:from-[#4BA0D8] hover:to-[#3B8BC0] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#5CBBF6]/25"
+                        className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25"
                       >
                         {isLoading ? (
                           <>
@@ -451,21 +455,21 @@ export default function LoginPage() {
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-6"
                     >
-                      {/* OTP Icon - More vibrant */}
+                      {/* OTP Icon - Orange theme */}
                       <div className="flex justify-center">
                         <div className="relative inline-flex">
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#5CBBF6] to-[#4BA0D8] rounded-3xl blur-xl opacity-50 animate-pulse"></div>
-                          <div className="relative w-20 h-20 bg-gradient-to-br from-[#5CBBF6] via-[#4BA0D8] to-[#3B8BC0] rounded-3xl flex items-center justify-center shadow-xl shadow-[#5CBBF6]/40 ring-4 ring-white">
+                          <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-600 rounded-3xl blur-xl opacity-50 animate-pulse"></div>
+                          <div className="relative w-20 h-20 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-3xl flex items-center justify-center shadow-xl shadow-orange-500/40 ring-4 ring-white">
                             <ShieldCheck className="w-10 h-10 text-white" />
                           </div>
                         </div>
                       </div>
 
-                      {/* OTP Inputs - More colorful */}
+                      {/* OTP Inputs - Orange theme */}
                       <div className="flex gap-3 justify-center">
                         {otp.map((digit, index) => (
                           <div key={index} className="relative group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#5CBBF6]/20 to-[#FF9933]/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur-lg"></div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 to-orange-600/20 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity blur-lg"></div>
                             <input
                               type="text"
                               inputMode="numeric"
@@ -475,18 +479,18 @@ export default function LoginPage() {
                               onKeyDown={(e) => handleOtpKeyDown(index, e)}
                               onPaste={handleOtpPaste}
                               ref={(el) => (otpRefs.current[index] = el)}
-                              className="relative w-14 h-16 text-center text-2xl font-bold bg-gray-50/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-[#5CBBF6] focus:shadow-lg focus:shadow-[#5CBBF6]/30 transition-all text-gray-900"
+                              className="relative w-14 h-16 text-center text-2xl font-bold bg-gray-50/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:border-orange-500 focus:shadow-lg focus:shadow-orange-500/30 transition-all text-gray-900"
                               autoComplete="one-time-code"
                             />
                           </div>
                         ))}
                       </div>
 
-                      {/* Verify Button - Professional */}
+                      {/* Verify Button - Orange theme */}
                       <button
                         onClick={handleOtpVerify}
                         disabled={isLoading || otp.join('').length !== 6}
-                        className="w-full py-3.5 px-4 bg-gradient-to-r from-[#5CBBF6] to-[#4BA0D8] hover:from-[#4BA0D8] hover:to-[#3B8BC0] text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#5CBBF6]/25"
+                        className="w-full py-3.5 px-4 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25"
                       >
                         {isLoading ? (
                           <>
@@ -518,7 +522,7 @@ export default function LoginPage() {
                       {/* Resend */}
                       <div className="text-center pt-4 border-t border-gray-200">
                         <button className="text-sm text-gray-600 hover:text-gray-900 font-medium">
-                          Didn't receive code? <span className="font-bold text-[#5CBBF6]">Resend</span>
+                          Didn't receive code? <span className="font-bold text-orange-500">Resend</span>
                         </button>
                       </div>
                     </motion.div>
