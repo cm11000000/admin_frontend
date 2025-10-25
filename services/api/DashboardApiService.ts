@@ -116,7 +116,7 @@ class DashboardApiService extends BaseApiService {
 
   /**
    * Get GMV Summary (matching Angular's getGmvApi)
-   * Endpoint: https://reportapi.sabpaisa.in/transactions/AdminSuccessSmallTxnSummary/
+   * Endpoint (v6): https://reportapi.sabpaisa.in/v6/transactions/AdminSuccessTxnSummarySmall/
    */
   async getGmvSummary(params: DashboardApiRequest): Promise<GmvSummaryResponse> {
     try {
@@ -124,7 +124,7 @@ class DashboardApiService extends BaseApiService {
       console.log('[DashboardAPI] Token from localStorage:', localStorage.getItem('accessToken') ? 'EXISTS' : 'MISSING')
 
       const response = await this.request<GmvSummaryResponse>(
-        'transactions/AdminSuccessSmallTxnSummary/',
+        'v6/transactions/AdminSuccessTxnSummarySmall/',
         'POST',
         params
       )
