@@ -19,14 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { ChargebackStatusBadge, ChargebackPriorityBadge, OverdueBadge } from '@/components/chargebacks/ChargebackStatusBadge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
@@ -345,145 +337,161 @@ export default function ChargebacksPage() {
         </Card>
       )}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gradient-to-r from-[#003366] to-[#002347]">
-                <TableRow>
-                  <TableHead className="text-white w-12">
-                    <Checkbox
-                      checked={isAllSelected}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          selectAllChargebacks();
-                        } else {
-                          clearSelection();
-                        }
-                      }}
-                    />
-                  </TableHead>
-                  <TableHead className="text-white text-white">Chargeback ID</TableHead>
-                  <TableHead className="text-white text-white">Transaction ID</TableHead>
-                  <TableHead className="text-white text-white">Customer</TableHead>
-                  <TableHead className="text-white text-white">Amount</TableHead>
-                  <TableHead className="text-white text-white">Reason</TableHead>
-                  <TableHead className="text-white text-white">Status</TableHead>
-                  <TableHead className="text-white text-white">Priority</TableHead>
-                  <TableHead className="text-white text-white">Due Date</TableHead>
-                  <TableHead className="text-white text-white">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
-                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading chargebacks...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : chargebacks.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
-                      <p className="text-muted-foreground">No chargebacks found</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  chargebacks.map((chargeback) => (
-                    <TableRow key={chargeback.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedChargebacks.has(chargeback.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              selectChargeback(chargeback.id);
-                            } else {
-                              deselectChargeback(chargeback.id);
-                            }
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={`/chargebacks/${chargeback.id}`}
-                          className="font-medium hover:text-primary"
-                        >
-                          #{chargeback.chargebackId}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {chargeback.transactionId}
-                      </TableCell>
-                      <TableCell>
-                        {chargeback.customer ? (
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <p className="text-sm">{chargeback.customer.email}</p>
-                              {chargeback.customer.name && (
-                                <p className="text-xs text-muted-foreground">
-                                  {chargeback.customer.name}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">N/A</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-semibold">{formatCurrency(chargeback.amount)}</div>
-                        <div className="text-xs text-muted-foreground">{chargeback.currency}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-xs">
-                          <p className="text-sm font-medium">{chargeback.reasonCode}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {chargeback.reasonDescription}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <ChargebackStatusBadge status={chargeback.status} />
-                      </TableCell>
-                      <TableCell>
-                        <ChargebackPriorityBadge priority={chargeback.priority} />
-                      </TableCell>
-                      <TableCell>
+      <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <tr>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        selectAllChargebacks();
+                      } else {
+                        clearSelection();
+                      }
+                    }}
+                  />
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Chargeback ID
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Transaction ID
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Customer
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Amount
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Reason
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Status
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Priority
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Due Date
+                </th>
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={10} className="px-3 md:px-6 py-8 text-center">
+                    <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-500">Loading chargebacks...</p>
+                  </td>
+                </tr>
+              ) : chargebacks.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-3 md:px-6 py-8 text-center">
+                    <p className="text-sm text-gray-500">No chargebacks found</p>
+                  </td>
+                </tr>
+              ) : (
+                chargebacks.map((chargeback) => (
+                  <tr key={chargeback.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4">
+                      <Checkbox
+                        checked={selectedChargebacks.has(chargeback.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            selectChargeback(chargeback.id);
+                          } else {
+                            deselectChargeback(chargeback.id);
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                      <Link
+                        href={`/chargebacks/${chargeback.id}`}
+                        className="font-medium hover:text-orange-600 transition-colors"
+                      >
+                        #{chargeback.chargebackId}
+                      </Link>
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-mono">
+                      {chargeback.transactionId}
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      {chargeback.customer ? (
                         <div className="flex items-center gap-2">
-                          {chargeback.isOverdue && <OverdueBadge />}
+                          <User className="h-4 w-4 text-gray-400" />
                           <div>
-                            <div className="flex items-center gap-1 text-sm">
-                              <Calendar className="h-3 w-3" />
-                              <span>{formatDate(chargeback.dueDate)}</span>
-                            </div>
-                            {chargeback.daysUntilDue !== undefined && (
-                              <p className={`text-xs ${
-                                chargeback.isOverdue ? 'text-red-600 font-semibold' : 'text-muted-foreground'
-                              }`}>
-                                {chargeback.daysUntilDue < 0
-                                  ? `${Math.abs(chargeback.daysUntilDue)}d overdue`
-                                  : `${chargeback.daysUntilDue}d left`}
+                            <p className="text-xs md:text-sm text-gray-900">{chargeback.customer.email}</p>
+                            {chargeback.customer.name && (
+                              <p className="text-xs text-gray-500">
+                                {chargeback.customer.name}
                               </p>
                             )}
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Link href={`/chargebacks/${chargeback.id}`}>
-                          <Button size="sm" variant="outline">
-                            View Details
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                      ) : (
+                        <span className="text-gray-500">N/A</span>
+                      )}
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      <div className="font-semibold text-gray-900">{formatCurrency(chargeback.amount)}</div>
+                      <div className="text-xs text-gray-500">{chargeback.currency}</div>
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      <div className="max-w-xs">
+                        <p className="text-xs md:text-sm font-medium text-gray-900">{chargeback.reasonCode}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {chargeback.reasonDescription}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      <ChargebackStatusBadge status={chargeback.status} />
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      <ChargebackPriorityBadge priority={chargeback.priority} />
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      <div className="flex items-center gap-2">
+                        {chargeback.isOverdue && <OverdueBadge />}
+                        <div>
+                          <div className="flex items-center gap-1 text-xs md:text-sm text-gray-900">
+                            <Calendar className="h-3 w-3 text-gray-400" />
+                            <span>{formatDate(chargeback.dueDate)}</span>
+                          </div>
+                          {chargeback.daysUntilDue !== undefined && (
+                            <p className={`text-xs ${
+                              chargeback.isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'
+                            }`}>
+                              {chargeback.daysUntilDue < 0
+                                ? `${Math.abs(chargeback.daysUntilDue)}d overdue`
+                                : `${chargeback.daysUntilDue}d left`}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
+                      <Link href={`/chargebacks/${chargeback.id}`}>
+                        <button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 min-h-[44px] touch-manipulation">
+                          View Details
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">

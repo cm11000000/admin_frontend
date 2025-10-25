@@ -287,119 +287,121 @@ export default function ClientsPage() {
         </div>
 
         {/* Mobile Cards / Desktop Table */}
-        <div className="bg-white backdrop-blur-xl rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Client</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">KYC</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Risk</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Volume</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {loading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-gray-400 rounded w-32"></div>
+          <div className="hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Type</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>KYC</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Risk</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Volume</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Status</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="h-4 bg-gray-400 rounded w-32"></div>
+                        </td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="h-4 bg-gray-400 rounded w-20"></div>
+                        </td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="h-6 bg-gray-400 rounded w-24"></div>
+                        </td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="h-6 bg-gray-400 rounded w-16"></div>
+                        </td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="h-4 bg-gray-400 rounded w-20"></div>
+                        </td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="h-6 bg-gray-400 rounded w-16"></div>
+                        </td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4">
+                          <div className="flex justify-end gap-1">
+                            <div className="w-8 h-8 bg-gray-400 rounded"></div>
+                            <div className="w-8 h-8 bg-gray-400 rounded"></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : filteredClients.map((client) => (
+                    <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-tr from-orange-500/20 to-orange-600/20 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-orange-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{client.client_name}</div>
+                            <div className="text-xs text-gray-500">{client.client_code}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-gray-400 rounded w-20"></div>
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <span className="text-sm text-gray-700">{client.client_type}</span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="h-6 bg-gray-400 rounded w-24"></div>
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(client.kyc_status)}`}>
+                          {client.kyc_status === 'VERIFIED' && <CheckCircle className="w-3 h-3" />}
+                          {client.kyc_status === 'PENDING' && <Clock className="w-3 h-3" />}
+                          {client.kyc_status}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="h-6 bg-gray-400 rounded w-16"></div>
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getRiskColor(client.risk_category)}`}>
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          {client.risk_category}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-gray-400 rounded w-20"></div>
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <div className="text-sm text-gray-900">{formatCurrency(client.total_volume)}</div>
+                        <div className="text-xs text-gray-500">{client.transaction_count} txns</div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="h-6 bg-gray-400 rounded w-16"></div>
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          client.active
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        }`}>
+                          {client.active ? 'Active' : 'Inactive'}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-1">
-                          <div className="w-8 h-8 bg-gray-400 rounded"></div>
-                          <div className="w-8 h-8 bg-gray-400 rounded"></div>
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => router.push(`/clients/${client.id}`)}
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-200 transition-colors group">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-tr from-orange-500/20 to-orange-600/20 rounded-lg flex items-center justify-center">
-                          <Building2 className="w-5 h-5 text-orange-400" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{client.client_name}</div>
-                          <div className="text-xs text-gray-500">{client.client_code}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-gray-700">{client.client_type}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(client.kyc_status)}`}>
-                        {client.kyc_status === 'VERIFIED' && <CheckCircle className="w-3 h-3" />}
-                        {client.kyc_status === 'PENDING' && <Clock className="w-3 h-3" />}
-                        {client.kyc_status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getRiskColor(client.risk_category)}`}>
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        {client.risk_category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm text-gray-900">{formatCurrency(client.total_volume)}</div>
-                      <div className="text-xs text-gray-500">{client.transaction_count} txns</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        client.active
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
-                        {client.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => router.push(`/clients/${client.id}`)}
-                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Mobile Card View */}

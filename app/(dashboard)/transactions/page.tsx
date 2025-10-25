@@ -11,6 +11,7 @@ import {
   AngularTransactionFilter
 } from '@/services/api/TransactionApiService';
 import ReportApiService from '@/services/api/ReportApiService';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   Download,
@@ -43,6 +44,7 @@ import {
 
 export default function TransactionsPage() {
   if (typeof window === 'undefined') return null;
+  const router = useRouter();
   // State - matches Angular component state
   const [transactions, setTransactions] = useState<any[]>([]);
   // Progressive row rendering for very large pages to keep UI responsive
@@ -52,7 +54,9 @@ export default function TransactionsPage() {
   const [statusList, setStatusList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const exportingRef = useRef<boolean>(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const hasSearchedRef = useRef<boolean>(false);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -123,7 +127,9 @@ export default function TransactionsPage() {
   // Load Client Code List - matches Angular getClientCodeListUSP_Slave (line 191)
   const loadClientCodeList = useCallback(async () => {
     try {
-      const data = await transactionService.getClientCodeList(userNameRef.current || userName);
+      const resolvedName = userNameRef.current || userName || '';
+      if (!resolvedName) return;
+      const data = await transactionService.getClientCodeList(resolvedName);
       setClientCodeList(data || []);
     } catch (error) {
       console.error('Failed to load client code list:', error);
@@ -188,6 +194,7 @@ export default function TransactionsPage() {
   };
 
   const handleSearch = async () => {
+    hasSearchedRef.current = true;
     // EXACT Angular validation - line 376-379
     if (!filters.fromDate || !filters.endDate) {
       toast.error('Date range required');
@@ -246,6 +253,16 @@ export default function TransactionsPage() {
     }
   };
 
+  // Debounced type-to-search that calls backend after first search
+  useEffect(() => {
+    const term = (filters.search || '').trim();
+    if (!hasSearchedRef.current) return; // only after user performed first search
+    const id = setTimeout(() => {
+      handleSearch();
+    }, 500);
+    return () => clearTimeout(id);
+  }, [filters.search]);
+
   // Page change handler - matches Angular pageChangeEvent (line 318)
   const handlePageChange = async (newPage: number) => {
     setCurrentPage(newPage);
@@ -271,10 +288,12 @@ export default function TransactionsPage() {
 
   // Export via backend (v6 async CSV) - triggers job and opens S3 link when ready
   const handleExport = async () => {
+    if (exportingRef.current || isExporting) return;
     if (!transactions || transactions.length === 0) {
       toast.error('Search data first');
       return;
     }
+    exportingRef.current = true;
     setIsExporting(true);
     try {
       const exportRequest: AngularTransactionFilter = {
@@ -290,26 +309,19 @@ export default function TransactionsPage() {
         search: (filters.search || '').trim() || undefined,
       } as any;
 
-      await ReportApiService.requestAdminTxnHistoryExcelV6(exportRequest);
-      toast.info('Export started. Preparing CSV on server...');
-
-      const url = await ReportApiService.waitForExportUrl({
-        createdBy: userName,
-        sourceStartsWith: 'v6_admin_txn_excel',
-        pollMs: 3000,
-        timeoutMs: 180000,
-      });
-      if (url) {
-        window.open(url, '_blank');
-        toast.success('CSV is ready. Download started.');
+      const resp = await ReportApiService.requestAdminTxnHistoryExcelV6(exportRequest);
+      if (resp && typeof resp === 'object' && (resp as any).detail) {
+        toast.success((resp as any).detail);
       } else {
-        toast.info('Export queued. Check Jobs or try again later.');
+        toast.info('Export started. Redirecting to Exports…');
       }
+      router.push('/exports');
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Failed to start export');
     } finally {
       setIsExporting(false);
+      exportingRef.current = false;
     }
   };
 
@@ -318,20 +330,24 @@ export default function TransactionsPage() {
     if (!transactions || transactions.length <= 500) return;
     let rafId: number | null = null;
     let cancelled = false;
+    let count = 0;
 
     const step = () => {
       if (cancelled) return;
-      setVisibleCount((prev) => {
-        if (prev >= transactions.length) return prev;
-        const next = Math.min(prev + 500, transactions.length);
-        return next;
-      });
-      if (visibleCount < transactions.length) {
+      count = Math.min(count + 500, transactions.length);
+      setVisibleCount(count);
+      if (count < transactions.length) {
         rafId = window.requestAnimationFrame(step);
       }
     };
 
-    rafId = window.requestAnimationFrame(step);
+    // reset and start
+    count = Math.min(500, transactions.length);
+    setVisibleCount(count);
+    if (count < transactions.length) {
+      rafId = window.requestAnimationFrame(step);
+    }
+
     return () => {
       cancelled = true;
       if (rafId) window.cancelAnimationFrame(rafId);
@@ -438,12 +454,7 @@ export default function TransactionsPage() {
                   searchPlaceholder="Search by code or name..."
                   onOpenChange={async (open) => {
                     if (open && clientCodeList.length === 0) {
-                      try {
-                        const codes = await transactionService.getClientCodeListCached(userNameRef.current || userName || '');
-                        setClientCodeList(codes || []);
-                      } catch (e) {
-                        console.error('[Transactions] Failed to load client codes:', e);
-                      }
+                      await loadClientCodeList();
                     }
                   }}
                 />
@@ -852,51 +863,51 @@ export default function TransactionsPage() {
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                   <tr>
                     {/* All 45 columns from Angular */}
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase tracking-wider whitespace-nowrap">S.No</th>
-                    <th className="sticky left-0 z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase tracking-wider whitespace-nowrap">Trans ID</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Client Trans ID</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">RNN/UTR</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Challan / VAN</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">PG Pay mode</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer Amount</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">Actual Amount</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">Round off paid</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">Bank amount</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Currency</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">Conv. charges</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">EP charges</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">GST</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">EP Conv Rate</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">EP Conv Type</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">SP Conv Rate</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">SP Conv Type</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">GST Rate</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">GST Rate Type</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Transaction Date</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payment Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer First Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer Last Name</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer Mobile</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer Email</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Client Code</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payment Mode</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer Address</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf1</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf2</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf3</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf4</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf5</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf6</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf9</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf10</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Udf20</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Gr.No</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Fee Forward</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Bank Response</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">IFSC Code</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Payer Account No</th>
-                    <th className="px-6 py-4 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider">Bank Txn Id</th>
-                    <th className="px-6 py-4 text-right text-xs font-extrabold text-gray-700 uppercase tracking-wider">Donation amount</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>S.No</th>
+                    <th className="sticky left-0 z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Trans ID</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Trans ID</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>RNN/UTR</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Challan / VAN</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>PG Pay mode</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer Amount</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Actual Amount</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Round off paid</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Bank amount</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Currency</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Conv. charges</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>EP charges</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>GST</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>EP Conv Rate</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>EP Conv Type</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>SP Conv Rate</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>SP Conv Type</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>GST Rate</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>GST Rate Type</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Transaction Date</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payment Status</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer First Name</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer Last Name</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer Mobile</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer Email</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Code</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payment Mode</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer Address</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf1</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf2</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf3</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf4</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf5</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf6</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf9</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf10</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Udf20</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Gr.No</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Fee Forward</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Bank Response</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>IFSC Code</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payer Account No</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Bank Txn Id</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Donation amount</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">

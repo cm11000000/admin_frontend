@@ -14,6 +14,7 @@ import {
   Calendar
 } from 'lucide-react';
 import ReportApiService from '@/services/api/ReportApiService';
+import { useRouter } from 'next/navigation';
 import { resolveUserName } from '@/lib/utils';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -66,6 +67,7 @@ const TABLE_COLUMNS: Array<{ key: keyof ChargebackTransaction; label: string }> 
 ];
 
 export default function ChargebackReportPage() {
+  const router = useRouter();
   const [chargebacks, setChargebacks] = useState<ChargebackTransaction[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -293,37 +295,36 @@ export default function ChargebackReportPage() {
     setCurrentPage(0);
   };
 
+  const exportingRef = React.useRef<boolean>(false);
+
   const handleExport = async () => {
+    if (exportingRef.current) return;
     if (chargebacks.length === 0) {
       toast.error('No data to export. Please search data first.');
       return;
     }
     setIsLoading(true);
+    exportingRef.current = true;
     try {
-      await ReportApiService.requestChargebackTxnExcelV6({
+      const resp = await ReportApiService.requestChargebackTxnExcelV6({
         clientCode: selectedClient,
         fromDate: dateFrom,
         endDate: dateTo,
         loginBy: userName,
+        search: tableSearchTerm || undefined,
       });
-      toast.info('Export started. Preparing CSV on server...');
-      const url = await ReportApiService.waitForExportUrl({
-        createdBy: userName,
-        sourceStartsWith: 'v6_chargeback_txn_excel',
-        pollMs: 3000,
-        timeoutMs: 120000,
-      });
-      if (url) {
-        window.open(url, '_blank');
-        toast.success('CSV is ready. Download started.');
+      if (resp && typeof resp === 'object' && (resp as any).detail) {
+        toast.success((resp as any).detail);
       } else {
-        toast.info('Export queued. Check Jobs later.');
+        toast.info('Export started. Redirecting to Exports…');
       }
+      router.push('/exports');
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Failed to start export');
     } finally {
       setIsLoading(false);
+      exportingRef.current = false;
     }
   };
 

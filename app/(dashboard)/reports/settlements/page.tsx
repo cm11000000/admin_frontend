@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Search, Download, Loader2, Calendar, Building2, ChevronLeft, ChevronRight, FileSpreadsheet } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ReportApiService from '@/services/api/ReportApiService';
 import { resolveUserName } from '@/lib/utils';
 import { toast } from '@/lib/toast';
@@ -31,6 +32,7 @@ interface SettlementReportResponse {
 }
 
 export default function SettlementReportPage() {
+  const router = useRouter();
   // Get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const date = new Date();
@@ -217,37 +219,36 @@ export default function SettlementReportPage() {
     }
   };
 
+  const exportingRef = useRef<boolean>(false);
+
   const handleExport = async () => {
+    if (exportingRef.current) return;
     if (!reportData?.results || reportData.results.length === 0) {
       toast.error('No data to export');
       return;
     }
     setIsLoading(true);
+    exportingRef.current = true;
     try {
-      await ReportApiService.requestSettledTxnExcelV6({
+      const resp = await ReportApiService.requestSettledTxnExcelV6({
         clientCode,
         fromDate,
         endDate,
         loginBy: userName,
+        search: searchTerm || undefined,
       });
-      toast.info('Export started. Preparing CSV on server...');
-      const url = await ReportApiService.waitForExportUrl({
-        createdBy: userName,
-        sourceStartsWith: 'v6_settled_txn_excel',
-        pollMs: 3000,
-        timeoutMs: 120000,
-      });
-      if (url) {
-        window.open(url, '_blank');
-        toast.success('CSV is ready. Download started.');
+      if (resp && typeof resp === 'object' && (resp as any).detail) {
+        toast.success((resp as any).detail);
       } else {
-        toast.info('Export queued. Check Jobs later.');
+        toast.info('Export started. Redirecting to Exports…');
       }
+      router.push('/exports');
     } catch (err: any) {
       console.error('Export failed:', err);
       toast.error('Failed to start export');
     } finally {
       setIsLoading(false);
+      exportingRef.current = false;
     }
   };
 

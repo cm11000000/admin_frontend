@@ -20,14 +20,7 @@ export default function SettlementPage() {
   const [importBatches, setImportBatches] = useState<ImportBatch[]>([])
   const [isLoadingBatches, setIsLoadingBatches] = useState(false)
 
-  // Load import batches when tab changes
-  useEffect(() => {
-    if (activeTab === 'importBatch') {
-      loadImportBatches()
-    }
-  }, [activeTab])
-
-  const loadImportBatches = async () => {
+  const loadImportBatches = React.useCallback(async () => {
     setIsLoadingBatches(true)
     try {
       const filters = {
@@ -42,7 +35,14 @@ export default function SettlementPage() {
     } finally {
       setIsLoadingBatches(false)
     }
-  }
+  }, [filterBatchId, filterDate])
+
+  // Load import batches when tab changes
+  useEffect(() => {
+    if (activeTab === 'importBatch') {
+      loadImportBatches()
+    }
+  }, [activeTab, loadImportBatches])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -245,12 +245,12 @@ export default function SettlementPage() {
 
                     <div className="overflow-x-auto">
                       <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-gray-200 bg-gray-50">
-                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">File Name</th>
-                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
-                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Records</th>
-                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Timestamp</th>
+                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                          <tr>
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>File Name</th>
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Status</th>
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Records</th>
+                            <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Timestamp</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -417,12 +417,12 @@ export default function SettlementPage() {
 
                             <div className="overflow-x-auto">
                               <table className="w-full">
-                                <thead>
-                                  <tr className="border-b border-gray-200 bg-gray-100">
-                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Record ID</th>
-                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Account Number</th>
-                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Amount</th>
-                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-600 uppercase tracking-wider whitespace-nowrap">Failure Reason</th>
+                                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                                  <tr>
+                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Record ID</th>
+                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Account Number</th>
+                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Amount</th>
+                                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Failure Reason</th>
                                   </tr>
                                 </thead>
                                 <tbody>

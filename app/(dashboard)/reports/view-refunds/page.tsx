@@ -24,6 +24,7 @@ import {
   Building2
 } from 'lucide-react';
 import ReportApiService from '@/services/api/ReportApiService';
+import { useRouter } from 'next/navigation';
 import { resolveUserName } from '@/lib/utils';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -38,9 +39,11 @@ interface RefundTransaction {
 
 export default function ViewRefundReportPage() {
   if (typeof window === 'undefined') return null;
+  const router = useRouter();
   // State matching Angular component
   const [refundData, setRefundData] = useState<RefundTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const exportingRef = React.useRef<boolean>(false);
   const [selectedClient, setSelectedClient] = useState('ALL');
   const [clientCodeList, setClientCodeList] = useState<any[]>([]);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
@@ -270,36 +273,33 @@ export default function ViewRefundReportPage() {
 
   // Export via backend (v6 async CSV)
   const handleExport = async () => {
+    if (exportingRef.current) return;
     if (!showGrid) {
       toast.error('No data to export. Please search data first.');
       return;
     }
+    exportingRef.current = true;
     setIsLoading(true);
     try {
-      await ReportApiService.requestRefundTxnExcelV6({
+      const resp = await ReportApiService.requestRefundTxnExcelV6({
         clientCode: selectedClient || 'ALL',
         fromDate: dateFrom,
         endDate: dateTo,
         loginBy: userName,
+        search: tableSearchTerm || undefined,
       });
-      toast.info('Export started. Preparing CSV on server...');
-      const url = await ReportApiService.waitForExportUrl({
-        createdBy: userName,
-        sourceStartsWith: 'v6_refund_txn_excel',
-        pollMs: 3000,
-        timeoutMs: 120000,
-      });
-      if (url) {
-        window.open(url, '_blank');
-        toast.success('CSV is ready. Download started.');
+      if (resp && typeof resp === 'object' && (resp as any).detail) {
+        toast.success((resp as any).detail);
       } else {
-        toast.info('Export queued. Check Jobs later.');
+        toast.info('Export started. Redirecting to Exports…');
       }
+      router.push('/exports');
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Failed to start export');
     } finally {
       setIsLoading(false);
+      exportingRef.current = false;
     }
   };
 

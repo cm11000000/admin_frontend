@@ -241,6 +241,7 @@ class ReportApiService {
     fromDate: string;
     endDate: string;
     loginBy: string;
+    search?: string;
   }): Promise<{ detail: string }> {
     const base =
       process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
@@ -261,6 +262,7 @@ class ReportApiService {
     fromDate: string;
     endDate: string;
     loginBy: string;
+    search?: string;
   }): Promise<{ detail: string }> {
     const base =
       process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
@@ -281,6 +283,7 @@ class ReportApiService {
     fromDate: string;
     endDate: string;
     loginBy: string;
+    search?: string;
   }): Promise<{ detail: string }> {
     const base =
       process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
@@ -1324,6 +1327,45 @@ class ReportApiService {
     const data = await this.getClientCodeListUSP_Slave(normalizedLogin);
     this._clientListCache = { key: cacheKey, data, expiry: now + ttlMs };
     return data;
+  }
+
+  // ==================== Templates (Admin API) ====================
+  static async listTemplates(params: { created_by: string }): Promise<{ count: number; results: any[] }> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    const qs = new URLSearchParams({ created_by: params.created_by });
+    return ApiService.get(`${adminBase.replace(/\/$/, '')}/api/report-templates/?${qs.toString()}`);
+  }
+
+  static async createTemplate(data: {
+    name: string;
+    description?: string;
+    report_type: 'transactions' | 'refunds' | 'chargebacks' | 'settlements';
+    filters_json: any;
+    visibility?: 'private' | 'shared' | 'public';
+    created_by: string;
+  }): Promise<{ id: number }> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    return ApiService.post(`${adminBase.replace(/\/$/, '')}/api/report-templates/`, data);
+  }
+
+  static async getTemplate(id: number): Promise<any> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    return ApiService.get(`${adminBase.replace(/\/$/, '')}/api/report-templates/${id}/`);
+  }
+
+  static async updateTemplate(id: number, updates: Partial<{ name: string; description: string; report_type: string; filters_json: any; visibility: string; is_active: boolean }>): Promise<{ updated: boolean }> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    return ApiService.patch(`${adminBase.replace(/\/$/, '')}/api/report-templates/${id}/`, updates);
+  }
+
+  static async shareTemplate(id: number, shares: Array<{ shared_with: string; shared_type?: 'user' | 'role'; permission?: 'run' | 'edit' }>): Promise<{ updated: boolean }> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    return ApiService.post(`${adminBase.replace(/\/$/, '')}/api/report-templates/${id}/share/`, { shares });
+  }
+
+  static async runTemplate(id: number, run_by: string, overrides?: any): Promise<{ detail: string; run_id?: number }> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    return ApiService.post(`${adminBase.replace(/\/$/, '')}/api/report-templates/${id}/run/`, { run_by, overrides });
   }
 }
 

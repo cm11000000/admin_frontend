@@ -217,6 +217,22 @@ const menuItems: MenuItem[] = [
     submenus: []
   },
   {
+    id: 60,
+    name: "Exports",
+    icon: null,
+    url: "/exports",
+    order: 25,
+    submenus: []
+  },
+  {
+    id: 61,
+    name: "Templates",
+    icon: null,
+    url: "/reports/templates",
+    order: 26,
+    submenus: []
+  },
+  {
     id: 36,
     name: "Upload settlement Report",
     icon: null,

@@ -1,489 +1,221 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Search, Play, Eye, FileText, DollarSign, Shield, Activity } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import DateRangePicker from '@/components/reports/DateRangePicker';
-import { useReportStore } from '@/stores/reportStore';
+import React, { useEffect, useMemo, useState } from 'react';
 import ReportApiService from '@/services/api/ReportApiService';
-import toast from 'react-hot-toast';
-import type { IReportTemplate, DateRange } from '@/types/reports';
+import { resolveUserName } from '@/lib/utils';
+import { toast } from '@/lib/toast';
+import { RefreshCw, Plus, Play, Calendar, FileSpreadsheet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-const templates = [
-  {
-    id: '1',
-    name: 'Daily Transaction Summary',
-    category: 'Transaction',
-    description: 'All transactions for a selected day with totals',
-    icon: Activity,
-    color: 'blue',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '2',
-    name: 'Monthly Revenue Report',
-    category: 'Financial',
-    description: 'Revenue breakdown by gateway and payment mode',
-    icon: DollarSign,
-    color: 'green',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '3',
-    name: 'Gateway Performance',
-    category: 'Operations',
-    description: 'Success rates and response times by gateway',
-    icon: Activity,
-    color: 'purple',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '4',
-    name: 'Payment Mode Analysis',
-    category: 'Transaction',
-    description: 'Transaction distribution by payment method',
-    icon: FileText,
-    color: 'blue',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '5',
-    name: 'Failed Transactions Report',
-    category: 'Operations',
-    description: 'All failed transactions with failure reasons',
-    icon: Activity,
-    color: 'red',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '6',
-    name: 'Reconciliation Report',
-    category: 'Financial',
-    description: 'Transaction matching with gateway settlements',
-    icon: DollarSign,
-    color: 'green',
-    dataSource: 'settlements' as const,
-  },
-  {
-    id: '7',
-    name: 'Settlement Report',
-    category: 'Financial',
-    description: 'Detailed settlement breakdown with fees',
-    icon: DollarSign,
-    color: 'green',
-    dataSource: 'settlements' as const,
-  },
-  {
-    id: '8',
-    name: 'Tax Report (GST)',
-    category: 'Compliance',
-    description: 'GST breakdown by CGST, SGST, IGST',
-    icon: Shield,
-    color: 'orange',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '9',
-    name: 'Customer Transaction History',
-    category: 'Transaction',
-    description: 'All transactions for a specific customer',
-    icon: FileText,
-    color: 'blue',
-    dataSource: 'transactions' as const,
-  },
-  {
-    id: '10',
-    name: 'Merchant Performance',
-    category: 'Operations',
-    description: 'Transaction volumes and success rates by merchant',
-    icon: Activity,
-    color: 'purple',
-    dataSource: 'transactions' as const,
-  },
+type ReportType = 'transactions' | 'refunds' | 'chargebacks' | 'settlements';
+type Visibility = 'private' | 'shared' | 'public';
+
+const DATE_MACROS = [
+  { key: '${YESTERDAY}', label: 'Yesterday' },
+  { key: '${TODAY}', label: 'Today' },
+  { key: '${LAST_7_DAYS}', label: 'Last 7 days' },
+  { key: '${THIS_MONTH}', label: 'This month' },
+  { key: '${PREV_MONTH}', label: 'Previous month' },
 ];
 
-const categories = ['All', 'Transaction', 'Financial', 'Compliance', 'Operations'];
-
-const categoryColors: Record<string, string> = {
-  Transaction: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  Financial: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  Compliance: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  Operations: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-};
-
-export default function ReportTemplatesPage() {
-  if (typeof window === 'undefined') return null;
+export default function TemplatesPage() {
+  const [userName, setUserName] = useState('');
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    report_type: 'transactions' as ReportType,
+    visibility: 'private' as Visibility,
+    clientCode: 'ALL',
+    fromDate: '${YESTERDAY}',
+    endDate: '${YESTERDAY}',
+    paymentStatus: 'ALL',
+    paymentMode: 'ALL',
+  });
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedTemplate, setSelectedTemplate] = useState<typeof templates[0] | null>(null);
-  const [showUseDialog, setShowUseDialog] = useState(false);
-  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
 
-  const [customization, setCustomization] = useState({
-    dateRange: {
-      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0],
-    },
-    format: 'excel' as 'csv' | 'excel' | 'pdf',
-    gateway: '',
-    paymentMethod: '',
-    status: 'all',
-  });
-
-  const filteredTemplates = templates.filter((template) => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || template.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const handleUseTemplate = (template: typeof templates[0]) => {
-    setSelectedTemplate(template);
-    setShowUseDialog(true);
-  };
-
-  const handlePreview = async (template: typeof templates[0]) => {
-    setSelectedTemplate(template);
-    setShowPreviewDialog(true);
-    setPreviewLoading(true);
-
+  const load = async () => {
+    if (!userName) return;
+    setLoading(true);
     try {
-      const data = await ReportApiService.runTemplate(template.id, {
-        dateRange: customization.dateRange,
-        limit: 10,
-      });
-      setPreviewData(data);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to load preview');
+      const resp = await ReportApiService.listTemplates({ created_by: userName });
+      setTemplates(resp.results || []);
+    } catch (e) {
+      toast.error('Failed to load templates');
     } finally {
-      setPreviewLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleGenerateReport = async () => {
-    if (!selectedTemplate) return;
+  useEffect(() => {
+    const u = resolveUserName();
+    if (u) setUserName(u);
+  }, []);
+  useEffect(() => { if (userName) load(); }, [userName]);
 
+  const handleCreate = async () => {
+    if (!form.name.trim()) { toast.error('Name is required'); return; }
+    setCreating(true);
     try {
-      toast.loading('Generating report...', { id: 'generate' });
-
-      const result = await ReportApiService.createFromTemplate(selectedTemplate.id, {
-        dateRange: customization.dateRange,
-        filters: {
-          gateway: customization.gateway || undefined,
-          paymentMethod: customization.paymentMethod || undefined,
-          status: customization.status !== 'all' ? customization.status : undefined,
-        },
-        format: customization.format,
+      const filters: any = { clientCode: form.clientCode, fromDate: form.fromDate, endDate: form.endDate };
+      if (form.report_type === 'transactions') {
+        filters.paymentStatus = form.paymentStatus;
+        filters.paymentMode = form.paymentMode;
+        filters.terminalStatus = 'TS';
+      }
+      const resp = await ReportApiService.createTemplate({
+        name: form.name.trim(),
+        description: form.description || '',
+        report_type: form.report_type,
+        filters_json: filters,
+        visibility: form.visibility,
+        created_by: userName,
       });
-
-      toast.success('Report generated successfully', { id: 'generate' });
-      setShowUseDialog(false);
-
-      // Navigate to custom reports or download
-      router.push('/reports/custom');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to generate report', { id: 'generate' });
+      toast.success('Template created');
+      setForm({ ...form, name: '' });
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to create template');
+    } finally {
+      setCreating(false);
     }
   };
 
-  const getIconColor = (color: string) => {
-    const colors: Record<string, string> = {
-      blue: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30',
-      green: 'text-green-600 bg-green-100 dark:bg-green-900/30',
-      purple: 'text-purple-600 bg-purple-100 dark:bg-purple-900/30',
-      orange: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30',
-      red: 'text-red-600 bg-red-100 dark:bg-red-900/30',
-    };
-    return colors[color] || colors.blue;
+  const handleRun = async (id: number, report_type: ReportType) => {
+    try {
+      const resp = await ReportApiService.runTemplate(id, userName);
+      toast.success(resp.detail || 'Request received successfully');
+      router.push('/exports');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to run template');
+    }
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex items-center justify-between pb-3 md:pb-4 border-b border-gray-200/60">
         <div className="flex items-center gap-3">
-          <Link
-            href="/reports"
-            className="rounded-lg border border-gray-200 p-2 transition-colors hover:bg-gray-50"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+          <FileSpreadsheet className="w-6 h-6 text-gray-700" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Report Templates
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Pre-built report templates ready to use
-            </p>
+            <h1 className="text-xl md:text-2xl font-extrabold text-gray-900">Report Templates</h1>
+            <p className="text-xs md:text-sm text-gray-600">Save reusable export templates and run them on demand</p>
           </div>
+        </div>
+        <button onClick={load} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-50">
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+        </button>
+      </div>
+
+      {/* Create template */}
+      <div className="bg-white/90 border border-gray-200 rounded-xl p-4 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          <div>
+            <label className="block text-sm font-semibold mb-2">Name</label>
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border rounded-lg px-3 py-2" placeholder="e.g. Yesterday Txns (ALL)" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Report</label>
+            <select value={form.report_type} onChange={(e) => setForm({ ...form, report_type: e.target.value as ReportType })} className="w-full border rounded-lg px-3 py-2">
+              <option value="transactions">Transactions</option>
+              <option value="refunds">Refunds</option>
+              <option value="chargebacks">Chargebacks</option>
+              <option value="settlements">Settlements</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Visibility</label>
+            <select value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value as Visibility })} className="w-full border rounded-lg px-3 py-2">
+              <option value="private">Private</option>
+              <option value="shared">Shared</option>
+              <option value="public">Public</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Client Code</label>
+            <input value={form.clientCode} onChange={(e) => setForm({ ...form, clientCode: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">From Date</label>
+            <select value={form.fromDate} onChange={(e) => setForm({ ...form, fromDate: e.target.value })} className="w-full border rounded-lg px-3 py-2">
+              {DATE_MACROS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">To Date</label>
+            <select value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="w-full border rounded-lg px-3 py-2">
+              {DATE_MACROS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+            </select>
+          </div>
+          {form.report_type === 'transactions' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Payment Status</label>
+                <input value={form.paymentStatus} onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Payment Mode</label>
+                <input value={form.paymentMode} onChange={(e) => setForm({ ...form, paymentMode: e.target.value })} className="w-full border rounded-lg px-3 py-2" />
+              </div>
+            </>
+          )}
+        </div>
+        <div className="pt-4">
+          <button onClick={handleCreate} disabled={creating} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700">
+            <Plus className={`w-4 h-4 ${creating ? 'animate-spin' : ''}`} /> Create Template
+          </button>
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <Card className="p-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* Templates Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredTemplates.map((template, index) => {
-          const Icon = template.icon;
-          return (
-            <motion.div
-              key={template.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className="p-6 hover:shadow-lg transition-all h-full flex flex-col">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-lg ${getIconColor(template.color)}`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <Badge className={categoryColors[template.category]}>
-                    {template.category}
-                  </Badge>
-                </div>
-
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {template.name}
-                </h3>
-
-                <p className="text-sm text-gray-600 mb-4 flex-1">
-                  {template.description}
-                </p>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleUseTemplate(template)}
-                    className="flex-1"
-                    size="sm"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Use Template
-                  </Button>
-                  <Button
-                    onClick={() => handlePreview(template)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {filteredTemplates.length === 0 && (
-        <Card className="p-12 text-center">
-          <p className="text-gray-600">
-            No templates found matching your criteria
-          </p>
-        </Card>
-      )}
-
-      {/* Use Template Dialog */}
-      <Dialog open={showUseDialog} onOpenChange={setShowUseDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Customize Template</DialogTitle>
-            <DialogDescription>
-              {selectedTemplate?.name} - {selectedTemplate?.description}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div>
-              <Label>Date Range</Label>
-              <DateRangePicker
-                value={customization.dateRange}
-                onChange={(dateRange) => setCustomization({ ...customization, dateRange })}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Gateway (Optional)</Label>
-                <Select
-                  value={customization.gateway}
-                  onValueChange={(value) => setCustomization({ ...customization, gateway: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Gateways" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Gateways</SelectItem>
-                    <SelectItem value="razorpay">Razorpay</SelectItem>
-                    <SelectItem value="payu">PayU</SelectItem>
-                    <SelectItem value="ccavenue">CCAvenue</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Payment Method (Optional)</Label>
-                <Select
-                  value={customization.paymentMethod}
-                  onValueChange={(value) => setCustomization({ ...customization, paymentMethod: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Methods" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Methods</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="upi">UPI</SelectItem>
-                    <SelectItem value="netbanking">Net Banking</SelectItem>
-                    <SelectItem value="wallet">Wallet</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Status</Label>
-                <Select
-                  value={customization.status}
-                  onValueChange={(value) => setCustomization({ ...customization, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="success">Success</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Export Format</Label>
-                <Select
-                  value={customization.format}
-                  onValueChange={(value: any) => setCustomization({ ...customization, format: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="csv">CSV</SelectItem>
-                    <SelectItem value="excel">Excel</SelectItem>
-                    <SelectItem value="pdf">PDF</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowUseDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleGenerateReport}>
-              Generate Report
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Preview Dialog */}
-      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Preview: {selectedTemplate?.name}</DialogTitle>
-            <DialogDescription>
-              Sample output showing first 10 records
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            {previewLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
-              </div>
-            ) : previewData ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      {previewData.columns?.map((col: string) => (
-                        <th key={col} className="text-left p-3 font-semibold text-gray-700">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewData.data?.slice(0, 10).map((row: any, index: number) => (
-                      <tr key={index} className="border-b border-gray-100">
-                        {previewData.columns?.map((col: string) => (
-                          <td key={col} className="p-3 text-gray-700">
-                            {row[col] || '-'}
-                          </td>
-                        ))}
-                      </tr>
+      {/* Templates list */}
+      <div className="bg-white/90 border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <tr className="border-b border-gray-200">
+                <th className="px-3 md:px-4 py-2.5 md:py-3 text-left text-[11px] font-extrabold text-gray-700 uppercase">Name</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3 text-left text-[11px] font-extrabold text-gray-700 uppercase">Report</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3 text-left text-[11px] font-extrabold text-gray-700 uppercase">Visibility</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3 text-left text-[11px] font-extrabold text-gray-700 uppercase">Owner</th>
+                <th className="px-3 md:px-4 py-2.5 md:py-3 text-right text-[11px] font-extrabold text-gray-700 uppercase">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`sk_${i}`} className="animate-pulse">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <td key={j} className="px-3 md:px-4 py-2.5 md:py-3">
+                        <div className="h-4 bg-gray-200 rounded w-full" />
+                      </td>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-400">
-                No preview data available
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={() => setShowPreviewDialog(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+                  </tr>
+                ))
+              ) : templates.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-600 text-sm">No templates found</td>
+                </tr>
+              ) : (
+                templates.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50">
+                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-sm text-gray-900">{t.name}</td>
+                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-sm text-gray-700">{t.report_type}</td>
+                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-sm text-gray-700">{t.visibility}</td>
+                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-sm text-gray-600">{t.created_by}</td>
+                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-sm text-right">
+                      <button onClick={() => handleRun(t.id, t.report_type)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-50">
+                        <Play className="w-4 h-4" /> Run
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
+

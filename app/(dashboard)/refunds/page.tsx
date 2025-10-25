@@ -618,22 +618,22 @@ export default function MerchantRefundRequestsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10">
-                <tr className="border-b border-[#0077FF]/30 text-gray-700 uppercase text-xs font-extrabold" style={{ letterSpacing: '-0.02em' }}>
-                  <th className="sticky left-0 z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-4 py-3 text-left whitespace-nowrap">Client Code</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Trans ID</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Client Trans ID</th>
-                  <th className="px-3 md:px-4 py-3 text-right whitespace-nowrap">Txn Amount</th>
-                  <th className="px-3 md:px-4 py-3 text-right whitespace-nowrap">Refund Req. Amt</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Trans Date</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Refund Initiated</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Status</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Payee Name</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Payee Mobile</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Payee Email</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">PG Pay Mode</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Payment Mode</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Request From</th>
-                  <th className="px-3 md:px-4 py-3 text-left whitespace-nowrap">Actions</th>
+                <tr>
+                  <th className="sticky left-0 z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Code</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Trans ID</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Trans ID</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Txn Amount</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Refund Req. Amt</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Trans Date</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Refund Initiated</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Status</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payee Name</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payee Mobile</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payee Email</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>PG Pay Mode</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Payment Mode</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Request From</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-900">
@@ -691,7 +691,7 @@ export default function MerchantRefundRequestsPage() {
                           {allowRefund ? (
                             <button
                               onClick={() => handleRefundClick(refund.txn_id)}
-                              className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg text-xs font-extrabold shadow hover:from-orange-600 hover:to-orange-700 min-h-[52px] touch-manipulation"
+                              className="px-3 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all min-h-[44px] touch-manipulation"
                             >
                               Process →
                             </button>
