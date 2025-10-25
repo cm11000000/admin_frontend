@@ -11,7 +11,9 @@ import {
   FileSpreadsheet,
   Loader2,
   Building2,
-  Calendar
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import ReportApiService from '@/services/api/ReportApiService';
 import { useRouter } from 'next/navigation';
@@ -341,15 +343,15 @@ export default function ChargebackReportPage() {
         <h4 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
           Chargeback Report
         </h4>
-        <p className="text-gray-600 text-xs md:text-sm mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>View chargeback history by client</p>
+        <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>View chargeback history by client</p>
       </div>
 
       {/* Important Notice Alert */}
-      <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3 md:p-4">
+      <div className="bg-orange-50 border border-orange-200 rounded-xl md:rounded-2xl p-3 md:p-4">
         <div className="flex items-start gap-2 md:gap-3">
-          <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-700 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-orange-700 font-extrabold text-sm md:text-base" style={{ letterSpacing: '-0.02em' }}>Important Notice</p>
+            <p className="text-orange-800 font-extrabold text-sm md:text-base" style={{ letterSpacing: '-0.02em' }}>Important Notice</p>
             <p className="text-orange-700 text-xs md:text-sm mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
               Select a specific client or choose ALL. Large ranges with ALL may take longer.
             </p>
@@ -368,9 +370,9 @@ export default function ChargebackReportPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div className="relative z-50">
-              <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
+              <label className="block text-xs md:text-sm font-extrabold text-gray-900 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
                 <Building2 className="inline-block w-4 h-4 mr-1 text-gray-600" />
-                Client Code <span className="text-red-700">*</span>
+                Client Code <span className="text-red-600">*</span>
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
@@ -405,7 +407,7 @@ export default function ChargebackReportPage() {
             </div>
 
             <div>
-              <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
+              <label className="block text-xs md:text-sm font-extrabold text-gray-900 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
                 <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" />
                 From Date
               </label>
@@ -418,7 +420,7 @@ export default function ChargebackReportPage() {
             </div>
 
             <div>
-              <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
+              <label className="block text-xs md:text-sm font-extrabold text-gray-900 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
                 <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" />
                 To Date
               </label>
@@ -431,119 +433,119 @@ export default function ChargebackReportPage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 pt-2 border-t border-gray-200">
             <button
               onClick={fetchChargebackReport}
               disabled={isLoading}
-              className="min-h-[52px] touch-manipulation px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm md:text-base font-semibold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/40 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-[52px] touch-manipulation px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm md:text-base font-semibold rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/40 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</span>
               ) : (
-                <span className="flex items-center justify-center gap-2"><Search className="w-4 h-4" /> Search →</span>
+                <span className="flex items-center justify-center gap-2"><Search className="w-4 h-4" /> Search Chargebacks</span>
               )}
             </button>
             <button
               onClick={handleExport}
-              disabled={chargebacks.length === 0}
-              className="min-h-[52px] touch-manipulation px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm md:text-base rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={chargebacks.length === 0 || isLoading}
+              className="min-h-[52px] touch-manipulation px-4 md:px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm md:text-base font-semibold rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none flex items-center justify-center gap-2"
             >
-              <Download className="w-4 h-4 inline mr-2" />
+              <Download className="w-4 h-4" />
               Export to Excel
             </button>
-          </div>
-
-          {/* Search and Pagination Section */}
-          <div className="pt-3 border-t border-gray-200">
-            <h6 className="text-sm md:text-base font-extrabold text-gray-900 mb-3" style={{ letterSpacing: '-0.02em' }}>Search Results</h6>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              <div className="md:col-span-7 relative z-10">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-                  <input
-                    type="text"
-                    value={tableSearchTerm}
-                    onChange={(e) => {
-                      setTableSearchTerm(e.target.value);
-                      setCurrentPage(0);
-                    }}
-                    placeholder="Search in results..."
-                    className="w-full min-h-[44px] touch-manipulation pl-10 pr-4 py-2.5 bg-white/90 backdrop-blur-xl border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 hover:border-gray-400"
-                  />
-                </div>
-              </div>
-
-              <div className="md:col-span-2 flex items-center justify-start md:justify-end">
-                <label className="text-xs md:text-sm text-gray-700 font-extrabold" style={{ letterSpacing: '-0.02em' }}>Count Per Page</label>
-              </div>
-
-              <div className="md:col-span-3">
-                <Select
-                  value={`${pageSize}`}
-                  onValueChange={(value) => {
-                    setPageSize(Number(value));
-                    setCurrentPage(0);
-                  }}
-                >
-                  <SelectTrigger className="w-full min-h-[44px] touch-manipulation bg-white/90 border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-300 text-gray-900">
-                    {[10,25,50,100].map((size) => (
-                      <SelectItem key={size} value={`${size}`}>{size}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-3">
-              <button
-                onClick={handleClearFilters}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs md:text-sm text-gray-600 hover:text-gray-900 transition-colors min-h-[44px] touch-manipulation"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Clear Filters
-              </button>
-            </div>
+            <button
+              onClick={handleClearFilters}
+              className="min-h-[52px] touch-manipulation px-4 md:px-6 py-2.5 bg-white border-2 border-gray-300 hover:bg-gray-50 text-gray-700 text-sm md:text-base font-medium rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Clear Filters
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Search and Pagination Section */}
+      {showGrid && (
+        <div className="relative z-10 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl md:rounded-2xl shadow-lg p-4 md:p-6">
+          <div className="mb-4 md:mb-5">
+            <h3 className="text-sm md:text-base font-extrabold text-gray-900 mb-0.5 md:mb-1 flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+              <Search className="w-4 md:w-5 h-4 md:h-5 text-orange-500" />
+              Quick Search
+            </h3>
+            <p className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>Search within your filtered results</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div className="md:col-span-8 relative z-10">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                  type="text"
+                  value={tableSearchTerm}
+                  onChange={(e) => {
+                    setTableSearchTerm(e.target.value);
+                    setCurrentPage(0);
+                  }}
+                  placeholder="Search in results..."
+                  className="w-full min-h-[44px] touch-manipulation pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all duration-200 hover:border-gray-400 shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-4 flex items-center gap-3">
+              <label className="text-xs md:text-sm text-gray-900 font-extrabold whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Rows per page:</label>
+              <Select
+                value={`${pageSize}`}
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
+              >
+                <SelectTrigger className="w-full min-h-[44px] touch-manipulation bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-300 text-gray-900">
+                  {[10,25,50,100].map((size) => (
+                    <SelectItem key={size} value={`${size}`}>{size}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Results Count */}
       {showGrid ? (
         <div className="flex items-center justify-between px-2">
-          <div className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
+          <div className="text-xs md:text-sm text-gray-700 font-light" style={{ letterSpacing: '-0.01em' }}>
             Showing <span className="text-gray-900 font-extrabold">{paginatedData.length}</span> of{' '}
-            <span className="text-gray-900 font-extrabold">{totalCount}</span> total records
+            <span className="text-orange-600 font-extrabold">{totalCount}</span> total records
             {tableSearchTerm && ` (filtered)`}
           </div>
         </div>
       ) : !isLoading && (
-        <div className="bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-8 md:p-12 text-center">
-          <FileSpreadsheet className="w-12 h-12 md:w-16 md:h-16 text-gray-600 mx-auto mb-4" />
-          <div className="text-gray-600 mb-2 font-extrabold text-sm md:text-base" style={{ letterSpacing: '-0.02em' }}>No data loaded</div>
-          <div className="text-xs md:text-sm text-gray-500 font-light" style={{ letterSpacing: '-0.01em' }}>Please select a client and date range, then click Search to load chargeback report</div>
+        <div className="bg-white/90 backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 shadow-xl p-8 md:p-12 text-center">
+          <FileSpreadsheet className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
+          <div className="text-gray-900 mb-2 font-extrabold text-sm md:text-base" style={{ letterSpacing: '-0.02em' }}>No data loaded</div>
+          <div className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>Please select a client and date range, then click Search to load chargeback report</div>
         </div>
       )}
 
       {/* Data Table */}
       {(showGrid || isLoading) && (
-        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
           {/* Mobile scroll hint */}
-          <div className="md:hidden bg-white/60 px-3 py-2 text-xs text-gray-600 text-center border-b border-gray-200">
-            Scroll horizontally to view all columns
+          <div className="md:hidden bg-gradient-to-r from-orange-50 to-orange-100 px-3 py-2 text-xs text-orange-700 text-center border-b border-orange-200 font-medium">
+            Scroll horizontally to view all columns →
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10">
                 <tr className="border-b-2 border-orange-200">
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase tracking-wider whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     #
                   </th>
                   {TABLE_COLUMNS.map(({ key, label }) => (
-                    <th key={key as string} className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold text-gray-700 uppercase tracking-wider whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
+                    <th key={key as string} className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase tracking-wider whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       {label}
                     </th>
                   ))}
@@ -554,7 +556,7 @@ export default function ChargebackReportPage() {
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={`skeleton-${i}`} className="animate-pulse">
                       {Array.from({ length: TABLE_COLUMNS.length + 1 }).map((_, j) => (
-                        <td key={j} className="px-3 md:px-4 py-2 md:py-3">
+                        <td key={j} className="px-3 md:px-6 py-3 md:py-4">
                           <div className="h-4 bg-gray-200 rounded w-full" />
                         </td>
                       ))}
@@ -585,7 +587,7 @@ export default function ChargebackReportPage() {
                         key={`${record.txn_id}-${index}`}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-900 font-medium">
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
                           {currentPage * pageSize + index + 1}
                         </td>
                         {TABLE_COLUMNS.map(({ key }) => {
@@ -595,13 +597,13 @@ export default function ChargebackReportPage() {
                           // Apply color coding to status columns
                           let colorClass = 'text-gray-900';
                           if (key === 'charge_back_status' || key === 'status' || key === 'merchant_cb_status') {
-                            if (isSuccess) colorClass = 'text-green-600';
-                            else if (isFailed) colorClass = 'text-red-600';
-                            else if (isPending) colorClass = 'text-yellow-600';
+                            if (isSuccess) colorClass = 'text-green-600 font-semibold';
+                            else if (isFailed) colorClass = 'text-red-600 font-semibold';
+                            else if (isPending) colorClass = 'text-yellow-600 font-semibold';
                           }
 
                           return (
-                            <td key={String(key)} className="px-3 md:px-4 py-2 md:py-3 whitespace-nowrap">
+                            <td key={String(key)} className="px-3 md:px-6 py-2.5 md:py-4 whitespace-nowrap">
                               <span className={`text-xs md:text-sm ${colorClass}`}>
                                 {displayValue}
                               </span>
@@ -618,31 +620,38 @@ export default function ChargebackReportPage() {
 
           {/* Pagination */}
           {!isLoading && totalPages > 1 && (
-            <div className="bg-white/60 px-3 md:px-4 py-3 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-xs md:text-sm text-gray-600 text-center sm:text-left font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount} results
-                </div>
-                <div className="flex items-center gap-3 md:gap-4">
-                  <span className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
-                    Page <span className="font-extrabold">{currentPage + 1}</span> of <span className="font-extrabold">{totalPages}</span>
+            <div className="bg-gradient-to-br from-white to-gray-50 px-3 md:px-6 py-3 md:py-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
+                <div className="text-xs md:text-sm text-gray-700 text-center sm:text-left font-light flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
+                  <div className="hidden sm:block w-1 h-6 bg-orange-500 rounded-full"></div>
+                  <span>
+                    Showing <span className="font-extrabold text-gray-900">{currentPage * pageSize + 1}</span> to{' '}
+                    <span className="font-extrabold text-gray-900">{Math.min((currentPage + 1) * pageSize, totalCount)}</span> of{' '}
+                    <span className="font-extrabold text-orange-600">{totalCount}</span> results
                   </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
-                      disabled={currentPage === 0}
-                      className="min-h-[52px] touch-manipulation px-3 md:px-4 py-1.5 md:py-2 bg-white border border-gray-300 text-gray-900 text-xs md:text-sm rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))}
-                      disabled={currentPage >= totalPages - 1}
-                      className="min-h-[52px] touch-manipulation px-3 md:px-4 py-1.5 md:py-2 bg-white border border-gray-300 text-gray-900 text-xs md:text-sm rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
+                </div>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <button
+                    onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0 || isLoading}
+                    className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-4 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 text-xs md:text-sm rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation flex items-center gap-1.5"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden xs:inline">Previous</span>
+                  </button>
+                  <div className="px-3 md:px-4 py-2.5 md:py-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl text-xs md:text-sm font-extrabold text-white shadow-md whitespace-nowrap min-h-[44px] md:min-h-[36px] flex items-center">
+                    <span>{currentPage + 1}</span>
+                    <span className="mx-1 md:mx-1.5 text-orange-200">/</span>
+                    <span className="text-orange-100">{totalPages}</span>
                   </div>
+                  <button
+                    onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
+                    disabled={currentPage >= totalPages - 1 || isLoading}
+                    className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-4 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 text-xs md:text-sm rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation flex items-center gap-1.5"
+                  >
+                    <span className="hidden xs:inline">Next</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>

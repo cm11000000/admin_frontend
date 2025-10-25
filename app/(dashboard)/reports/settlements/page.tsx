@@ -265,17 +265,17 @@ export default function SettlementReportPage() {
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <Link
             href="/reports"
-            className="p-2 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl text-gray-700 hover:text-gray-900 hover:border-gray-300 transition-all"
+            className="p-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
-              View Settlement Reports
+              Settlement Report
             </h1>
             <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
               Search and view settlement transaction details
@@ -292,7 +292,7 @@ export default function SettlementReportPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4">
           <div>
-            <label className="block text-sm font-extrabold text-gray-700 mb-2" style={{ letterSpacing: '-0.02em' }}>
+            <label className="block text-sm font-extrabold text-gray-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
               <Building2 className="inline-block w-4 h-4 mr-1 text-gray-600" />
               Client Code <span className="text-red-700">*</span>
             </label>
@@ -330,7 +330,7 @@ export default function SettlementReportPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-extrabold text-gray-700 mb-2" style={{ letterSpacing: '-0.02em' }}>
+            <label className="block text-sm font-extrabold text-gray-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
               <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" />
               From Date
             </label>
@@ -342,7 +342,7 @@ export default function SettlementReportPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-extrabold text-gray-700 mb-2" style={{ letterSpacing: '-0.02em' }}>
+            <label className="block text-sm font-extrabold text-gray-900 mb-2" style={{ letterSpacing: '-0.02em' }}>
               <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" />
               To Date
             </label>
@@ -358,7 +358,7 @@ export default function SettlementReportPage() {
           <button
             onClick={handleSearch}
             disabled={isLoading || !clientCode}
-            className="flex-1 sm:flex-none min-h-[52px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 sm:flex-none min-h-[52px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm font-medium rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
           >
             {isLoading ? (
               <>
@@ -395,7 +395,7 @@ export default function SettlementReportPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 items-end">
             <div className="md:col-span-2 relative">
-              <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>Search Query</label>
+              <label className="block text-xs md:text-sm font-extrabold text-gray-900 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>Search Query</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
@@ -415,7 +415,7 @@ export default function SettlementReportPage() {
               </div>
               <div>
                 <p className="text-[10px] md:text-xs text-gray-600 font-medium">Total Records</p>
-                <p className="text-lg md:text-xl font-bold text-orange-600">{formatIndianNumber(transactions.length)}</p>
+                <p className="text-lg md:text-xl font-bold text-orange-600">{formatIndianNumber(totalCount)}</p>
               </div>
             </div>
           </div>
@@ -423,7 +423,18 @@ export default function SettlementReportPage() {
       )}
 
       {/* Results */}
-      {!isLoading && reportData && (
+      {isLoading && !reportData ? (
+        <div className="flex items-center justify-center py-12 md:py-16 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl md:rounded-2xl shadow-lg">
+          <div className="text-center px-4">
+            <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4">
+              <div className="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-transparent border-t-orange-500 rounded-full animate-spin"></div>
+            </div>
+            <p className="text-sm md:text-base font-extrabold text-gray-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Loading Settlements</p>
+            <p className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>Please wait while we fetch your data...</p>
+          </div>
+        </div>
+      ) : !isLoading && reportData && (
         <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
           {/* Results Header */}
           <div className="border-b border-gray-200 p-4 md:p-6">
@@ -431,7 +442,7 @@ export default function SettlementReportPage() {
               <div>
                 <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Settlement Transactions</h2>
                 <p className="text-xs md:text-sm text-gray-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Total Records: <span className="text-gray-900 font-extrabold">{totalCount}</span>
+                  Showing <span className="text-gray-900 font-extrabold">{formatIndianNumber(totalCount)}</span> settlements
                 </p>
               </div>
 
@@ -440,7 +451,7 @@ export default function SettlementReportPage() {
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500/50 h-11 md:h-10 min-h-[44px] md:min-h-[40px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm font-medium hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 h-11 md:h-10 min-h-[44px] md:min-h-[40px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <option value="10">10 per page</option>
                   <option value="20">20 per page</option>
@@ -451,7 +462,8 @@ export default function SettlementReportPage() {
                 {transactions.length > 0 && (
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-2 px-4 md:px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all min-h-[52px]"
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 md:px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-xl shadow-lg shadow-green-500/25 hover:shadow-xl transition-all min-h-[52px] disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                   >
                     <Download className="w-4 h-4" />
                     <span className="hidden xs:inline">Export to Excel</span>
@@ -470,7 +482,7 @@ export default function SettlementReportPage() {
                 <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Client Code</p>
-                    <p className="font-mono text-sm font-bold text-blue-600 truncate">
+                    <p className="font-mono text-sm font-bold text-orange-600 truncate">
                       {txn.client_code}
                     </p>
                   </div>
@@ -526,7 +538,7 @@ export default function SettlementReportPage() {
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                 <tr>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>#</th>
-                  <th className="sticky left-0 z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Code</th>
+                  <th className="sticky left-0 z-20 bg-gradient-to-r from-gray-50 to-gray-100 shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Code</th>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Name</th>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Txn ID</th>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>SP Txn ID</th>
@@ -545,7 +557,7 @@ export default function SettlementReportPage() {
                 {paginatedTransactions.map((txn, index) => (
                   <tr key={startIndex + index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{startIndex + index + 1}</td>
-                    <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-blue-600 font-semibold whitespace-nowrap">{txn.client_code}</td>
+                    <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-600 font-semibold whitespace-nowrap">{txn.client_code}</td>
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">{txn.client_name}</td>
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.client_txn_id}</td>
                     <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.txn_id}</td>
@@ -578,11 +590,11 @@ export default function SettlementReportPage() {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1 || isLoading}
-                    className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+                    className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <div className="px-3 md:px-4 py-2.5 md:py-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-xs md:text-sm font-bold text-white shadow-md whitespace-nowrap min-h-[44px] md:min-h-[36px] flex items-center">
+                  <div className="px-3 md:px-4 py-2.5 md:py-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl text-xs md:text-sm font-extrabold text-white shadow-md whitespace-nowrap min-h-[44px] md:min-h-[36px] flex items-center">
                     <span>{currentPage}</span>
                     <span className="mx-1 md:mx-1.5 text-orange-200">/</span>
                     <span className="text-orange-100">{totalPages}</span>
@@ -590,7 +602,7 @@ export default function SettlementReportPage() {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages || isLoading}
-                    className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+                    className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -616,7 +628,7 @@ export default function SettlementReportPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-500/10 backdrop-blur-xl border border-red-500/30 rounded-xl md:rounded-2xl p-6 text-red-400">
+        <div className="bg-red-50 border border-red-200 rounded-xl md:rounded-2xl p-6 text-red-600">
           Failed to load settlement report. Please try again.
         </div>
       )}

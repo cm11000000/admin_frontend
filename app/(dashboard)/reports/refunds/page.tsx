@@ -108,20 +108,20 @@ export default function RefundReportPage() {
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-green-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
-            <p className="text-sm text-green-300 mb-2">
+          <div className="bg-white/90 backdrop-blur-xl border border-green-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+            <p className="text-sm text-gray-600 mb-2">
               Success Rate
             </p>
-            <p className="text-2xl font-bold text-green-400">
+            <p className="text-2xl font-bold text-green-600">
               {report.summary.success_rate.toFixed(1)}%
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-orange-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
-            <p className="text-sm text-orange-300 mb-2">
+          <div className="bg-white/90 backdrop-blur-xl border border-orange-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+            <p className="text-sm text-gray-600 mb-2">
               Total Amount
             </p>
-            <p className="text-2xl font-bold text-[#FF8800]">
+            <p className="text-2xl font-bold text-orange-600">
               ₹{report.summary.total_refund_amount.toLocaleString()}
             </p>
           </div>
@@ -226,66 +226,66 @@ export default function RefundReportPage() {
                   <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Refund ID
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Transaction ID
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Original Amount
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Refund Amount
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Type
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Date
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {report.refunds.slice(0, 20).map((refund) => (
-                  <tr key={refund.refund_id} className="hover:bg-gray-100 transition-colors duration-150">
-                    <td className="px-4 py-3 text-sm text-[#0077FF] font-semibold">
+                  <tr key={refund.refund_id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-500 font-mono font-medium whitespace-nowrap">
                       {refund.refund_id}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-800">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700 font-mono">
                       {refund.transaction_id}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
                       ₹{refund.original_amount.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-[#FF8800]">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-600 font-semibold">
                       ₹{refund.refund_amount.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
                           refund.refund_type === 'full'
-                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                            : 'bg-blue-100 text-blue-800 border border-blue-300'
                         }`}
                       >
                         {refund.refund_type}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${
                           refund.status === 'successful'
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            ? 'bg-green-100 text-green-800 border border-green-300'
                             : refund.status === 'failed'
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            ? 'bg-red-100 text-red-800 border border-red-300'
+                            : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
                         }`}
                       >
                         {refund.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600">
                       {new Date(refund.refund_date).toLocaleDateString()}
                     </td>
                   </tr>
@@ -298,18 +298,23 @@ export default function RefundReportPage() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-t-[#0077FF] border-r-[#FF8800] rounded-full animate-spin"></div>
+        <div className="flex items-center justify-center py-12 md:py-16 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl md:rounded-2xl shadow-lg">
+          <div className="text-center px-4">
+            <div className="relative w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4">
+              <div className="absolute inset-0 border-4 border-orange-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-transparent border-t-orange-500 rounded-full animate-spin"></div>
+            </div>
+            <p className="text-sm md:text-base font-extrabold text-gray-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Loading Refund Report</p>
+            <p className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>Please wait while we fetch your data...</p>
           </div>
         </div>
       )}
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-500/10 backdrop-blur-xl border border-red-500/30 rounded-xl p-6 text-red-400">
-          Failed to load refund report. Please try again.
+        <div className="bg-red-50 border border-red-200 rounded-xl md:rounded-2xl p-4 md:p-6 text-red-700 shadow-lg">
+          <p className="font-extrabold text-sm md:text-base mb-1" style={{ letterSpacing: '-0.02em' }}>Failed to Load Report</p>
+          <p className="text-xs md:text-sm font-light" style={{ letterSpacing: '-0.01em' }}>Please try again or contact support if the problem persists.</p>
         </div>
       )}
     </div>
