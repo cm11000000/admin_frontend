@@ -62,9 +62,9 @@ const AUTH_KEY = process.env.NEXT_PUBLIC_AUTH_KEY || 'JUtMpbgS8tjzGwDwbyQPIrGXe+
 const AUTH_IV = process.env.NEXT_PUBLIC_AUTH_IV || 'ILeUg1bJPLa5fQ5DtB+VfwS28F+5Ee4tw+iDFMbvZwa7wDkR/u/G/oj1sRpb70kq'
 
 // Feature flag for encryption - can be toggled via environment variable
-// Set to 'false' to disable AES-GCM encryption and use plain JSON fallback
-// By default, encryption is ENABLED for security
-const ENABLE_LOGIN_ENCRYPTION = process.env.NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION !== 'false'
+// Set NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION='true' to enable AES-GCM encryption.
+// By default, encryption is DISABLED to match adminportalfrontend behavior.
+const ENABLE_LOGIN_ENCRYPTION = process.env.NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION === 'true'
 
 class AuthApiService {
   private client = createCobClient()
