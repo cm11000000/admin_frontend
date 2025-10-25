@@ -11,18 +11,18 @@ The frontend (Next.js 15) is deployed to AWS S3 + CloudFront CDN for staging env
 - **Region**: `ap-south-1` (Mumbai)
 
 ### AWS Services
-- **S3 Bucket**: `sabpaisa-admin-staging-frontend`
+- **S3 Bucket**: `sabpaisa-admin-staging`
   - Static website hosting enabled
   - Public read access for website content
   - All other public access blocked
-- **CloudFront Distribution**: `E1RMJE7ZOE6LFY`
+- **CloudFront Distribution**: `EXDXAHC1SOAO8`
   - Custom error pages (404, 403)
   - Default root object: `index.html`
   - Origin: S3 website endpoint
 
 ### Access URLs
-- **CloudFront URL**: https://d1h5xqn2afswov.cloudfront.net
-- **S3 Website URL**: http://sabpaisa-admin-staging-frontend.s3-website.ap-south-1.amazonaws.com
+- **CloudFront URL**: https://d2pkux0qnhtskm.cloudfront.net
+- **S3 Website URL**: http://sabpaisa-admin-staging.s3-website-ap-south-1.amazonaws.com
 
 ## Deployment Process
 
@@ -34,7 +34,7 @@ The frontend (Next.js 15) is deployed to AWS S3 + CloudFront CDN for staging env
 
 **Steps**:
 1. Checkout code
-2. Setup Node.js 20
+2. Setup Node.js 18
 3. Install dependencies with `npm ci --legacy-peer-deps`
 4. Build static export with `npm run build:static`
 5. Configure AWS credentials (hardcoded in workflow)
@@ -57,14 +57,14 @@ npm run build:static
 aws configure --profile chaitanya-staging-2
 
 # 3. Sync to S3
-aws s3 sync out/ s3://sabpaisa-admin-staging-frontend/ \
+aws s3 sync out/ s3://sabpaisa-admin-staging/ \
   --delete \
   --profile chaitanya-staging-2 \
   --region ap-south-1
 
 # 4. Invalidate CloudFront cache
 aws cloudfront create-invalidation \
-  --distribution-id E1RMJE7ZOE6LFY \
+  --distribution-id EXDXAHC1SOAO8 \
   --paths "/*" \
   --profile chaitanya-staging-2
 ```
@@ -75,8 +75,8 @@ aws cloudfront create-invalidation \
 - `AWS_ACCESS_KEY_ID`: AKIAYZZGTDOXIRTE65UJ
 - `AWS_SECRET_ACCESS_KEY`: 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
 - `AWS_REGION`: ap-south-1
-- `S3_BUCKET`: sabpaisa-admin-staging-frontend
-- `CLOUDFRONT_DISTRIBUTION_ID`: E1RMJE7ZOE6LFY
+- `S3_BUCKET`: sabpaisa-admin-staging
+- `CLOUDFRONT_DISTRIBUTION_ID`: EXDXAHC1SOAO8
 
 **Note**: Credentials are hardcoded in workflow file as repository is private. For production, use GitHub Secrets.
 
@@ -102,19 +102,25 @@ aws cloudfront create-invalidation \
 ```bash
 # Check CloudFront distribution status
 aws cloudfront get-distribution \
-  --id E1RMJE7ZOE6LFY \
+  --id EXDXAHC1SOAO8 \
   --profile chaitanya-staging-2
+
+# Check recent cache invalidations
+aws cloudfront list-invalidations \
+  --distribution-id EXDXAHC1SOAO8 \
+  --profile chaitanya-staging-2 \
+  --max-items 3
 ```
 
 ### S3 Bucket Status
 ```bash
 # List files in bucket
-aws s3 ls s3://sabpaisa-admin-staging-frontend/ \
+aws s3 ls s3://sabpaisa-admin-staging/ \
   --recursive \
   --profile chaitanya-staging-2
 
 # Check bucket size
-aws s3 ls s3://sabpaisa-admin-staging-frontend/ \
+aws s3 ls s3://sabpaisa-admin-staging/ \
   --recursive \
   --human-readable \
   --summarize \
@@ -191,4 +197,4 @@ Or restore from S3 versioning (if enabled).
 - **Total Time**: ~5 minutes from push to live
 
 ---
-Last Updated: 2025-10-22
+Last Updated: 2025-10-25

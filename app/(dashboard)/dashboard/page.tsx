@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react'
-import { Download, Search, DollarSign, CheckCircle2 } from 'lucide-react'
+import { Download, Search, DollarSign, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { dashboardApiService, TransactionSummary, DashboardApiRequest } from '@/services/api/DashboardApiService'
 import { DatePicker } from '@/components/ui/date-picker'
 // XLSX is lazy-loaded in export handler to reduce initial bundle size
@@ -22,6 +22,9 @@ export default function DashboardPage() {
   const [summaryStats, setSummaryStats] = useState<SummaryStats>({ successfulTransactions: 0, gmv: 0 })
   const [transactionData, setTransactionData] = useState<TransactionSummary[]>([])
   const [filteredData, setFilteredData] = useState<TransactionSummary[]>([])
+  // Client-side pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
 
   const dateOptions = [
     { label: 'Today', value: '1' },
@@ -169,6 +172,7 @@ export default function DashboardPage() {
       const response = await dashboardApiService.getTransactionSummaryByClient(requestData)
       setTransactionData(response)
       setFilteredData(response)
+      setCurrentPage(1)
     } catch (error) {
       console.error('[Dashboard] Details load error:', error)
       setShowGrid(false)
@@ -179,11 +183,12 @@ export default function DashboardPage() {
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
-    if (!value.trim()) { setFilteredData(transactionData); return }
+    if (!value.trim()) { setFilteredData(transactionData); setCurrentPage(1); return }
     const filtered = transactionData.filter(
       i => i.client_code.toLowerCase().includes(value.toLowerCase()) || i.client_name.toLowerCase().includes(value.toLowerCase())
     )
     setFilteredData(filtered)
+    setCurrentPage(1)
   }
 
   const calculateTotals = () => {
@@ -202,19 +207,46 @@ export default function DashboardPage() {
 
   const handleExportToExcel = async () => {
     if (filteredData.length === 0) return
-    const fileName = `SuccessfulTxn${Date.now()}.xlsx`
-    const table = document.getElementById('txnDataTable')
-    if (!table) return
     const XLSX = await import('xlsx')
-    const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(table)
-    const wb: XLSX.WorkBook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+    const headers = [
+      'Client Code',
+      'Client Name',
+      'Success',
+      'Failed',
+      'Aborted / Init',
+      'Refund Init',
+      'Refunded',
+      'Total',
+      'GMV (INR)'
+    ]
+    const rows = filteredData.map((i) => [
+      i.client_code,
+      i.client_name,
+      i.success_txn,
+      i.failed_txn,
+      i.abort_init_txn,
+      i.refund_init_txn,
+      i.refunded_txn,
+      i.total_txn,
+      i.paidamount,
+    ])
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Summary')
+    const fileName = `SuccessfulTxn_${fromDate}_${toDate}.xlsx`
     XLSX.writeFile(wb, fileName)
   }
 
   const formatCurrency = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v)
   const formatNumber = (v: number) => new Intl.NumberFormat('en-IN').format(v)
   const totals = calculateTotals()
+  // Pagination derived values
+  const totalCount = filteredData.length
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  const safePage = Math.min(Math.max(currentPage, 1), totalPages)
+  const startIndex = (safePage - 1) * pageSize
+  const endIndex = Math.min(startIndex + pageSize, totalCount)
+  const pageRows = filteredData.slice(startIndex, endIndex)
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
@@ -329,9 +361,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Results meta + page size */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 md:gap-3">
+            <p className="text-xs md:text-sm text-gray-700 font-light" style={{ letterSpacing: '-0.01em' }}>
+              Showing <span className="font-extrabold text-gray-900">{startIndex + 1}</span> to{' '}
+              <span className="font-extrabold text-gray-900">{endIndex}</span> of{' '}
+              <span className="font-extrabold text-orange-600">{totalCount.toLocaleString('en-IN')}</span> entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                className="min-h-[36px] px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs md:text-sm text-gray-700 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-colors"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+
           {/* Mobile Card View */}
           <div className="md:hidden space-y-3">
-            {Array.isArray(filteredData) && filteredData.map((item, index) => (
+            {Array.isArray(pageRows) && pageRows.map((item, index) => (
               <div key={index} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
                 {/* Header with Client Code */}
                 <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
@@ -342,7 +396,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-1">#{index + 1}</p>
+                    <p className="text-xs text-gray-500 mb-1">#{startIndex + index + 1}</p>
                   </div>
                 </div>
 
@@ -411,9 +465,9 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {Array.isArray(filteredData) && filteredData.map((item, index) => (
+                  {Array.isArray(pageRows) && pageRows.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="sticky left-0 z-10 bg-white px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{index + 1}</td>
+                      <td className="sticky left-0 z-10 bg-white px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{startIndex + index + 1}</td>
                       <td className="sticky left-[60px] z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-500 font-medium whitespace-nowrap">{item.client_code}</td>
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{item.client_name}</td>
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-green-600 font-medium whitespace-nowrap">{formatNumber(item.success_txn)}</td>
@@ -442,6 +496,39 @@ export default function DashboardPage() {
                 </tfoot>
               </table>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination controls */}
+      {showGrid && totalPages > 1 && (
+        <div className="border-t border-gray-200 px-4 md:px-6 py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
+            <p className="text-xs md:text-sm text-gray-700 text-center sm:text-left font-light" style={{ letterSpacing: '-0.01em' }}>
+              Page <span className="font-extrabold text-gray-900">{safePage}</span> of{' '}
+              <span className="font-extrabold text-orange-600">{totalPages}</span>
+            </p>
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1 || loading}
+                className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="px-3 md:px-4 py-2.5 md:py-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg text-xs md:text-sm font-bold text-white shadow-md whitespace-nowrap min-h-[44px] md:min-h-[36px] flex items-center">
+                <span>{safePage}</span>
+                <span className="mx-1 md:mx-1.5 text-orange-200">/</span>
+                <span className="text-orange-100">{totalPages}</span>
+              </div>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+                disabled={safePage === totalPages || loading}
+                className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
