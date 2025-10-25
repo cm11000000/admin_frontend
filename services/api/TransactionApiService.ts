@@ -693,7 +693,7 @@ export class TransactionApiService extends ReportBaseApiService {
 
   /**
    * Get Admin Transaction History - Matches Angular getAdminTxnFilterPostMethodSlave
-   * API: POST transactions/GetAdminTxnHistory/
+   * API: POST v6/transactions/GetAdminTxnHistory/
    * BASE URL: https://reportapi.sabpaisa.in/
    * Used in: transaction-report.component.ts lines 343, 421, 632
    */
@@ -702,8 +702,8 @@ export class TransactionApiService extends ReportBaseApiService {
     count: number;
   }> {
     try {
-      // Match Angular API exactly - reportapi.sabpaisa.in/transactions/GetAdminTxnHistory/
-      const response = await this.post<any>('transactions/GetAdminTxnHistory/', filter);
+      // Switch to v6 optimized endpoint under the same report base
+      const response = await this.post<any>('v6/transactions/GetAdminTxnHistory/', filter);
       return {
         results: response.results || [],
         count: response.count || 0
@@ -846,7 +846,8 @@ export class TransactionApiService extends ReportBaseApiService {
     try {
       // Query format: "{txnId}/0" or "0/{clientTxnId}"
       // Match Angular API exactly - reportapi.sabpaisa.in/transactions/ViewTxnPublic/
-      const response = await this.get<any>(`transactions/ViewTxnPublic/${query}`);
+      // Django endpoint expects trailing slash: ViewTxnPublic/<txnid>/<clienttxnid>/
+      const response = await this.get<any>(`transactions/ViewTxnPublic/${query}/`);
       return response;
     } catch (error) {
       console.error('viewTransaction error:', error);

@@ -2,12 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  Search,
-  Loader2,
-  Pencil,
-  FileText
-} from 'lucide-react';
+import { Search, Loader2, Pencil, FileText, PlusCircle, Trash2, RefreshCw, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import RateMappingApiService from '@/services/api/RateMappingApiService';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ClientOption {
   code: string;
@@ -35,7 +31,9 @@ interface ClientOption {
 }
 
 interface FeeRecord {
-  id: number;
+  feeId: number;
+  paymodeId?: number;
+  clientId?: number;
   slabNumber: number;
   slabFloor: number;
   slabCeiling: number;
@@ -78,6 +76,14 @@ const normalizeFee = (fee: any): FeeRecord => {
     const parsed = Number(value);
     return Number.isNaN(parsed) ? 0 : parsed;
   };
+  const pickNumber = (obj: any, keys: string[]): number => {
+    for (const k of keys) {
+      const v = obj?.[k];
+      const n = toNumber(v);
+      if (n) return n;
+    }
+    return 0;
+  };
 
   const toChargeType = (value: any): 'percentage' | 'fixed' => {
     const normalized = String(value ?? '').trim().toLowerCase();
@@ -91,7 +97,12 @@ const normalizeFee = (fee: any): FeeRecord => {
   };
 
   return {
-    id: toNumber(fee.feeId ?? fee.feeid ?? fee.Id ?? fee.id),
+    feeId: pickNumber(fee, ['feeId', 'feeid', 'id', 'FeeId']),
+    // Angular rows use Id for paymode in some responses; include multiple candidates
+    paymodeId: pickNumber(fee, [
+      'paymodeId', 'payModeId', 'paymodeid', 'paymentModeId', 'paymentmodeid', 'p_payment_id', 'Id'
+    ]),
+    clientId: pickNumber(fee, ['clientId', 'clientid', 'p_client_id']),
     slabNumber: toNumber(fee.slabNumber ?? fee.slabnumber),
     slabFloor: toNumber(fee.slabFloor ?? fee.slabfloor),
     slabCeiling: toNumber(fee.slabCeiling ?? fee.slabceiling),
@@ -144,6 +155,31 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     convchargesApp: true,
     epchargesApp: true
   });
+
+  // Add Slab dialog state
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [addFee, setAddFee] = useState<FeeRecord | null>(null);
+  const [addForm, setAddForm] = useState({
+    slabFloor: 0,
+    slabCeiling: 0,
+    convchargesType: 'percentage' as 'percentage' | 'fixed',
+    convcharges: 0,
+    endPointchargesTypes: 'percentage' as 'percentage' | 'fixed',
+    endPointcharge: 0,
+    gstType: 'percentage' as 'percentage' | 'fixed',
+    convchargesApp: true,
+    epchargesApp: true,
+  });
+
+  // Delete Slab dialog state
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteFee, setDeleteFee] = useState<FeeRecord | null>(null);
+  const [deleteRemarks, setDeleteRemarks] = useState('');
+
+  // Fee Forwarded state
+  const [isFFLoading, setIsFFLoading] = useState(false);
+  const DEFAULT_GST_PERCENT = Number(process.env.NEXT_PUBLIC_DEFAULT_GST_PERCENT || 18);
+  const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const clientOptions = useMemo(
     () =>
@@ -198,38 +234,17 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     const loadAgreement = async () => {
       setIsAgreementLoading(true);
       try {
-        const response = await fetch(
-          'https://cobkyc.sabpaisa.in/kyc/upload-merchant-document/get-merchant-agreement-by-client-code/',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ client_code: selectedClient })
-          }
-        );
-
+        const data = await RateMappingApiService.viewPDF(selectedClient);
         if (!mounted) return;
-
-        if (response.ok) {
-          const data: any[] = await response.json();
-          if (Array.isArray(data) && data.length > 0 && data[0]?.file_path) {
-            setAgreementUrl(String(data[0].file_path));
-          } else {
-            setAgreementUrl(null);
-          }
+        if (Array.isArray(data) && data.length > 0 && data[0]?.file_path) {
+          setAgreementUrl(String(data[0].file_path));
         } else {
           setAgreementUrl(null);
         }
       } catch (error) {
-        console.warn('Agreement lookup failed', error);
-        if (mounted) {
-          setAgreementUrl(null);
-        }
+        if (mounted) setAgreementUrl(null);
       } finally {
-        if (mounted) {
-          setIsAgreementLoading(false);
-        }
+        if (mounted) setIsAgreementLoading(false);
       }
     };
 
@@ -258,7 +273,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     setIsEditOpen(true);
     setIsRemarksLoading(true);
     try {
-      const history = await RateMappingApiService.getRemarksData(fee.id);
+      const history = await RateMappingApiService.getRemarksData(fee.feeId);
       setRemarksHistory(normalizeRemarks(history));
     } catch (error) {
       console.warn('Failed to load remarks history', error);
@@ -295,7 +310,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
 
     try {
       const payload = {
-        feeId: activeFee.id,
+        feeId: activeFee.feeId,
         slabNumber: activeFee.slabNumber,
         slabFloor: formData.slabFloor,
         slabCeiling: formData.slabCeiling,
@@ -304,12 +319,12 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
         endPointchargesTypes: formData.endPointchargesTypes,
         endPointcharge: formData.endPointcharge,
         gstType: formData.gstType,
-        gst: formData.gstType === 'fixed' ? 0 : 18,
+        gst: formData.gstType === 'fixed' ? 0 : DEFAULT_GST_PERCENT,
         convchargesApp: formData.convchargesApp ? 1 : 0,
         epchargesApp: formData.epchargesApp ? 1 : 0
       };
 
-      await RateMappingApiService.updateFeeByID(String(activeFee.id), payload);
+      await RateMappingApiService.updateFeeByID(String(activeFee.feeId), payload);
 
       // Log history + remarks for audit parity with Angular
       await Promise.all([
@@ -319,7 +334,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
           approvedfor: 'ManageFee'
         }),
         RateMappingApiService.approveFee({
-          approved_by: `${userName}:${remarks.trim()}:${activeFee.id}`,
+          approved_by: `${userName}:${remarks.trim()}:${activeFee.feeId}`,
           client_code: selectedClient,
           approvedfor: 'updatefee'
         })
@@ -336,10 +351,134 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     }
   };
 
+  // Add Slab handlers
+  const openAddSlab = (fee: FeeRecord) => {
+    setAddFee(fee);
+    setAddForm({
+      slabFloor: 0,
+      slabCeiling: 0,
+      convchargesType: 'percentage',
+      convcharges: 0,
+      endPointchargesTypes: 'percentage',
+      endPointcharge: 0,
+      gstType: 'percentage',
+      convchargesApp: true,
+      epchargesApp: true,
+    });
+    setIsAddOpen(true);
+  };
+
+  const submitAddSlab = async () => {
+    if (!addFee) return;
+    if (addForm.slabFloor >= addForm.slabCeiling) {
+      toast.error('Slab floor must be less than slab ceiling');
+      return;
+    }
+    try {
+      await RateMappingApiService.addNewSlab({
+        FeeId: addFee.feeId,
+        ConvChargesType: addForm.convchargesType,
+        ConvCharges: addForm.convcharges,
+        EPChargesTypes: addForm.endPointchargesTypes,
+        EPCharges: addForm.endPointcharge,
+        GstType: addForm.gstType,
+        GstValue: addForm.gstType === 'fixed' ? 0 : DEFAULT_GST_PERCENT,
+        SlabFloor: addForm.slabFloor,
+        SlabCeiling: addForm.slabCeiling,
+        AddedBy: userName,
+      });
+      toast.success('Slab added successfully');
+      setBanner({ type: 'success', message: 'Slab added successfully.' });
+      setIsAddOpen(false);
+      const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
+      setFeeRecords(refreshed.map(normalizeFee));
+    } catch (error: any) {
+      const msg = error?.message || 'Failed to add slab';
+      toast.error(msg);
+      setBanner({ type: 'error', message: msg });
+    }
+  };
+
+  // Delete Slab handlers
+  const openDeleteSlab = (fee: FeeRecord) => {
+    setDeleteFee(fee);
+    setDeleteRemarks('');
+    setIsDeleteOpen(true);
+  };
+  const submitDeleteSlab = async () => {
+    if (!deleteFee) return;
+    if (!deleteRemarks.trim()) {
+      toast.error('Remarks are required to delete a slab');
+      return;
+    }
+    try {
+      await RateMappingApiService.deleteSlab(deleteFee.feeId, userName, deleteRemarks.trim());
+      toast.success('Slab deleted successfully');
+      setBanner({ type: 'success', message: 'Slab deleted successfully.' });
+      setIsDeleteOpen(false);
+      const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
+      setFeeRecords(refreshed.map(normalizeFee));
+    } catch (error: any) {
+      const msg = error?.message || 'Failed to delete slab';
+      toast.error(msg);
+      setBanner({ type: 'error', message: msg });
+    }
+  };
+
+  const updateFeeForwarded = async (fee: FeeRecord) => {
+    if (!selectedClient) return;
+    try {
+      setIsFFLoading(true);
+      let clientId = fee.clientId || 0;
+      if (!clientId) {
+        const resp = await RateMappingApiService.getClientId(selectedClient);
+        const first = Array.isArray(resp) && resp.length > 0 ? resp[0] : null;
+        clientId = Number(first?.clientId || first?.clientid || 0);
+      }
+      const paymodeId = Number(fee.paymodeId || 0);
+      if (!clientId || !paymodeId) {
+        toast.error('Missing client or payment mode identifier');
+        return;
+      }
+      await RateMappingApiService.updateFeeForwarded({
+        p_client_id: clientId,
+        p_paymode_id: paymodeId,
+        p_updatedBy: userName,
+      });
+      toast.success('Fee forwarded updated');
+      setBanner({ type: 'success', message: 'Fee forwarded updated.' });
+      const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
+      setFeeRecords(refreshed.map(normalizeFee));
+    } catch (error: any) {
+      const msg = error?.message || 'Failed to update fee forwarded';
+      toast.error(msg);
+      setBanner({ type: 'error', message: msg });
+    } finally {
+      setIsFFLoading(false);
+    }
+  };
+
+  const getFeeFwdDisabledReason = (fee: FeeRecord): string | null => {
+    if (!isAdmin) return 'Requires admin privileges';
+    if (isFFLoading) return 'Updating in progress';
+    if (!fee.paymodeId) return 'Missing payment mode identifier';
+    return null;
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Filters Section */}
       <div className="relative z-20 rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-lg">
+        {banner && (
+          <div
+            className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+              banner.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+            }`}
+          >
+            <Info className={banner.type === 'success' ? 'text-emerald-600 h-4 w-4' : 'text-red-600 h-4 w-4'} />
+            <span>{banner.message}</span>
+          </div>
+        )}
         <div className="mb-4">
           <h2 className="text-lg md:text-xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Client Selection</h2>
           <p className="text-xs md:text-sm text-gray-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
@@ -472,7 +611,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
 
                 {!isLoading &&
                   filteredFees.map((fee) => (
-                    <tr key={`${fee.id}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
+                    <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
                       <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900">
                         {fee.payMode || '-'}
                       </td>
@@ -500,16 +639,57 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                         </span>
                       </td>
                       <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditModal(fee)}
-                          className="min-h-[52px] touch-manipulation"
-                        >
-                          <Pencil className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                          <span className="hidden sm:inline">Edit</span>
-                          <span className="sm:hidden">Edit</span>
-                        </Button>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditModal(fee)}
+                            className="min-h-[40px] touch-manipulation"
+                          >
+                            <Pencil className="mr-1 h-3 w-3 md:h-4 md:w-4" /> Edit
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openAddSlab(fee)}
+                            disabled={!isAdmin}
+                            className="min-h-[40px] touch-manipulation"
+                          >
+                            <PlusCircle className="mr-1 h-3 w-3 md:h-4 md:w-4" /> Add Slab
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openDeleteSlab(fee)}
+                            disabled={!isAdmin}
+                            className="min-h-[40px] touch-manipulation"
+                          >
+                            <Trash2 className="mr-1 h-3 w-3 md:h-4 md:w-4" /> Delete
+                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => updateFeeForwarded(fee)}
+                                    disabled={Boolean(getFeeFwdDisabledReason(fee))}
+                                    className="min-h-[40px] touch-manipulation"
+                                  >
+                                    <RefreshCw className={`mr-1 h-3 w-3 md:h-4 md:w-4 ${isFFLoading ? 'animate-spin' : ''}`} />
+                                    Fee Fwd
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              {getFeeFwdDisabledReason(fee) && (
+                                <TooltipContent>
+                                  <p>{getFeeFwdDisabledReason(fee)}</p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -648,7 +828,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="percentage">Percentage (18%)</SelectItem>
+                        <SelectItem value="percentage">Percentage ({DEFAULT_GST_PERCENT}%)</SelectItem>
                         <SelectItem value="fixed">Fixed (₹0)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -748,21 +928,110 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             </div>
           )}
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="ghost"
-              onClick={closeEditModal}
-              className="w-full sm:w-auto min-h-[52px] touch-manipulation"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateFee}
-              disabled={!isAdmin}
-              className="w-full sm:w-auto min-h-[52px] touch-manipulation"
-            >
-              Update fee →
-            </Button>
+      <DialogFooter className="flex-col sm:flex-row gap-2">
+        <Button
+          variant="ghost"
+          onClick={closeEditModal}
+          className="w-full sm:w-auto min-h-[52px] touch-manipulation"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleUpdateFee}
+          disabled={!isAdmin}
+          className="w-full sm:w-auto min-h-[52px] touch-manipulation"
+        >
+          Update fee →
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+      {/* Add Slab Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={(open) => !open && setIsAddOpen(false)}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg md:text-xl font-extrabold" style={{ letterSpacing: '-0.02em' }}>
+              Add New Slab
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">Slab floor (₹)</Label>
+                <Input type="number" value={addForm.slabFloor} onChange={(e) => setAddForm((p) => ({ ...p, slabFloor: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label className="text-xs md:text-sm">Slab ceiling (₹)</Label>
+                <Input type="number" value={addForm.slabCeiling} onChange={(e) => setAddForm((p) => ({ ...p, slabCeiling: Number(e.target.value) }))} />
+              </div>
+            </div>
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">Conv charges value</Label>
+                <Input type="number" value={addForm.convcharges} onChange={(e) => setAddForm((p) => ({ ...p, convcharges: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label className="text-xs md:text-sm">Conv type</Label>
+                <Select value={addForm.convchargesType} onValueChange={(v) => setAddForm((p) => ({ ...p, convchargesType: v as any }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">EP charges value</Label>
+                <Input type="number" value={addForm.endPointcharge} onChange={(e) => setAddForm((p) => ({ ...p, endPointcharge: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label className="text-xs md:text-sm">EP type</Label>
+                <Select value={addForm.endPointchargesTypes} onValueChange={(v) => setAddForm((p) => ({ ...p, endPointchargesTypes: v as any }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs md:text-sm">GST Type</Label>
+              <Select value={addForm.gstType} onValueChange={(v) => setAddForm((p) => ({ ...p, gstType: v as any }))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percentage">Percentage ({DEFAULT_GST_PERCENT}%)</SelectItem>
+                  <SelectItem value="fixed">Fixed (₹0)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={submitAddSlab} disabled={!isAdmin} className="w-full sm:w-auto">Add slab →</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Slab Dialog */}
+      <Dialog open={isDeleteOpen} onOpenChange={(open) => !open && setIsDeleteOpen(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg md:text-xl font-extrabold" style={{ letterSpacing: '-0.02em' }}>
+              Delete Slab
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700">Provide remarks for audit trail.</p>
+            <Label className="text-xs md:text-sm">Remarks</Label>
+            <Input value={deleteRemarks} onChange={(e) => setDeleteRemarks(e.target.value)} placeholder="Reason for deletion" />
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="ghost" onClick={() => setIsDeleteOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+            <Button variant="destructive" onClick={submitDeleteSlab} disabled={!isAdmin} className="w-full sm:w-auto">Delete →</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

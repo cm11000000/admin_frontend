@@ -24,8 +24,8 @@ interface NormalizedClient {
 }
 
 const normalizeClient = (client: ClientCode): NormalizedClient => ({
-  code: client.clientCode,
-  name: client.clientName ?? client.clientCode
+  code: client.clientCode || '',
+  name: client.clientName || client.clientCode || ''
 });
 
 export default function TransactionLimitPage(): JSX.Element {
@@ -68,8 +68,9 @@ export default function TransactionLimitPage(): JSX.Element {
       .then((data) => {
         if (!mounted) return;
         const mapped = (data || [])
+          .filter(client => client?.clientCode) // Filter out clients without clientCode
           .map(normalizeClient)
-          .sort((a, b) => a.code.localeCompare(b.code));
+          .sort((a, b) => (a.code || '').localeCompare(b.code || ''));
         setClients(mapped);
       })
       .catch((error: any) => {

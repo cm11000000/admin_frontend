@@ -6,7 +6,7 @@
 
 import React, { useEffect, useState } from 'react'
 import AnalyticsApiService from '@/services/api/AnalyticsApiService'
-import DateRangePicker from '@/components/reports/DateRangePicker'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,19 @@ export default function ReferralTrendsPage() {
   const [loading, setLoading] = useState(true)
   const [series, setSeries] = useState<any[]>([])
   const [top, setTop] = useState<any[]>([])
+  const [selectedRange, setSelectedRange] = useState<'7d' | '30d' | '90d'>('7d')
+
+  const deriveRange = (rangeType: '7d' | '30d' | '90d') => {
+    const now = new Date()
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const to = fmt(now)
+    const start = new Date(now)
+    if (rangeType === '7d') start.setDate(start.getDate() - 6)
+    else if (rangeType === '30d') start.setDate(start.getDate() - 29)
+    else if (rangeType === '90d') start.setDate(start.getDate() - 89)
+    const from = fmt(start)
+    return { from, to }
+  }
 
   const load = async () => {
     setLoading(true)
@@ -34,6 +47,13 @@ export default function ReferralTrendsPage() {
       setTop(data?.topClients || [])
     } finally { setLoading(false) }
   }
+
+  const handleRangeChange = (rangeType: '7d' | '30d' | '90d') => {
+    setSelectedRange(rangeType)
+    const newRange = deriveRange(rangeType)
+    setRange(newRange)
+  }
+
   useEffect(()=>{ load() }, [])
 
   return (
@@ -87,12 +107,50 @@ export default function ReferralTrendsPage() {
               className="w-full min-h-[44px]"
             />
           </div>
-          <div className="md:col-span-2">
+
+          {/* From Date */}
+          <div className="relative z-50">
             <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">
-              <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" /> Date Range
+              <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" /> From
             </label>
-            <DateRangePicker value={range} onChange={setRange} variant="orange" helperText="Max 92 days" />
+            <DatePicker value={range.from} onChange={(v) => setRange({ ...range, from: v })} placeholder="From date" />
           </div>
+
+          {/* To Date */}
+          <div className="relative z-50">
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">
+              <Calendar className="inline-block w-4 h-4 mr-1 text-gray-600" /> To
+            </label>
+            <DatePicker value={range.to} onChange={(v) => setRange({ ...range, to: v })} placeholder="To date" />
+          </div>
+        </div>
+
+        {/* Range Selector Buttons */}
+        <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4">
+          <Button
+            variant={selectedRange === '7d' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleRangeChange('7d')}
+            className={`min-h-[44px] ${selectedRange === '7d' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white' : 'bg-white'}`}
+          >
+            7 Days
+          </Button>
+          <Button
+            variant={selectedRange === '30d' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleRangeChange('30d')}
+            className={`min-h-[44px] ${selectedRange === '30d' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white' : 'bg-white'}`}
+          >
+            30 Days
+          </Button>
+          <Button
+            variant={selectedRange === '90d' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleRangeChange('90d')}
+            className={`min-h-[44px] ${selectedRange === '90d' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white' : 'bg-white'}`}
+          >
+            90 Days
+          </Button>
         </div>
 
         {/* Apply Button */}

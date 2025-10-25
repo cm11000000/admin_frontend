@@ -24,25 +24,25 @@ export interface ApiEndpoint {
 }
 
 /**
- * Get API configuration - Matches Angular environment.ts exactly
- * ADMIN_URL = 'https://adminapi.sabpaisa.in/api/' - For admin operations
- * ADMIN_URL_NEW = 'https://reportapi.sabpaisa.in/' - For reports and master data
- * PRODUCT_COB = 'https://cobawsapi.sabpaisa.in/' - For COB operations
+ * Get API configuration - Updated to use CloudFront HTTPS URLs
+ * Admin API - CloudFront: https://d18fssv9lb395v.cloudfront.net
+ * Report API - CloudFront: https://d63eaznhkkse9.cloudfront.net
+ * COB API - External: https://stgcobapi.sabpaisa.in
  */
 export function getApiConfig(): ApiConfig {
   const isProd = process.env.NODE_ENV === 'production';
   return {
-    // Admin API
+    // Admin API - CloudFront HTTPS
     baseURL: isProd
-      ? (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin/api/')
-      : 'https://staging-apis.13-204-100-160.sslip.io/admin/api/',
+      ? (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net')
+      : 'https://d18fssv9lb395v.cloudfront.net',
 
-    // Report API
+    // Report API - CloudFront HTTPS
     reportBaseURL: isProd
-      ? (process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/report/')
-      : 'https://staging-apis.13-204-100-160.sslip.io/report/',
+      ? (process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://d63eaznhkkse9.cloudfront.net')
+      : 'https://d63eaznhkkse9.cloudfront.net',
 
-    // COB API (Auth)
+    // COB API (Auth) - External service
     cobBaseURL: process.env.NEXT_PUBLIC_COB_API_URL || 'https://stgcobapi.sabpaisa.in/',
 
     timeout: 30000,

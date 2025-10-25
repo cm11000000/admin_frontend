@@ -1,15 +1,13 @@
 'use client';
 // Client-only page; safe for static export
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
   AlertCircle,
-  Loader2,
-  Search
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import RateMappingApiService from '@/services/api/RateMappingApiService';
@@ -75,7 +73,6 @@ const normalizeFeeRecord = (item: any): FeeRecord => {
 
 const CloneRateMappingPage: React.FC = () => {
   const [userName, setUserName] = useState('');
-  const [clientSearch, setClientSearch] = useState('');
 
   const [sourceClient, setSourceClient] = useState('');
   const [targetClient, setTargetClient] = useState('');
@@ -86,15 +83,6 @@ const CloneRateMappingPage: React.FC = () => {
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
-
-  const resolvedClients = useMemo(() => {
-    if (!clientSearch.trim()) {
-      return clients;
-    }
-
-    const term = clientSearch.trim().toLowerCase();
-    return clients.filter((client) => `${client.code} ${client.name}`.toLowerCase().includes(term));
-  }, [clients, clientSearch]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -259,52 +247,13 @@ const CloneRateMappingPage: React.FC = () => {
         <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           <div className="relative z-20">
             <Label className="text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
-              Target client (new)
-            </Label>
-            <div className="relative mt-2 z-10">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600 pointer-events-none" />
-              <Input
-                value={clientSearch}
-                onChange={(event) => setClientSearch(event.target.value)}
-                placeholder="Search client code or name"
-                className="pl-9 min-h-[44px] touch-manipulation"
-              />
-            </div>
-            <div className="mt-3">
-              <Combobox
-                value={targetClient}
-                onChange={setTargetClient}
-                options={resolvedClients.slice(0, 200).map((client) => ({
-                  value: client.code,
-                  label: `${client.code} — ${client.name}`
-                }))}
-                placeholder={isLoadingClients ? 'Loading clients…' : 'Select target client'}
-                searchPlaceholder="Search clients..."
-                emptyMessage={
-                  clientSearch
-                    ? `No clients match "${clientSearch}".`
-                    : 'Client master unavailable.'
-                }
-                disabled={isLoadingClients || resolvedClients.length === 0}
-                className="min-h-[44px] touch-manipulation"
-              />
-              {resolvedClients.length > 200 && (
-                <p className="mt-2 text-xs text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Showing 200 of {resolvedClients.length}. Refine your search…
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="relative z-10">
-            <Label className="text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
               Source client (existing)
             </Label>
             <div className="mt-2">
               <Combobox
                 value={sourceClient}
                 onChange={setSourceClient}
-                options={clients.slice(0, 200).map((client) => ({
+                options={clients.map((client) => ({
                   value: client.code,
                   label: `${client.code} — ${client.name}`
                 }))}
@@ -314,11 +263,27 @@ const CloneRateMappingPage: React.FC = () => {
                 disabled={isLoadingClients || clients.length === 0}
                 className="min-h-[44px] touch-manipulation"
               />
-              {clients.length > 200 && (
-                <p className="mt-2 text-xs text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Showing 200 of {clients.length}. Refine your search…
-                </p>
-              )}
+            </div>
+          </div>
+
+          <div className="relative z-10">
+            <Label className="text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+              Target client (new)
+            </Label>
+            <div className="mt-2">
+              <Combobox
+                value={targetClient}
+                onChange={setTargetClient}
+                options={clients.map((client) => ({
+                  value: client.code,
+                  label: `${client.code} — ${client.name}`
+                }))}
+                placeholder={isLoadingClients ? 'Loading clients…' : 'Select target client'}
+                searchPlaceholder="Search clients..."
+                emptyMessage="Client master unavailable."
+                disabled={isLoadingClients || clients.length === 0}
+                className="min-h-[44px] touch-manipulation"
+              />
             </div>
           </div>
         </div>

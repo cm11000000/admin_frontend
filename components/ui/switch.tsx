@@ -5,7 +5,35 @@ import { cn } from "@/lib/utils"
 
 // Simple switch implementation without Radix UI
 const SwitchPrimitives = {
-  Root: React.forwardRef<HTMLButtonElement, any>(({ children, ...props }, ref) => <button ref={ref} type="button" role="switch" {...props}>{children}</button>),
+  Root: React.forwardRef<HTMLButtonElement, any>(({ children, onCheckedChange, checked, defaultChecked, ...props }, ref) => {
+    const [isChecked, setIsChecked] = React.useState(checked ?? defaultChecked ?? false)
+
+    React.useEffect(() => {
+      if (checked !== undefined) {
+        setIsChecked(checked)
+      }
+    }, [checked])
+
+    const handleClick = () => {
+      const newChecked = !isChecked
+      setIsChecked(newChecked)
+      onCheckedChange?.(newChecked)
+    }
+
+    return (
+      <button
+        ref={ref}
+        type="button"
+        role="switch"
+        aria-checked={isChecked}
+        data-state={isChecked ? 'checked' : 'unchecked'}
+        onClick={handleClick}
+        {...props}
+      >
+        {children}
+      </button>
+    )
+  }),
   Thumb: React.forwardRef<HTMLSpanElement, any>(({ ...props }, ref) => <span ref={ref} {...props} />)
 }
 SwitchPrimitives.Root.displayName = "SwitchRoot"
@@ -98,20 +126,19 @@ const Switch = React.forwardRef<
             : undefined
         }
       >
-        <SwitchPrimitives.Thumb className={cn(thumbVariants({ size }))} asChild={animate}>
-          {animate ? (
-            <motion.span
-              layout
-              transition={{
-                type: "spring",
-                stiffness: 500,
-                damping: 30,
-              }}
-            />
-          ) : (
-            <span />
-          )}
-        </SwitchPrimitives.Thumb>
+        {animate ? (
+          <motion.span
+            className={cn(thumbVariants({ size }))}
+            layout
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 30,
+            }}
+          />
+        ) : (
+          <SwitchPrimitives.Thumb className={cn(thumbVariants({ size }))} />
+        )}
       </SwitchPrimitives.Root>
     )
 
@@ -239,20 +266,19 @@ const IconSwitch = React.forwardRef<
             </motion.div>
           )}
         </div>
-        <SwitchPrimitives.Thumb className={cn(thumbVariants({ size }))} asChild={animate}>
-          {animate ? (
-            <motion.span
-              layout
-              transition={{
-                type: "spring",
-                stiffness: 500,
-                damping: 30,
-              }}
-            />
-          ) : (
-            <span />
-          )}
-        </SwitchPrimitives.Thumb>
+        {animate ? (
+          <motion.span
+            className={cn(thumbVariants({ size }))}
+            layout
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 30,
+            }}
+          />
+        ) : (
+          <SwitchPrimitives.Thumb className={cn(thumbVariants({ size }))} />
+        )}
       </SwitchPrimitives.Root>
     )
   }

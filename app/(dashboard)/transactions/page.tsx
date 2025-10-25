@@ -10,6 +10,7 @@ import {
   transactionService,
   AngularTransactionFilter
 } from '@/services/api/TransactionApiService';
+import ReportApiService from '@/services/api/ReportApiService';
 import {
   Search,
   Download,
@@ -268,80 +269,45 @@ export default function TransactionsPage() {
     }
   };
 
-  // Export to Excel - matches Angular ExportToExcel (line 615)
+  // Export via backend (v6 async CSV) - triggers job and opens S3 link when ready
   const handleExport = async () => {
     if (!transactions || transactions.length === 0) {
       toast.error('Search data first');
       return;
     }
-
     setIsExporting(true);
     try {
-      // Build export request with length=0 to get all records (line 626)
       const exportRequest: AngularTransactionFilter = {
         clientCode: filters.clientCode,
         paymentStatus: filters.paymentStatus || 'ALL',
         paymentMode: filters.paymentMode || 'ALL',
         fromDate: filters.fromDate,
         endDate: filters.endDate,
-        length: 0, // 0 means get all records for export
+        length: 0,
         page: 0,
         terminalStatus: filters.terminalStatus,
         loginBy: userName,
-      };
+        search: (filters.search || '').trim() || undefined,
+      } as any;
 
-      const response = await transactionService.getAdminTxnHistory(exportRequest);
+      await ReportApiService.requestAdminTxnHistoryExcelV6(exportRequest);
+      toast.info('Export started. Preparing CSV on server...');
 
-      // Create Excel export with exact column structure from Angular (line 639-701)
-      const excelHeaderRow = [
-        "srNo", "txn_id", "client_txn_id", "amount_type", "challan_no",
-        "payer_amount", "trans_date", "trans_complete_date", "status",
-        "pag_response_code", "resp_msg", "payer_first_name", "payer_lst_name",
-        "payer_mob", "payer_email", "client_code", "payment_mode",
-        "payee_address", "udf1", "udf2", "udf3", "udf4", "udf5",
-        "udf6", "udf7", "udf8", "udf9", "udf10", "udf11", "udf12",
-        "udf13", "udf14", "udf15", "udf16", "udf17", "udf18", "udf19", "udf20",
-        "client_name", "gr_number", "paid_amount", "pg_pay_mode",
-        "act_amount", "bank_message", "fee_forward", "ifsc_code",
-        "payer_acount_number", "bank_txn_id", "pg_return_amount",
-        "p_convcharges", "p_ep_charges", "p_gst", "ep_conv_rate",
-        "ep_conv_rate_type", "sp_conv_rate", "sp_conv_rate_type",
-        "gst_rate", "gst_rate_type", "is_settled", "donation_amount",
-        "payment_mode_id", "servicebank_id", "business_ctg_code",
-        "pg_name", "referral_code"
-      ];
-
-      // Escape CSV fields to handle commas, quotes and newlines
-      const esc = (val: any) => {
-        const s = String(val ?? '');
-        if (/[",\n]/.test(s)) {
-          return '"' + s.replace(/"/g, '""') + '"';
-        }
-        return s;
-      };
-
-      const csvContent = [
-        excelHeaderRow.join(','),
-        ...response.results.map((item: any) =>
-          excelHeaderRow.map(key => esc(item[key])).join(',')
-        )
-      ].join('\n');
-
-      // Download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `Transaction_History_${Date.now()}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast.success('Export completed successfully');
+      const url = await ReportApiService.waitForExportUrl({
+        createdBy: userName,
+        sourceStartsWith: 'v6_admin_txn_excel',
+        pollMs: 3000,
+        timeoutMs: 180000,
+      });
+      if (url) {
+        window.open(url, '_blank');
+        toast.success('CSV is ready. Download started.');
+      } else {
+        toast.info('Export queued. Check Jobs or try again later.');
+      }
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('Failed to export data');
+      toast.error('Failed to start export');
     } finally {
       setIsExporting(false);
     }

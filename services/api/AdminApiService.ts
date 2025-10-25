@@ -127,28 +127,28 @@ class AdminApiService {
   constructor() {
     // Initialize different base URLs
     this.reportApi = axios.create({
-      baseURL: 'https://staging-apis.13-204-100-160.sslip.io/report',
+      baseURL: process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://d63eaznhkkse9.cloudfront.net',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
     this.adminApi = axios.create({
-      baseURL: (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin').replace(/\/$/, '') + '/api',
+      baseURL: (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net').replace(/\/$/, '') + '/api',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
     this.accessApi = axios.create({
-      baseURL: (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin').replace(/\/$/, ''),
+      baseURL: (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net').replace(/\/$/, ''),
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
     this.payLinkApi = axios.create({
-      baseURL: (process.env.NEXT_PUBLIC_PAYLINK_BASE_URL || (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin').replace(/\/$/, '')).replace(/\/$/, '') + '/api',
+      baseURL: (process.env.NEXT_PUBLIC_PAYLINK_BASE_URL || (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net').replace(/\/$/, '')).replace(/\/$/, '') + '/api',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -169,7 +169,7 @@ class AdminApiService {
     });
 
     this.mobilePocApi = axios.create({
-      baseURL: (process.env.NEXT_PUBLIC_POC_BASE_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin').replace(/\/$/, ''),
+      baseURL: (process.env.NEXT_PUBLIC_POC_BASE_URL || 'https://d18fssv9lb395v.cloudfront.net').replace(/\/$/, ''),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -409,7 +409,7 @@ class AdminApiService {
 
   // ============== FEES ==============
   async saveFee(feeData: any): Promise<any> {
-    const adminBase = (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin').replace(/\/$/, '');
+    const adminBase = (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net').replace(/\/$/, '');
     const response = await axios.post(`${adminBase}/REST/config/savefee`, feeData, {
       headers: {
         'Content-Type': 'application/json',

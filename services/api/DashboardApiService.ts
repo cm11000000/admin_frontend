@@ -145,7 +145,7 @@ class DashboardApiService extends BaseApiService {
 
   /**
    * Get Transaction Summary by Client (matching Angular's getSuccessTxnSummaryAdmin)
-   * Endpoint: https://reportapi.sabpaisa.in/transactions/AdminSuccessTxnSummary/
+   * Endpoint (v6): https://reportapi.sabpaisa.in/v6/transactions/AdminSuccessTxnSummary/
    */
   async getTransactionSummaryByClient(params: DashboardApiRequest): Promise<TransactionSummary[]> {
     try {
@@ -153,7 +153,7 @@ class DashboardApiService extends BaseApiService {
       console.log('[DashboardAPI] Token from localStorage:', localStorage.getItem('accessToken') ? 'EXISTS' : 'MISSING')
 
       const response = await this.request<TransactionSummary[]>(
-        'transactions/AdminSuccessTxnSummary/',
+        'v6/transactions/AdminSuccessTxnSummary/',
         'POST',
         params
       )

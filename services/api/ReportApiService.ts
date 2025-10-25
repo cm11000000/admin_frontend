@@ -142,10 +142,10 @@ class ReportApiService {
   }
 
   /**
-   * Fetch refund transaction history via txnHistory service
-   * Matches Angular getRefundReport(filter)
-   * API: POST {txnHistoryDbsUrl}/transactions/GetRefundTxnHistory/
-   * Body: { clientCode, fromDate, endDate, noOfClient: 0, rpttype: 1 }
+   * Fetch refund transaction history via txnHistory service (v6)
+   * Matches Angular getRefundReport(filter) payload
+   * API: POST {txnHistoryDbsUrl}/v6/transactions/GetRefundTxnHistory/
+   * Body: { clientCode, fromDate, endDate, noOfClient, rpttype, page, length, search }
    */
   static async getRefundTxnHistory(body: {
     clientCode: string;
@@ -153,15 +153,18 @@ class ReportApiService {
     endDate: string;
     noOfClient: number;
     rpttype: number;
+    page?: number;
+    length?: number;
+    search?: string;
   }): Promise<any> {
     const base = process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL || 'https://staging-apis.13-204-100-160.sslip.io/report';
-    return ApiService.post(`${base.replace(/\/$/, '')}/transactions/GetRefundTxnHistory/`, body);
+    return ApiService.post(`${base.replace(/\/$/, '')}/v6/transactions/GetRefundTxnHistory/`, body);
   }
 
   /**
-   * Fetch chargeback transaction history (Angular getChargebackReport)
-   * API: POST {txnHistoryDbsUrl}/transactions/GetChargebackTxnHistory/
-   * Body: { clientCode, fromDate, endDate, noOfClient: 0, rpttype: 1 }
+   * Fetch chargeback transaction history (v6)
+   * API: POST {txnHistoryDbsUrl}/v6/transactions/GetChargebackTxnHistory/
+   * Body: { clientCode, fromDate, endDate, noOfClient, rpttype, page, length, search }
    */
   static async getChargebackTxnHistory(body: {
     clientCode: string;
@@ -169,9 +172,12 @@ class ReportApiService {
     endDate: string;
     noOfClient: number;
     rpttype: number;
+    page?: number;
+    length?: number;
+    search?: string;
   }): Promise<any> {
     const base = process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL || 'https://staging-apis.13-204-100-160.sslip.io/report';
-    return ApiService.post(`${base.replace(/\/$/, '')}/transactions/GetChargebackTxnHistory/`, body);
+    return ApiService.post(`${base.replace(/\/$/, '')}/v6/transactions/GetChargebackTxnHistory/`, body);
   }
 
   /**
@@ -197,6 +203,152 @@ class ReportApiService {
       process.env.NEXT_PUBLIC_REPORT_API_URL ||
       'https://staging-apis.13-204-100-160.sslip.io/report';
     return ApiService.post(`${String(base).replace(/\/$/, '')}/transactions/GetPaymentModeMaster/`, {});
+  }
+
+  // ==================== V6 Export Triggers (CSV via backend) ====================
+  /**
+   * Trigger Admin Transactions CSV export (v6 async job)
+   * Endpoint: POST {reportBase}/v6/transactions/GetAdminTxnHistoryExcel/
+   */
+  static async requestAdminTxnHistoryExcelV6(filter: {
+    clientCode: string;
+    paymentStatus: string;
+    paymentMode: string;
+    fromDate: string;
+    endDate: string;
+    length: number;
+    page: number;
+    terminalStatus: string;
+    loginBy: string;
+    search?: string;
+  }): Promise<{ detail: string }> {
+    const base =
+      process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
+      process.env.NEXT_PUBLIC_REPORT_API_URL ||
+      'https://staging-apis.13-204-100-160.sslip.io/report';
+    return ApiService.post(
+      `${String(base).replace(/\/$/, '')}/v6/transactions/GetAdminTxnHistoryExcel/`,
+      filter
+    );
+  }
+
+  /**
+   * Trigger Refunds CSV export (v6 async job)
+   * Endpoint: POST {reportBase}/v6/transactions/GetRefundTxnExcelHistory/
+   */
+  static async requestRefundTxnExcelV6(body: {
+    clientCode: string;
+    fromDate: string;
+    endDate: string;
+    loginBy: string;
+  }): Promise<{ detail: string }> {
+    const base =
+      process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
+      process.env.NEXT_PUBLIC_REPORT_API_URL ||
+      'https://staging-apis.13-204-100-160.sslip.io/report';
+    return ApiService.post(
+      `${String(base).replace(/\/$/, '')}/v6/transactions/GetRefundTxnExcelHistory/`,
+      body
+    );
+  }
+
+  /**
+   * Trigger Chargebacks CSV export (v6 async job)
+   * Endpoint: POST {reportBase}/v6/transactions/GetChargebackTxnExcelHistory/
+   */
+  static async requestChargebackTxnExcelV6(body: {
+    clientCode: string;
+    fromDate: string;
+    endDate: string;
+    loginBy: string;
+  }): Promise<{ detail: string }> {
+    const base =
+      process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
+      process.env.NEXT_PUBLIC_REPORT_API_URL ||
+      'https://staging-apis.13-204-100-160.sslip.io/report';
+    return ApiService.post(
+      `${String(base).replace(/\/$/, '')}/v6/transactions/GetChargebackTxnExcelHistory/`,
+      body
+    );
+  }
+
+  /**
+   * Trigger Settlements CSV export (v6 async job; V2 columns)
+   * Endpoint: POST {reportBase}/v6/transactions/GetSettledTxnExcelV2History/
+   */
+  static async requestSettledTxnExcelV6(body: {
+    clientCode: string;
+    fromDate: string;
+    endDate: string;
+    loginBy: string;
+  }): Promise<{ detail: string }> {
+    const base =
+      process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL ||
+      process.env.NEXT_PUBLIC_REPORT_API_URL ||
+      'https://staging-apis.13-204-100-160.sslip.io/report';
+    return ApiService.post(
+      `${String(base).replace(/\/$/, '')}/v6/transactions/GetSettledTxnExcelV2History/`,
+      body
+    );
+  }
+
+  /**
+   * List export jobs for a user and date window via Admin API
+   * Endpoint: GET {adminBase}/api/REST/TxnReportS3Details/?created_by=...&from_date=...&to_date=...&status=Completed
+   */
+  static async listTxnReportS3Details(params: {
+    created_by: string;
+    from_date?: string;
+    to_date?: string;
+    status?: 'Processing' | 'Completed' | 'Failure' | string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ count: number; results: any[] }> {
+    const adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin';
+    const qs = new URLSearchParams();
+    qs.set('created_by', params.created_by);
+    if (params.from_date) qs.set('from_date', params.from_date);
+    if (params.to_date) qs.set('to_date', params.to_date);
+    if (params.status) qs.set('status', params.status);
+    if (params.limit) qs.set('limit', String(params.limit));
+    if (params.offset) qs.set('offset', String(params.offset));
+    return ApiService.get(`${adminBase.replace(/\/$/, '')}/api/REST/TxnReportS3Details/?${qs.toString()}`);
+  }
+
+  /**
+   * Poll for latest Completed export for a source; resolves with s3_bucket_url or null on timeout
+   */
+  static async waitForExportUrl(opts: {
+    createdBy: string;
+    sourceStartsWith: string; // e.g. 'v6_admin_txn_excel'
+    pollMs?: number;
+    timeoutMs?: number;
+  }): Promise<string | null> {
+    const pollMs = opts.pollMs ?? 3000;
+    const timeoutMs = opts.timeoutMs ?? 120000; // 2 minutes
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const resp = await this.listTxnReportS3Details({
+          created_by: opts.createdBy,
+          status: 'Completed',
+          limit: 50,
+        });
+        const rows = Array.isArray(resp?.results) ? resp.results : [];
+        // Find the most recent matching source with a valid URL
+        const match = rows.find((r: any) =>
+          String(r?.source || '').startsWith(opts.sourceStartsWith) &&
+          r?.s3_bucket_url && String(r.s3_bucket_url).startsWith('http')
+        );
+        if (match) {
+          return String(match.s3_bucket_url);
+        }
+      } catch (e) {
+        // ignore and continue polling
+      }
+      await new Promise(res => setTimeout(res, pollMs));
+    }
+    return null;
   }
 
   /**
@@ -1095,7 +1247,7 @@ class ReportApiService {
    * Get reseller list
    */
   static async getResellerList(): Promise<any> {
-    const cobKycBase = (process.env.NEXT_PUBLIC_COBKYC_URL || 'https://staging-apis.13-204-100-160.sslip.io').replace(/\/$/, '');
+    const cobKycBase = (process.env.NEXT_PUBLIC_COBKYC_URL || 'https://cobkyc.sabpaisa.in').replace(/\/$/, '');
     return ApiService.get(`${cobKycBase}/kyc/get-client-code-by-role/?role=reseller&null_client_codes=True`);
   }
 
@@ -1115,9 +1267,9 @@ class ReportApiService {
   // ============= SETTLEMENT REPORT (View Settlement Report) =============
 
   /**
-   * Get settlement report (View Settlement Report)
-   * Matches Angular getSettelmentReport method
-   * @param data - Request body with clientCode, fromDate, endDate, noOfClient, rpttype
+   * Get settlement report (View Settlement Report) — v6
+   * Matches Angular getSettelmentReport method payload
+   * @param data - Request body with clientCode, fromDate, endDate, noOfClient, rpttype, page, length, search
    */
   static async getSettlementReport(data: {
     clientCode: string;
@@ -1125,10 +1277,13 @@ class ReportApiService {
     endDate: string;
     noOfClient: number;
     rpttype: number;
+    page?: number;
+    length?: number;
+    search?: string;
   }): Promise<any> {
-    // Match Angular: txnHistoryDbsUrl + transactions/GetSettledTxnHistory/
+    // v6 optimized path under same base
     const base = process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL || 'https://staging-apis.13-204-100-160.sslip.io/report';
-    return ApiService.post(`${base.replace(/\/$/, '')}/transactions/GetSettledTxnHistory/`, data);
+    return ApiService.post(`${base.replace(/\/$/, '')}/v6/transactions/GetSettledTxnHistory/`, data);
   }
 
   /**

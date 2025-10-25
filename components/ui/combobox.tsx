@@ -58,8 +58,9 @@ export function Combobox({
   const computePosition = () => {
     if (!containerRef.current) return
     const rect = containerRef.current.getBoundingClientRect()
-    const top = rect.bottom + (window.scrollY || window.pageYOffset)
-    const left = rect.left + (window.scrollX || window.pageXOffset)
+    // Use getBoundingClientRect directly for fixed positioning
+    const top = rect.bottom + 4 // Add small gap between trigger and dropdown
+    const left = rect.left
     setDropdownStyle({ position: 'fixed', top, left, width: rect.width, zIndex: 9999 })
   }
 
@@ -137,7 +138,7 @@ export function Combobox({
 
       {open && portalRoot && (
         ReactDOM.createPortal(
-        <div ref={dropdownRef} className="mt-1 bg-white border border-gray-300 rounded-md shadow-lg animate-in fade-in-0 zoom-in-95" style={dropdownStyle}>
+        <div ref={dropdownRef} className="bg-white border border-gray-300 rounded-md shadow-lg animate-in fade-in-0 zoom-in-95" style={dropdownStyle}>
           {/* Search Input */}
           <div className="p-2 border-b border-gray-200">
             <div className="relative">

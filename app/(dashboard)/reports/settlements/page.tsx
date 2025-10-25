@@ -47,6 +47,7 @@ export default function SettlementReportPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [reportData, setReportData] = useState<SettlementReportResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
@@ -73,6 +74,23 @@ export default function SettlementReportPage() {
       if (qClient && qFrom && qTo) setTimeout(() => { handleSearch(); }, 0);
     } catch {}
   }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    // Only trigger search if we already have data loaded (not initial load)
+    if (!reportData || !searchTerm) return;
+
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      setIsLoading(true);
+
+      fetchSettlements(1, pageSize)
+        .catch(() => {}) // Error already handled in fetchSettlements
+        .finally(() => setIsLoading(false));
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]); // Only depend on searchTerm
   const ensureClients = async () => {
     if (clientsLoaded) {
       return;
@@ -93,7 +111,49 @@ export default function SettlementReportPage() {
     }
   };
 
-  // Fetch settlement report
+  // Shared function to fetch settlements with pagination and search
+  const fetchSettlements = async (page: number, length: number, showSuccessToast = false) => {
+    try {
+      const inputData = {
+        clientCode,
+        fromDate,
+        endDate,
+        noOfClient: 0,
+        rpttype: 1,
+        page,
+        length,
+        search: searchTerm || undefined, // ✅ Send search to backend
+      };
+      const response = await ReportApiService.getSettlementReport(inputData);
+
+      // Handle paginated response
+      if (response && typeof response === 'object' && 'results' in response) {
+        setReportData({ results: response.results || [] });
+        setTotalCount(response.count || 0);
+
+        if (showSuccessToast) {
+          toast.success(`Found ${formatIndianNumber(response.count || 0)} settlements`);
+        }
+      } else {
+        // Fallback for non-paginated response (when page=0 or length=0)
+        setReportData({ results: Array.isArray(response) ? response : [] });
+        setTotalCount(Array.isArray(response) ? response.length : 0);
+
+        if (showSuccessToast && Array.isArray(response)) {
+          toast.success(`Found ${formatIndianNumber(response.length)} settlements`);
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch settlements:', err);
+      setError(err);
+      setReportData({ results: [] });
+      setTotalCount(0);
+      toast.error('Failed to load settlement report');
+      throw err; // Re-throw for caller to handle
+    }
+  };
+
+  // Fetch settlement report with backend pagination
   const handleSearch = async () => {
     if (!clientCode) {
       toast.error('Please select a client code');
@@ -115,101 +175,91 @@ export default function SettlementReportPage() {
 
     setIsLoading(true);
     setError(null);
+    setCurrentPage(1); // Reset to first page on new search
 
     try {
-      const inputData = {
-        clientCode,
-        fromDate,
-        endDate,
-        noOfClient: 0,
-        rpttype: 1
-      };
-      const data = await ReportApiService.getSettlementReport(inputData);
-      setReportData(data);
-    } catch (err: any) {
-      console.error('Failed to fetch settlement report:', err);
-      setError(err);
-      toast.error('Failed to load settlement report');
+      await fetchSettlements(1, pageSize, true);
+    } catch (err) {
+      // Error already handled in fetchSettlements
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleExport = () => {
+  // Handle page change with backend pagination
+  const handlePageChange = async (newPage: number) => {
+    if (newPage === currentPage) return;
+
+    setCurrentPage(newPage);
+    setIsLoading(true);
+
+    try {
+      await fetchSettlements(newPage, pageSize);
+    } catch (err) {
+      // Error already handled in fetchSettlements
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = async (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+    setIsLoading(true);
+
+    try {
+      await fetchSettlements(1, newSize);
+    } catch (err) {
+      // Error already handled in fetchSettlements
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
     if (!reportData?.results || reportData.results.length === 0) {
       toast.error('No data to export');
       return;
     }
-
-    // Convert to CSV
-    const headers = [
-      'Client Code',
-      'Client Name',
-      'Client Txn ID',
-      'SP Txn ID',
-      'Payer Amount',
-      'Actual Amount',
-      'Paid Amount',
-      'Settlement Amount',
-      'Settlement Date',
-      'Trans Date',
-      'Bank Settlement Amount',
-      'Bank Settlement Date',
-      'Settled By'
-    ];
-
-    const esc = (val: any) => {
-      const s = String(val ?? '');
-      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-    };
-
-    const csvContent = [
-      headers.join(','),
-      ...reportData.results.map(row =>
-        [
-          esc(row.client_code),
-          esc(row.client_name),
-          esc(row.client_txn_id),
-          esc(row.txn_id),
-          esc(row.payee_amount),
-          esc(row.act_amount),
-          esc(row.paid_amount),
-          esc(row.settlement_amount),
-          esc(row.settlement_date),
-          esc(row.trans_date),
-          esc(row.settlement_bank_amount),
-          esc(row.settlement_bank_amount_date),
-          esc(row.settlement_by)
-        ].join(',')
-      )
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `settlement-report-${clientCode}-${fromDate}-to-${endDate}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-
-    toast.success('Report exported successfully');
+    setIsLoading(true);
+    try {
+      await ReportApiService.requestSettledTxnExcelV6({
+        clientCode,
+        fromDate,
+        endDate,
+        loginBy: userName,
+      });
+      toast.info('Export started. Preparing CSV on server...');
+      const url = await ReportApiService.waitForExportUrl({
+        createdBy: userName,
+        sourceStartsWith: 'v6_settled_txn_excel',
+        pollMs: 3000,
+        timeoutMs: 120000,
+      });
+      if (url) {
+        window.open(url, '_blank');
+        toast.success('CSV is ready. Download started.');
+      } else {
+        toast.info('Export queued. Check Jobs later.');
+      }
+    } catch (err: any) {
+      console.error('Export failed:', err);
+      toast.error('Failed to start export');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Filter and paginate data
+  // Backend pagination - display current page data directly
   const transactions = reportData?.results || [];
-  const filteredTransactions = transactions.filter(txn =>
-    !searchTerm ||
-    txn.client_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    txn.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    txn.client_txn_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    txn.txn_id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
-  const totalPages = Math.ceil(filteredTransactions.length / pageSize);
+  // ✅ No client-side filtering - search is handled by backend
+  const paginatedTransactions = transactions; // Backend handles search and pagination
+
+  // Use backend totalCount for pagination calculation
+  const totalPages = Math.ceil(totalCount / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
-  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + pageSize);
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
@@ -364,7 +414,7 @@ export default function SettlementReportPage() {
               </div>
               <div>
                 <p className="text-[10px] md:text-xs text-gray-600 font-medium">Total Records</p>
-                <p className="text-lg md:text-xl font-bold text-orange-600">{formatIndianNumber(filteredTransactions.length)}</p>
+                <p className="text-lg md:text-xl font-bold text-orange-600">{formatIndianNumber(transactions.length)}</p>
               </div>
             </div>
           </div>
@@ -380,18 +430,16 @@ export default function SettlementReportPage() {
               <div>
                 <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Settlement Transactions</h2>
                 <p className="text-xs md:text-sm text-gray-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Total Records: <span className="text-gray-900 font-extrabold">{filteredTransactions.length}</span>
+                  Total Records: <span className="text-gray-900 font-extrabold">{totalCount}</span>
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <select
                   value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500/50 h-11 md:h-10 min-h-[44px] md:min-h-[40px] touch-manipulation"
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500/50 h-11 md:h-10 min-h-[44px] md:min-h-[40px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="10">10 per page</option>
                   <option value="20">20 per page</option>
@@ -399,7 +447,7 @@ export default function SettlementReportPage() {
                   <option value="100">100 per page</option>
                 </select>
 
-                {filteredTransactions.length > 0 && (
+                {transactions.length > 0 && (
                   <button
                     onClick={handleExport}
                     className="flex items-center gap-2 px-4 md:px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all min-h-[52px]"
@@ -522,13 +570,13 @@ export default function SettlementReportPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
                 <p className="text-xs md:text-sm text-gray-700 text-center sm:text-left font-light" style={{ letterSpacing: '-0.01em' }}>
                   Showing <span className="font-extrabold text-gray-900">{startIndex + 1}</span> to{' '}
-                  <span className="font-extrabold text-gray-900">{Math.min(startIndex + pageSize, filteredTransactions.length)}</span> of{' '}
-                  <span className="font-extrabold text-orange-600">{formatIndianNumber(filteredTransactions.length)}</span> entries
+                  <span className="font-extrabold text-gray-900">{Math.min(startIndex + pageSize, totalCount)}</span> of{' '}
+                  <span className="font-extrabold text-orange-600">{formatIndianNumber(totalCount)}</span> entries
                 </p>
                 <div className="flex items-center gap-1.5 md:gap-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1 || isLoading}
                     className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -539,8 +587,8 @@ export default function SettlementReportPage() {
                     <span className="text-orange-100">{totalPages}</span>
                   </div>
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages || isLoading}
                     className="h-11 md:h-9 min-h-[44px] md:min-h-[36px] px-3 md:px-2 bg-white border-2 border-gray-300 hover:border-orange-400 hover:bg-orange-50 text-gray-900 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -553,7 +601,7 @@ export default function SettlementReportPage() {
       )}
 
       {/* No Data Message */}
-      {!isLoading && reportData && filteredTransactions.length === 0 && (
+      {!isLoading && reportData && transactions.length === 0 && (
         <div className="text-center py-12 md:py-16 bg-gradient-to-br from-white to-gray-50 border-2 border-dashed border-gray-300 rounded-xl md:rounded-2xl shadow-lg px-4">
           <div className="max-w-md mx-auto">
             <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-gradient-to-br from-orange-100 to-orange-200 rounded-full flex items-center justify-center">

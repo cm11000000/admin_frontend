@@ -147,11 +147,15 @@ export default function ViewRateMappingPage(): JSX.Element {
 
     try {
       const response = await ReportApiService.getClientCodeListUSP_Cached(loginBy);
+      console.log('[RateMapping] Raw client response:', response?.length, 'clients');
+
       const mapped = Array.isArray(response)
         ? response
             .map(normaliseClient)
             .filter((item): item is ClientOption => Boolean(item))
         : [];
+
+      console.log('[RateMapping] After filtering:', mapped.length, 'valid clients');
 
       const sorted = mapped.sort((a, b) => a.code.localeCompare(b.code));
       setClients(sorted);
@@ -321,29 +325,28 @@ export default function ViewRateMappingPage(): JSX.Element {
               Client Code <span className="text-red-500">*</span>
             </label>
             <Combobox
-              options={filteredClients.list.map((client) => ({
+              options={clients.map((client) => ({
                 value: client.code,
                 label: `${client.code} — ${client.name || 'Unnamed Client'}`
               }))}
               value={selectedClient}
               onChange={setSelectedClient}
               placeholder="Search and select client..."
+              searchPlaceholder="Type to search by client code or name..."
               emptyMessage={
                 isLoadingClients
                   ? 'Loading clients...'
-                  : clientSearchTerm
-                    ? `No clients match "${clientSearchTerm}"`
-                    : 'Start typing to search for a client'
+                  : 'No matching clients found'
               }
-              disabled={isLoadingClients || filteredClients.total === 0}
+              disabled={isLoadingClients || clients.length === 0}
               className="w-full"
             />
             <p className="text-xs text-gray-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
               {isLoadingClients
                 ? 'Loading clients…'
-                : filteredClients.total > 0
-                  ? `Showing ${filteredClients.list.length} of ${filteredClients.total} matches (cap 200).`
-                  : 'Start typing to search for a client code or name.'}
+                : clients.length > 0
+                  ? `${clients.length} clients available. Start typing to search by code or name.`
+                  : 'No clients available.'}
             </p>
           </div>
 

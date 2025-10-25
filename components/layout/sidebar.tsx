@@ -169,14 +169,6 @@ const menuItems: MenuItem[] = [
     submenus: []
   },
   {
-    id: 1608,
-    name: "Ops Assistant",
-    icon: null,
-    url: "/assistant",
-    order: 16,
-    submenus: []
-  },
-  {
     id: 17,
     name: "View Rate Mapping",
     icon: null,

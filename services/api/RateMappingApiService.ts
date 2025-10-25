@@ -157,7 +157,7 @@ class RateMappingApiService {
    * Matches: getAssignedPaymenMode(cltID)
    */
   static async getAssignedPaymentMode(clientCode: string): Promise<any[]> {
-    const response = await adminAPI.get(`/api/common-data/3/${clientCode}`)
+    const response = await adminAPI.get(`/api/common-data/3/${clientCode}/`)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to fetch assigned payment modes')
@@ -181,7 +181,7 @@ class RateMappingApiService {
    * Matches: getPaymodeForAddNewRate(cltCode)
    */
   static async getPaymodeForAddNewRate(clientCode: string): Promise<any[]> {
-    const response = await adminAPI.get(`/api/common-data/14/${clientCode}`)
+    const response = await adminAPI.get(`/api/common-data/14/${clientCode}/`)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to fetch payment modes')
@@ -288,7 +288,8 @@ class RateMappingApiService {
    * Matches: getEndpointForAddNewRate(payModeId)
    */
   static async getEndpointForAddNewRate(paymodeId: string): Promise<any[]> {
-    const response = await adminAPI.get(`/api/common-data/18/${paymodeId}/`)
+    // Angular uses common-data/15/{payModeId} for endpoints list
+    const response = await adminAPI.get(`/api/common-data/15/${paymodeId}/`)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to fetch endpoints')
@@ -318,7 +319,7 @@ class RateMappingApiService {
    * Matches: getMappingDetail(cltCode)
    */
   static async getMappingDetail(clientCode: string): Promise<any[]> {
-    const response = await fetch(`${STG_REPORT_API}MappingDetail/Mapping/${clientCode}`, {
+    const response = await fetch(`${STG_REPORT_API}MappingDetail/Mapping/${clientCode}/`, {
       credentials: 'include'
     })
     if (!response.ok) throw new Error('Failed to fetch mapping details')
@@ -411,7 +412,7 @@ class RateMappingApiService {
    * Matches: geFeeForUpdate(cltCode)
    */
   static async getFeeForUpdate(clientCode: string): Promise<any[]> {
-    const response = await adminAPI.get(`/SabPaisaAdmin/rest/client_ep/FeeDetail2/${clientCode}`)
+    const response = await adminAPI.get(`/api/rest/client_ep/FeeDetail2/${clientCode}/`)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to fetch fee details')
@@ -435,7 +436,7 @@ class RateMappingApiService {
    * Matches: updateFeByFeeID(inputData, Ids)
    */
   static async updateFeeByID(feeId: string, data: any): Promise<any> {
-    const response = await adminAPI.post(`/SabPaisaAdmin/REST/client/updateFee/${feeId}/`, data)
+    const response = await adminAPI.post(`/api/REST/client/updateFee/${feeId}/`, data)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to update fee')
@@ -478,7 +479,7 @@ class RateMappingApiService {
     SlabCeiling: number
     AddedBy: string
   }): Promise<any> {
-    const response = await adminAPI.post('/SabPaisaAdmin/v2/AddSlab/', data)
+    const response = await adminAPI.post('/api/v2/AddSlab/', data)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to add slab')
@@ -492,7 +493,7 @@ class RateMappingApiService {
    * Matches: deleteSlab(feeID, loginId, remarks)
    */
   static async deleteSlab(feeId: number, loginId: string, remarks: string): Promise<any> {
-    const response = await adminAPI.get(`/SabPaisaAdmin/ManageFalg/Flag/${encodeURIComponent(remarks)}/${encodeURIComponent('deleteslab')}/${feeId}/${encodeURIComponent(loginId)}`)
+    const response = await adminAPI.get(`/api/ManageFalg/Flag/${encodeURIComponent(remarks)}/${encodeURIComponent('deleteslab')}/${feeId}/${encodeURIComponent(loginId)}`)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to delete slab')
@@ -532,7 +533,7 @@ class RateMappingApiService {
       gstper
     ].map((part) => encodeURIComponent(String(part)));
 
-    const response = await adminAPI.get(`/SabPaisaAdmin/REST/AddFeeForNewPMode/${parts.join('/')}`)
+    const response = await adminAPI.get(`/api/REST/AddFeeForNewPMode/${parts.join('/')}`)
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to add fee for new payment mode')
@@ -950,7 +951,7 @@ class RateMappingApiService {
    * Matches: viewpdf(cltCode)
    */
   static async viewPDF(clientCode: string): Promise<any> {
-    const cobkycUrl = (process.env.NEXT_PUBLIC_COBKYC_URL || 'https://staging-apis.13-204-100-160.sslip.io').replace(/\/$/, '/')
+    const cobkycUrl = (process.env.NEXT_PUBLIC_COBKYC_URL || 'https://cobkyc.sabpaisa.in').replace(/\/$/, '/')
     const response = await fetch(`${cobkycUrl}kyc/upload-merchant-document/get-merchant-agreement-by-client-code/`, {
       method: 'POST',
       headers: {

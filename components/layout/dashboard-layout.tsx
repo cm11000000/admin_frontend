@@ -4,16 +4,9 @@ import React, { useState } from 'react'
 import { useSwipeable } from 'react-swipeable'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { MessageSquare } from 'lucide-react'
-import AssistantChat from '@/components/assistant/AssistantChat'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [assistantOpen, setAssistantOpen] = useState(false)
-  const pathname = usePathname()
-  const showAssistantFab = typeof window !== 'undefined' ? !String(pathname || '').startsWith('/assistant') : true
 
   // Swipe gesture handlers - ONLY for mobile devices (< 768px)
   const swipeHandlers = useSwipeable({
@@ -87,44 +80,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
       </div>
-
-      {/* Floating Assistant Button (bottom-right) */}
-      {showAssistantFab && (
-        <button
-          onClick={() => setAssistantOpen(true)}
-          className="fixed right-4 bottom-4 z-40 md:right-6 md:bottom-6 group"
-          title="Ops Assistant"
-          aria-label="Open Ops Assistant"
-        >
-          <div className="relative">
-            <div className="rounded-full p-4 md:p-4.5 shadow-lg shadow-gray-300/50 bg-gradient-to-r from-[#FF9933] to-[#FF6600] text-white transition-transform duration-200 group-hover:scale-105">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-white/90 border border-gray-200 text-[10px] text-gray-700 flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-              AI
-            </div>
-          </div>
-        </button>
-      )}
-
-      {/* Assistant Drawer */}
-      {assistantOpen && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setAssistantOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-[92vw] sm:w-[520px] bg-white border-l border-gray-200 shadow-xl flex flex-col">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
-              <div className="text-sm font-extrabold text-gray-700" style={{ letterSpacing: '-0.02em' }}>Ops Assistant</div>
-              <div className="flex items-center gap-2">
-                <Link href="/assistant" className="text-xs font-medium text-[#5CBBF6] underline">Open Full Page</Link>
-                <button onClick={() => setAssistantOpen(false)} className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors">✕</button>
-              </div>
-            </div>
-            <div className="flex-1">
-              <AssistantChat />
-            </div>
-          </div>
-        </div>
-      )}
 
       <style jsx>{`
         @keyframes blob {

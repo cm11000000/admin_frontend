@@ -49,6 +49,7 @@ export default function ViewRefundReportPage() {
   const [dateTo, setDateTo] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [showGrid, setShowGrid] = useState(false);
   const [errorMsg, setErrorMsg] = useState(false);
   const [noRecord, setNoRecord] = useState(0);
@@ -121,6 +122,56 @@ export default function ViewRefundReportPage() {
     fetchClientCodeList(userName);
   }, [userName, fetchClientCodeList]);
 
+  // Shared function to fetch refunds with pagination
+  const fetchRefunds = async (page: number, length: number, showSuccessToast = false) => {
+    try {
+      const inputData = {
+        clientCode: selectedClient || 'ALL',
+        fromDate: dateFrom,
+        endDate: dateTo,
+        noOfClient: 0,
+        rpttype: 1,
+        page,
+        length,
+        search: tableSearchTerm || undefined, // Backend search
+      };
+
+      const response = await ReportApiService.getRefundTxnHistory(inputData);
+
+      // Handle response - check if paginated format
+      if (response && typeof response === 'object' && 'results' in response) {
+        setRefundData(response.results || []);
+        setTotalCount(response.count || 0);
+        setShowGrid(true);
+        setErrorMsg(false);
+        setNoRecord(response.count || 0);
+        if (showSuccessToast) {
+          toast.success(`Found ${response.count || 0} refund transactions`);
+        }
+      } else {
+        // Fallback for non-paginated response
+        const data = Array.isArray(response) ? response : [];
+        setRefundData(data);
+        setTotalCount(data.length);
+        setShowGrid(true);
+        setErrorMsg(data.length === 0);
+        setNoRecord(data.length);
+        if (showSuccessToast && data.length > 0) {
+          toast.success(`Loaded ${data.length} refund transactions`);
+        }
+      }
+    } catch (error) {
+      console.error('Exception: Refund Transaction History not found', error);
+      setRefundData([]);
+      setTotalCount(0);
+      setErrorMsg(true);
+      setShowGrid(false);
+      setNoRecord(0);
+      toast.error('Failed to fetch refund report');
+      throw error;
+    }
+  };
+
   // API: Fetch Refund Transaction History - Angular parity
   // POST /transactions/GetRefundTxnHistory/
   const fetchRefundReport = async () => {
@@ -146,49 +197,17 @@ export default function ViewRefundReportPage() {
       return;
     }
 
-    const startTime = new Date().getTime();
     setIsLoading(true);
     setRefundData([]);
     setShowGrid(false);
+    setCurrentPage(0);
 
     try {
-      const response = await ReportApiService.getRefundTxnHistory({
-        clientCode: selectedClient || 'ALL',
-        fromDate: dateFrom,
-        endDate: dateTo,
-        noOfClient: 0,
-        rpttype: 1
-      });
-
-      const endTime = new Date().getTime();
-      const timeDiff = (endTime - startTime) / 60;
-
-      setTimeout(() => {
-        setIsLoading(false);
-      }, timeDiff);
-
-      // Handle response - API returns results in .results per Angular
-      const data = response?.results || [];
-
-      if (Array.isArray(data) && data.length > 0) {
-        setRefundData(data);
-        setShowGrid(true);
-        setNoRecord(data.length);
-        setErrorMsg(false);
-        toast.success(`Loaded ${data.length} refund transactions`);
-      } else {
-        setRefundData([]);
-        setShowGrid(true);
-        setNoRecord(0);
-        setErrorMsg(true);
-        toast.info('No refund transactions found');
-      }
+      await fetchRefunds(1, pageSize, true);
     } catch (error) {
-      console.error('Exception: Refund Transaction History not found', error);
+      // Error already handled in fetchRefunds
+    } finally {
       setIsLoading(false);
-      setErrorMsg(true);
-      setShowGrid(false);
-      toast.error('Failed to fetch refund report');
     }
   };
 
@@ -203,45 +222,90 @@ export default function ViewRefundReportPage() {
     setShowGrid(false);
     setErrorMsg(false);
     setNoRecord(0);
+    setTotalCount(0);
   };
 
-  // Export to Excel - Matching Angular implementation
+  // Handle page change
+  const handlePageChange = async (newPage: number) => {
+    if (newPage === currentPage) return;
+    setCurrentPage(newPage);
+    setIsLoading(true);
+    try {
+      await fetchRefunds(newPage + 1, pageSize); // +1 because currentPage is 0-indexed
+    } catch (error) {
+      // Error already handled in fetchRefunds
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = async (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    setIsLoading(true);
+    try {
+      await fetchRefunds(1, newSize);
+    } catch (error) {
+      // Error already handled in fetchRefunds
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Debounced search effect - triggers backend search when tableSearchTerm changes
+  useEffect(() => {
+    if (!showGrid || refundData.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(0);
+      setIsLoading(true);
+      fetchRefunds(1, pageSize)
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [tableSearchTerm]);
+
+  // Export via backend (v6 async CSV)
   const handleExport = async () => {
-    if (refundData.length === 0) {
+    if (!showGrid) {
       toast.error('No data to export. Please search data first.');
       return;
     }
-
+    setIsLoading(true);
     try {
-      const XLSX = await import('xlsx');
-      // Use Angular's exportAsExcelFile equivalent
-      const ws = XLSX.utils.json_to_sheet(refundData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'RefundReport');
-      XLSX.writeFile(wb, `RefundReport_${new Date().getTime()}.xlsx`);
-
-      toast.success('Export completed successfully');
+      await ReportApiService.requestRefundTxnExcelV6({
+        clientCode: selectedClient || 'ALL',
+        fromDate: dateFrom,
+        endDate: dateTo,
+        loginBy: userName,
+      });
+      toast.info('Export started. Preparing CSV on server...');
+      const url = await ReportApiService.waitForExportUrl({
+        createdBy: userName,
+        sourceStartsWith: 'v6_refund_txn_excel',
+        pollMs: 3000,
+        timeoutMs: 120000,
+      });
+      if (url) {
+        window.open(url, '_blank');
+        toast.success('CSV is ready. Download started.');
+      } else {
+        toast.info('Export queued. Check Jobs later.');
+      }
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('Failed to export data');
+      toast.error('Failed to start export');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Filter for search term (debounced to reduce re-renders)
-  const filteredData = useMemo(() => {
-    if (!debouncedTableSearch) return refundData;
-    const term = debouncedTableSearch.toLowerCase();
-    return refundData.filter(refund =>
-      Object.values(refund).some(value => value?.toString().toLowerCase().includes(term))
-    );
-  }, [refundData, debouncedTableSearch]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredData.length / pageSize);
-  const paginatedData = filteredData.slice(
-    currentPage * pageSize,
-    (currentPage + 1) * pageSize
-  );
+  // Backend handles search and pagination - no client-side filtering needed
+  const paginatedData = refundData; // Backend already returns paginated data
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   // Get column keys from first record (dynamic columns)
   const columnKeys = refundData.length > 0 ? Object.keys(refundData[0]) : [];
@@ -397,10 +461,7 @@ export default function ViewRefundReportPage() {
             <div className="md:col-span-3">
               <Select
                 value={`${pageSize}`}
-                onValueChange={(value) => {
-                  setPageSize(Number(value));
-                  setCurrentPage(0);
-                }}
+                onValueChange={(value) => handlePageSizeChange(Number(value))}
               >
                 <SelectTrigger className="w-full min-h-[44px] bg-white/90 border border-gray-300 rounded-xl text-gray-900 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500">
                   <SelectValue />
@@ -435,8 +496,8 @@ export default function ViewRefundReportPage() {
               <h2 className="text-lg md:text-xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Refund Transactions</h2>
               <p className="text-xs md:text-sm text-gray-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
                 Showing <span className="text-gray-900 font-extrabold">{paginatedData.length}</span> of{' '}
-                <span className="text-gray-900 font-extrabold">{filteredData.length}</span> total records
-                {tableSearchTerm && ` (filtered from ${refundData.length} total)`}
+                <span className="text-gray-900 font-extrabold">{totalCount}</span> total records
+                {tableSearchTerm && ` (search: "${tableSearchTerm}")`}
               </p>
             </div>
           </div>
@@ -554,7 +615,7 @@ export default function ViewRefundReportPage() {
             <div className="bg-white/60 px-3 md:px-4 py-3 md:py-4 border-t border-gray-200/50">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="text-xs md:text-sm text-gray-600 text-center sm:text-left order-2 sm:order-1 font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, filteredData.length)} of {filteredData.length} results
+                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount} results
                 </div>
                 <div className="flex items-center gap-3 md:gap-4 order-1 sm:order-2">
                   <span className="text-xs md:text-sm text-gray-600 whitespace-nowrap font-light" style={{ letterSpacing: '-0.01em' }}>
@@ -562,15 +623,15 @@ export default function ViewRefundReportPage() {
                   </span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                      disabled={currentPage === 0}
+                      onClick={() => handlePageChange(Math.max(0, currentPage - 1))}
+                      disabled={currentPage === 0 || isLoading}
                       className="min-h-[52px] px-3 md:px-4 py-2 bg-white text-gray-700 text-xs md:text-sm rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     >
                       Previous
                     </button>
                     <button
-                      onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                      disabled={currentPage >= totalPages - 1}
+                      onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
+                      disabled={currentPage >= totalPages - 1 || isLoading}
                       className="min-h-[52px] px-3 md:px-4 py-2 bg-white text-gray-700 text-xs md:text-sm rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     >
                       Next

@@ -318,15 +318,11 @@ class APIClient {
   }
 }
 
-// API Client instances
-const __adminBase = (process.env.NODE_ENV === 'production'
-  ? (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin')
-  : 'https://staging-apis.13-204-100-160.sslip.io/admin');
+// API Client instances - Always use environment variables regardless of NODE_ENV
+const __adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net';
 export const adminAPI = new APIClient(__adminBase);
 
-const __reportBase = (process.env.NODE_ENV === 'production'
-  ? (process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/report')
-  : 'https://staging-apis.13-204-100-160.sslip.io/report');
+const __reportBase = process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://d63eaznhkkse9.cloudfront.net';
 export const reportAPI = new APIClient(__reportBase);
 
 export const cobAPI = new APIClient(
@@ -334,9 +330,7 @@ export const cobAPI = new APIClient(
 );
 
 // Transaction History DB service (Angular's txnHistoryDbsUrl)
-const __txnHistoryBase = (process.env.NODE_ENV === 'production'
-  ? (process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL || 'https://staging-apis.13-204-100-160.sslip.io/report')
-  : 'https://staging-apis.13-204-100-160.sslip.io/report');
+const __txnHistoryBase = process.env.NEXT_PUBLIC_TXN_HISTORY_DBS_URL || 'https://d63eaznhkkse9.cloudfront.net';
 export const txnHistoryAPI = new APIClient(__txnHistoryBase);
 
 // Dev-only base URL log to verify no production hosts are used

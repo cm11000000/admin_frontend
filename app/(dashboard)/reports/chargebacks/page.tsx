@@ -66,8 +66,8 @@ const TABLE_COLUMNS: Array<{ key: keyof ChargebackTransaction; label: string }> 
 ];
 
 export default function ChargebackReportPage() {
-  if (typeof window === 'undefined') return null;
   const [chargebacks, setChargebacks] = useState<ChargebackTransaction[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedClient, setSelectedClient] = useState('ALL');
   const [clientCodeList, setClientCodeList] = useState<any[]>([]);
@@ -139,6 +139,74 @@ export default function ChargebackReportPage() {
     fetchClientCodeList(userName);
   }, [userName, fetchClientCodeList]);
 
+  // Debounced search effect
+  useEffect(() => {
+    // Only trigger search if we already have data loaded
+    if (!showGrid || chargebacks.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(0);
+      setIsLoading(true);
+
+      fetchChargebacks(1, pageSize)
+        .catch(() => {}) // Error already handled in fetchChargebacks
+        .finally(() => setIsLoading(false));
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [tableSearchTerm]); // Only depend on tableSearchTerm
+
+  // Shared function to fetch chargebacks with pagination and search
+  const fetchChargebacks = async (page: number, length: number, showSuccessToast = false) => {
+    try {
+      const response = await ReportApiService.getChargebackTxnHistory({
+        clientCode: selectedClient,
+        fromDate: dateFrom,
+        endDate: dateTo,
+        noOfClient: 0,
+        rpttype: 1,
+        page,
+        length,
+        search: tableSearchTerm || undefined
+      });
+
+      // Handle paginated response
+      if (response && typeof response === 'object' && 'results' in response) {
+        setChargebacks(response.results || []);
+        setTotalCount(response.count || 0);
+        setShowGrid(true);
+        setErrorMsg(false);
+
+        if (showSuccessToast) {
+          toast.success(`Found ${response.count || 0} chargeback records`);
+        }
+      } else {
+        // Fallback for non-paginated response (when page=0 or length=0)
+        const data = Array.isArray(response) ? response : [];
+        setChargebacks(data);
+        setTotalCount(data.length);
+        setShowGrid(true);
+        setErrorMsg(data.length === 0);
+
+        if (showSuccessToast) {
+          if (data.length > 0) {
+            toast.success(`Found ${data.length} chargeback records`);
+          } else {
+            toast.info('No chargebacks found for the selected filters');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Exception: Chargeback report not found', error);
+      setChargebacks([]);
+      setTotalCount(0);
+      setErrorMsg(true);
+      setShowGrid(false);
+      toast.error('Failed to fetch chargeback report');
+      throw error;
+    }
+  };
+
   const fetchChargebackReport = async () => {
     if (!selectedClient) {
       toast.error('Please select a client code or choose ALL.');
@@ -169,50 +237,46 @@ export default function ChargebackReportPage() {
       return;
     }
 
-    const startTime = Date.now();
     setIsLoading(true);
-    setChargebacks([]);
-    setShowGrid(false);
+    setCurrentPage(0);
 
     try {
-      const response = await ReportApiService.getChargebackTxnHistory({
-        clientCode: selectedClient,
-        fromDate: dateFrom,
-        endDate: dateTo,
-        noOfClient: 0,
-        rpttype: 1
-      });
-
-      const endTime = Date.now();
-      const delay = Math.max((endTime - startTime) / 60, 0);
-
-      setTimeout(() => {
-        setIsLoading(false);
-      }, delay);
-
-      const data = Array.isArray(response?.results)
-        ? response.results
-        : Array.isArray(response)
-          ? response
-          : response?.results || [];
-
-      if (Array.isArray(data) && data.length > 0) {
-        setChargebacks(data);
-        setShowGrid(true);
-        setErrorMsg(false);
-        toast.success(`Loaded ${data.length} chargeback records`);
-      } else {
-        setChargebacks([]);
-        setShowGrid(true);
-        setErrorMsg(true);
-        toast.info('No chargebacks found for the selected filters');
-      }
+      await fetchChargebacks(1, pageSize, true);
     } catch (error) {
-      console.error('Exception: Chargeback report not found', error);
+      // Error already handled in fetchChargebacks
+    } finally {
       setIsLoading(false);
-      setErrorMsg(true);
-      setShowGrid(false);
-      toast.error('Failed to fetch chargeback report');
+    }
+  };
+
+  // Handle page change with backend pagination
+  const handlePageChange = async (newPage: number) => {
+    if (newPage === currentPage) return;
+
+    setCurrentPage(newPage);
+    setIsLoading(true);
+
+    try {
+      await fetchChargebacks(newPage + 1, pageSize); // +1 because currentPage is 0-indexed
+    } catch (error) {
+      // Error already handled
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = async (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    setIsLoading(true);
+
+    try {
+      await fetchChargebacks(1, newSize);
+    } catch (error) {
+      // Error already handled
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -234,56 +298,40 @@ export default function ChargebackReportPage() {
       toast.error('No data to export. Please search data first.');
       return;
     }
-
+    setIsLoading(true);
     try {
-      const XLSX = await import('xlsx');
-      const exportRows = chargebacks.map((record, index) => ({
-        '#': index + 1,
-        'Client Code': record.client_code || '',
-        'Client Name': record.client_name || '',
-        'Client Txn ID': record.client_txn_id || '',
-        'SP Txn ID': record.txn_id || '',
-        'Payment Mode': record.payment_mode || '',
-        'Payer Amount (INR)': record.payee_amount ?? '',
-        'Round Off Paid Amount (INR)': record.paid_amount ?? '',
-        'Chargeback Amount': record.charge_back_amount ?? '',
-        'Chargeback Date': record.charge_back_date || '',
-        'Chargeback Debit Amount': record.charge_back_debit_amount ?? '',
-        'CB Credit Date To Merchant': record.charge_back_credit_date_to_merchant || '',
-        'Chargeback Remarks': record.charge_back_remarks || '',
-        'Status': record.status || '',
-        'Chargeback Status': record.charge_back_status || '',
-        'ARN': record.arn || '',
-        'Bank Chargeback Fee': record.bank_cb_fee ?? '',
-        'Merchant Chargeback Status': record.merchant_cb_status || '',
-        'Prearb Date': record.prearb_date || '',
-        'CB Credit Date Txn Reject': record.cb_credit_date_txn_reject || ''
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(exportRows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'ChargebackReport');
-      XLSX.writeFile(workbook, `ChargebackReport_${new Date().getTime()}.xlsx`);
-      toast.success('Export completed successfully');
+      await ReportApiService.requestChargebackTxnExcelV6({
+        clientCode: selectedClient,
+        fromDate: dateFrom,
+        endDate: dateTo,
+        loginBy: userName,
+      });
+      toast.info('Export started. Preparing CSV on server...');
+      const url = await ReportApiService.waitForExportUrl({
+        createdBy: userName,
+        sourceStartsWith: 'v6_chargeback_txn_excel',
+        pollMs: 3000,
+        timeoutMs: 120000,
+      });
+      if (url) {
+        window.open(url, '_blank');
+        toast.success('CSV is ready. Download started.');
+      } else {
+        toast.info('Export queued. Check Jobs later.');
+      }
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('Failed to export data');
+      toast.error('Failed to start export');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filteredData = useMemo(() => {
-    if (!debouncedTableSearch) return chargebacks;
-    const term = debouncedTableSearch.toLowerCase();
-    return chargebacks.filter((record) =>
-      TABLE_COLUMNS.some(({ key }) => {
-        const value = record[key];
-        return value !== undefined && value !== null && value.toString().toLowerCase().includes(term);
-      })
-    );
-  }, [chargebacks, debouncedTableSearch]);
+  // ✅ No client-side filtering - search is handled by backend
+  const paginatedData = chargebacks; // Backend handles search and pagination
 
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = filteredData.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  // Use backend totalCount for pagination calculation
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
@@ -466,8 +514,8 @@ export default function ChargebackReportPage() {
         <div className="flex items-center justify-between px-2">
           <div className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
             Showing <span className="text-gray-900 font-extrabold">{paginatedData.length}</span> of{' '}
-            <span className="text-gray-900 font-extrabold">{filteredData.length}</span> total records
-            {tableSearchTerm && ` (filtered from ${chargebacks.length} total)`}
+            <span className="text-gray-900 font-extrabold">{totalCount}</span> total records
+            {tableSearchTerm && ` (filtered)`}
           </div>
         </div>
       ) : !isLoading && (
@@ -572,7 +620,7 @@ export default function ChargebackReportPage() {
             <div className="bg-white/60 px-3 md:px-4 py-3 border-t border-gray-200">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="text-xs md:text-sm text-gray-600 text-center sm:text-left font-light" style={{ letterSpacing: '-0.01em' }}>
-                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, filteredData.length)} of {filteredData.length} results
+                  Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount} results
                 </div>
                 <div className="flex items-center gap-3 md:gap-4">
                   <span className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>

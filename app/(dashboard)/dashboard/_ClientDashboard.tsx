@@ -12,8 +12,8 @@ interface SummaryStats {
 }
 
 export default function ClientDashboard() {
-  // State management - Initialize with '1' to match Angular default
-  const [selectedDateOption, setSelectedDateOption] = useState('1')
+  // State management - No default selection, user must select
+  const [selectedDateOption, setSelectedDateOption] = useState('')
   const [customizeDate, setCustomizeDate] = useState(false)
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
