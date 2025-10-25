@@ -181,7 +181,7 @@ export default function PaymentLinksPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="pb-4 border-b border-gray-200">
-        <h4 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <h4 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
           Payment Links
         </h4>
         <p className="text-gray-600 text-sm mt-1">
@@ -197,13 +197,14 @@ export default function PaymentLinksPage() {
             size="sm"
             onClick={() => refreshPaymentLinks()}
             disabled={isRefreshing}
+            className="touch-manipulation min-h-[44px]"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" disabled={isExporting}>
+              <Button variant="outline" size="sm" disabled={isExporting} className="touch-manipulation min-h-[44px]">
                 {isExporting ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
@@ -224,7 +225,7 @@ export default function PaymentLinksPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" onClick={() => router.push('/payment-links/create')}>
+          <Button size="sm" onClick={() => router.push('/payment-links/create')} className="touch-manipulation min-h-[44px]">
             <Plus className="h-4 w-4 mr-2" />
             Create Link
           </Button>
@@ -232,7 +233,7 @@ export default function PaymentLinksPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <Card className="bg-white backdrop-blur-xl border border-gray-200 rounded-xl shadow-2xl p-4 hover:shadow-orange-500/5 transition-shadow duration-300">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">Total Amount</span>
@@ -303,6 +304,7 @@ export default function PaymentLinksPage() {
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
+            className="touch-manipulation min-h-[44px]"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filters
@@ -399,10 +401,10 @@ export default function PaymentLinksPage() {
               </div>
 
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={clearFilters}>
+                <Button variant="outline" size="sm" onClick={clearFilters} className="touch-manipulation min-h-[44px]">
                   Clear All
                 </Button>
-                <Button size="sm" onClick={applyFilters}>
+                <Button size="sm" onClick={applyFilters} className="touch-manipulation min-h-[44px]">
                   Apply Filters
                 </Button>
               </div>
@@ -425,7 +427,7 @@ export default function PaymentLinksPage() {
           <p className="text-gray-600 mb-6">
             Create your first payment link to get started
           </p>
-          <Button onClick={() => router.push('/payment-links/create')}>
+          <Button onClick={() => router.push('/payment-links/create')} className="touch-manipulation min-h-[44px]">
             <Plus className="h-4 w-4 mr-2" />
             Create Payment Link
           </Button>
@@ -434,7 +436,7 @@ export default function PaymentLinksPage() {
         <>
           <div className="space-y-4">
             {paymentLinks.map((link) => (
-              <Card key={link.id} className="p-4 sm:p-6 hover:shadow-md transition-shadow">
+              <Card key={link.id} className="p-4 md:p-6 hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                   {/* Main Content */}
                   <div className="flex-1 min-w-0">
@@ -496,7 +498,7 @@ export default function PaymentLinksPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopyLink(link)}
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-none touch-manipulation min-h-[44px]"
                     >
                       {copiedId === link.id ? (
                         <Check className="h-4 w-4 text-green-600" />
@@ -509,14 +511,14 @@ export default function PaymentLinksPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewLink(link)}
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-none touch-manipulation min-h-[44px]"
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="touch-manipulation min-h-[44px]">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

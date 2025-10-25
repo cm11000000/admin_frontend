@@ -170,28 +170,28 @@ export default function ClientsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Clients</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>Clients</h1>
             <p className="text-sm text-gray-600">Manage merchant clients and configurations</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all">
+            <button className="flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 min-h-[44px] touch-manipulation bg-white border border-gray-300 rounded-lg text-xs md:text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all">
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">Bulk Upload</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all">
+            <button className="flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 min-h-[44px] touch-manipulation bg-white border border-gray-300 rounded-lg text-xs md:text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
             </button>
             <button
               onClick={fetchClients}
               disabled={loading}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 min-h-[44px] touch-manipulation bg-white border border-gray-300 rounded-lg text-xs md:text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/25"
+              className="flex items-center gap-2 px-3 md:px-4 py-2.5 md:py-3 min-h-[44px] touch-manipulation bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/25"
             >
               <Plus className="w-4 h-4" />
               <span>Add Client</span>
@@ -202,7 +202,7 @@ export default function ClientsPage() {
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div className="bg-white backdrop-blur-xl rounded-xl border border-gray-200 p-4 shadow-sm">
+            <div className="bg-white backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-5 shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 rounded-lg bg-blue-500/10">
                   <Users className="w-5 h-5 text-blue-500" />
@@ -212,7 +212,7 @@ export default function ClientsPage() {
               <div className="text-xs text-gray-600">Total Clients</div>
             </div>
 
-            <div className="bg-white backdrop-blur-xl rounded-xl border border-gray-200 p-4 shadow-sm">
+            <div className="bg-white backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-5 shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 rounded-lg bg-green-500/10">
                   <UserCheck className="w-5 h-5 text-green-500" />
@@ -222,7 +222,7 @@ export default function ClientsPage() {
               <div className="text-xs text-gray-600">Active</div>
             </div>
 
-            <div className="bg-white backdrop-blur-xl rounded-xl border border-gray-200 p-4 shadow-sm">
+            <div className="bg-white backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-5 shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 rounded-lg bg-red-500/10">
                   <UserX className="w-5 h-5 text-red-500" />
@@ -232,7 +232,7 @@ export default function ClientsPage() {
               <div className="text-xs text-gray-600">Inactive</div>
             </div>
 
-            <div className="bg-white backdrop-blur-xl rounded-xl border border-gray-200 p-4 shadow-sm">
+            <div className="bg-white backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 p-4 md:p-5 shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 rounded-lg bg-orange-500/10">
                   <DollarSign className="w-5 h-5 text-orange-500" />
@@ -248,8 +248,8 @@ export default function ClientsPage() {
 
         {/* Filters */}
         <div className="bg-white backdrop-blur-xl rounded-xl border border-gray-200 p-3 shadow-sm">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="md:col-span-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -261,7 +261,7 @@ export default function ClientsPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="md:col-span-2 grid grid-cols-2 gap-3 md:gap-4">
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
@@ -379,19 +379,19 @@ export default function ClientsPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => router.push(`/clients/${client.id}`)}
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                            className="p-2 min-h-[44px] min-w-[44px] touch-manipulation text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                            className="p-2 min-h-[44px] min-w-[44px] touch-manipulation text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                            className="p-2 min-h-[44px] min-w-[44px] touch-manipulation text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>

@@ -204,51 +204,47 @@ export default function RateMappingPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4"
-        >
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
               Create Rate Mapping
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
               Configure rate mapping for clients
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
             <Link href="/config/rate-mapping/manage">
-              <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950">
+              <Button variant="outline" className="min-h-[44px] px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm touch-manipulation border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950">
                 Manage Rates
               </Button>
             </Link>
             <Link href="/config/rate-mapping/add-new">
-              <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950">
+              <Button variant="outline" className="min-h-[44px] px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm touch-manipulation border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950">
                 Add New Pay Mode
               </Button>
             </Link>
           </div>
-        </motion.div>
+        </div>
 
-        <Card className="p-6 bg-white/50 backdrop-blur-xl border-gray-200/50">
+        <Card className="p-4 md:p-6 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl">
           <div className="flex flex-col lg:flex-row gap-4 mb-6">
             <div className="flex-1">
               <Input
                 placeholder="Search by client code or name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50/60 border-gray-300"
+                className="min-h-[44px] w-full bg-gray-50/60 border-gray-300"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <Label className="text-sm text-gray-400">Count per page:</Label>
+              <Label className="text-xs md:text-sm text-gray-600">Count per page:</Label>
               <Select value={countPerPage} onValueChange={setCountPerPage}>
-                <SelectTrigger className="w-24 bg-gray-50/60">
+                <SelectTrigger className="min-h-[44px] w-24 bg-gray-50/60">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,50 +266,50 @@ export default function RateMappingPage() {
               </div>
             ) : (
               <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-gray-200/50">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Client Code
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Name
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Contact
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Email
                     </th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-300">
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Status
                     </th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-300">
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Config Status
                     </th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-300">
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-200">
                   {filteredClients.map((client) => (
                     <tr
                       key={client.id}
-                      className="border-b border-gray-200/30 hover:bg-gray-100/20 transition-colors"
+                      className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-medium">
                         {client.clientCode}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-900">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">
                         {client.clientName}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-400">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600">
                         {client.contact}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-400">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600">
                         {client.email}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-center">
                         <Badge
                           variant={client.status === 'Active' ? 'success' : 'secondary'}
                           className="text-xs"
@@ -321,7 +317,7 @@ export default function RateMappingPage() {
                           {client.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-center">
                         <Badge
                           variant={
                             client.configStatus === 'Configured'
@@ -335,12 +331,12 @@ export default function RateMappingPage() {
                           {client.configStatus}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-center">
                         <Button
                           variant="primary"
                           size="sm"
                           onClick={() => openWizard(client)}
-                          className="bg-orange-500 hover:bg-orange-600 text-gray-900"
+                          className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm touch-manipulation bg-orange-500 hover:bg-orange-600 text-white"
                         >
                           Rate Mapping
                         </Button>
@@ -449,26 +445,26 @@ export default function RateMappingPage() {
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200/50">
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Payment Mode
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Endpoint
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Priority
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-gray-200">
                       {endpointConfigs.map((config, index) => (
-                        <tr key={index} className="border-b border-gray-200/30">
-                          <td className="py-2 px-3 text-sm text-gray-900">
+                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
                             {config.paymentMode}
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Input
                               value={config.endpoint}
                               onChange={(e) => {
@@ -477,10 +473,10 @@ export default function RateMappingPage() {
                                 setEndpointConfigs(newConfigs)
                               }}
                               placeholder="Enter endpoint URL"
-                              className="w-full"
+                              className="min-h-[44px] w-full"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Input
                               type="number"
                               value={config.priority}
@@ -489,7 +485,7 @@ export default function RateMappingPage() {
                                 newConfigs[index].priority = parseInt(e.target.value)
                                 setEndpointConfigs(newConfigs)
                               }}
-                              className="w-20"
+                              className="min-h-[44px] w-20"
                             />
                           </td>
                         </tr>
@@ -511,73 +507,73 @@ export default function RateMappingPage() {
                     variant="primary"
                     size="sm"
                     onClick={addRateSlab}
-                    className="bg-orange-500 hover:bg-orange-600 text-gray-900"
+                    className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm touch-manipulation bg-orange-500 hover:bg-orange-600 text-white"
                   >
                     + Add Slab
                   </Button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200/50">
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           From
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           To
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Rate
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Comm Type
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Conv Fee
                         </th>
-                        <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           GST
                         </th>
-                        <th className="text-center py-2 px-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <th className="px-3 md:px-6 py-3 md:py-4 text-center text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-gray-200">
                       {rateSlabs.map((slab) => (
-                        <tr key={slab.id} className="border-b border-gray-200/30">
-                          <td className="py-2 px-3">
+                        <tr key={slab.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Input
                               type="number"
                               value={slab.fromAmount}
                               onChange={(e) => updateRateSlab(slab.id, { fromAmount: parseFloat(e.target.value) })}
-                              className="w-24"
+                              className="min-h-[44px] w-24"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Input
                               type="number"
                               value={slab.toAmount}
                               onChange={(e) => updateRateSlab(slab.id, { toAmount: parseFloat(e.target.value) })}
-                              className="w-24"
+                              className="min-h-[44px] w-24"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Input
                               type="number"
                               value={slab.rate}
                               onChange={(e) => updateRateSlab(slab.id, { rate: parseFloat(e.target.value) })}
-                              className="w-24"
+                              className="min-h-[44px] w-24"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Select
                               value={slab.commType}
                               onValueChange={(value: 'Percentage' | 'Fixed') =>
                                 updateRateSlab(slab.id, { commType: value })
                               }
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="min-h-[44px] w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -586,22 +582,22 @@ export default function RateMappingPage() {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Input
                               type="number"
                               value={slab.convFee}
                               onChange={(e) => updateRateSlab(slab.id, { convFee: parseFloat(e.target.value) })}
-                              className="w-24"
+                              className="min-h-[44px] w-24"
                             />
                           </td>
-                          <td className="py-2 px-3">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4">
                             <Select
                               value={slab.gst}
                               onValueChange={(value: 'Inclusive' | 'Exclusive') =>
                                 updateRateSlab(slab.id, { gst: value })
                               }
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="min-h-[44px] w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -610,12 +606,12 @@ export default function RateMappingPage() {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="py-2 px-3 text-center">
+                          <td className="px-3 md:px-6 py-2.5 md:py-4 text-center">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => deleteRateSlab(slab.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                              className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm touch-manipulation text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                             >
                               Delete
                             </Button>
@@ -634,18 +630,23 @@ export default function RateMappingPage() {
               variant="outline"
               onClick={handleWizardBack}
               disabled={wizardStep === 1}
+              className="min-h-[44px] px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm touch-manipulation"
             >
               Back
             </Button>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setWizardOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setWizardOpen(false)}
+                className="min-h-[44px] px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm touch-manipulation"
+              >
                 Cancel
               </Button>
               {wizardStep < 3 ? (
                 <Button
                   variant="primary"
                   onClick={handleWizardNext}
-                  className="bg-orange-500 hover:bg-orange-600 text-gray-900"
+                  className="min-h-[44px] px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm touch-manipulation bg-orange-500 hover:bg-orange-600 text-white"
                 >
                   Next
                 </Button>
@@ -653,7 +654,7 @@ export default function RateMappingPage() {
                 <Button
                   variant="primary"
                   onClick={handleWizardSubmit}
-                  className="bg-green-500 hover:bg-green-600 text-gray-900"
+                  className="min-h-[44px] px-4 md:px-6 py-2.5 md:py-3 text-xs md:text-sm touch-manipulation bg-green-500 hover:bg-green-600 text-white"
                 >
                   Submit
                 </Button>

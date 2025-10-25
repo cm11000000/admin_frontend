@@ -95,28 +95,35 @@ export default function ChargebacksPage() {
   const isAllSelected = chargebacks.length > 0 && selectedChargebacks.size === chargebacks.length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Chargebacks</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>Chargebacks</h1>
+          <p className="text-muted-foreground text-xs md:text-sm mt-1.5 md:mt-2">
             Manage and track all chargeback disputes
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             onClick={() => fetchChargebacks(true)}
             disabled={isLoading}
+            className="min-h-[44px] touch-manipulation"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            <span className="hidden xs:inline">Refresh</span>
           </Button>
           <Link href="/chargebacks/workflow">
-            <Button variant="outline">Workflow View</Button>
+            <Button variant="outline" className="min-h-[44px] touch-manipulation w-full sm:w-auto">
+              <span className="hidden xs:inline">Workflow View</span>
+              <span className="xs:hidden">Workflow</span>
+            </Button>
           </Link>
           <Link href="/chargebacks/analytics">
-            <Button variant="primary">Analytics</Button>
+            <Button variant="primary" className="min-h-[44px] touch-manipulation w-full sm:w-auto">
+              <span className="hidden xs:inline">Analytics</span>
+              <span className="xs:hidden">Stats</span>
+            </Button>
           </Link>
         </div>
       </div>
@@ -132,19 +139,19 @@ export default function ChargebacksPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="p-4 md:p-5 pb-3">
             <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-5 pt-0">
             <div className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</div>
             <p className="text-xs text-muted-foreground mt-1">{totalCount} chargebacks</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="p-4 md:p-5 pb-3">
             <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-5 pt-0">
             <div className="text-2xl font-bold text-green-600">
               {stats.wonCount + stats.lostCount > 0
                 ? Math.round((stats.wonCount / (stats.wonCount + stats.lostCount)) * 100)
@@ -156,10 +163,10 @@ export default function ChargebacksPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="p-4 md:p-5 pb-3">
             <CardTitle className="text-sm font-medium">Active Cases</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-5 pt-0">
             <div className="text-2xl font-bold text-blue-600">
               {stats.newCount + stats.underReviewCount + stats.evidenceSubmittedCount}
             </div>
@@ -169,10 +176,10 @@ export default function ChargebacksPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="p-4 md:p-5 pb-3">
             <CardTitle className="text-sm font-medium">Overdue</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-5 pt-0">
             <div className="text-2xl font-bold text-red-600">{stats.overdueCount}</div>
             <p className="text-xs text-muted-foreground mt-1">Requires immediate attention</p>
           </CardContent>
@@ -180,25 +187,26 @@ export default function ChargebacksPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 md:p-6">
           <div className="flex items-center justify-between">
             <CardTitle>Filters & Search</CardTitle>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
+              className="min-h-[44px] touch-manipulation"
             >
               <Filter className="h-4 w-4 mr-2" />
               {appliedFiltersCount > 0 && (
                 <Badge variant="default" className="mr-2">{appliedFiltersCount}</Badge>
               )}
-              {showFilters ? 'Hide' : 'Show'} Filters
+              <span className="hidden xs:inline">{showFilters ? 'Hide' : 'Show'} Filters</span>
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6 pt-0">
           <div className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -206,12 +214,12 @@ export default function ChargebacksPage() {
                   value={(filters as any)?.search || ''}
                   onChange={(e) => setFilter('search', e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                  className="pl-10"
+                  className="pl-10 min-h-[44px]"
                 />
               </div>
-              <Button onClick={() => applyFilters()}>Search</Button>
+              <Button onClick={() => applyFilters()} className="min-h-[44px] touch-manipulation">Search</Button>
               {appliedFiltersCount > 0 && (
-                <Button variant="outline" onClick={clearFilters}>
+                <Button variant="outline" onClick={clearFilters} className="min-h-[44px] touch-manipulation">
                   Clear Filters
                 </Button>
               )}
@@ -266,11 +274,13 @@ export default function ChargebacksPage() {
                       type="date"
                       value={(filters as any)?.dateFrom || ''}
                       onChange={(e) => setFilter('dateFrom', e.target.value)}
+                      className="min-h-[44px]"
                     />
                     <Input
                       type="date"
                       value={(filters as any)?.dateTo || ''}
                       onChange={(e) => setFilter('dateTo', e.target.value)}
+                      className="min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -283,18 +293,20 @@ export default function ChargebacksPage() {
                       placeholder="Min"
                       value={(filters as any)?.amountFrom || ''}
                       onChange={(e) => setFilter('amountFrom', e.target.value ? Number(e.target.value) : null)}
+                      className="min-h-[44px]"
                     />
                     <Input
                       type="number"
                       placeholder="Max"
                       value={(filters as any)?.amountTo || ''}
                       onChange={(e) => setFilter('amountTo', e.target.value ? Number(e.target.value) : null)}
+                      className="min-h-[44px]"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-end">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                     <Checkbox
                       checked={filters.isOverdue === true}
                       onCheckedChange={(checked) => setFilter('isOverdue', checked ? true : undefined)}
@@ -310,15 +322,15 @@ export default function ChargebacksPage() {
 
       {selectedChargebacks.size > 0 && (
         <Card className="border-primary">
-          <CardContent className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl p-4 hover:shadow-orange-500/5 transition-shadow duration-300">
-            <div className="flex items-center justify-between">
+          <CardContent className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl p-4 md:p-6 hover:shadow-orange-500/5 transition-shadow duration-300">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Checkbox checked={true} onCheckedChange={clearSelection} />
                 <span className="font-medium">{selectedChargebacks.size} selected</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Select onValueChange={handleBulkAssign}>
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-full sm:w-[200px] min-h-[44px]">
                     <SelectValue placeholder="Assign to..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -327,9 +339,10 @@ export default function ChargebacksPage() {
                     <SelectItem value="agent3">Agent 3</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => handleExport('csv')}>
+                <Button variant="outline" onClick={() => handleExport('csv')} className="min-h-[44px] touch-manipulation">
                   <Download className="h-4 w-4 mr-2" />
-                  Export Selected
+                  <span className="hidden xs:inline">Export Selected</span>
+                  <span className="xs:hidden">Export</span>
                 </Button>
               </div>
             </div>
@@ -493,7 +506,7 @@ export default function ChargebacksPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="text-sm text-muted-foreground">
           Showing {chargebacks.length} of {totalCount} chargebacks
         </div>
@@ -503,9 +516,10 @@ export default function ChargebacksPage() {
             size="sm"
             onClick={() => setPage(currentPage - 1)}
             disabled={!hasPrev || isLoading}
+            className="min-h-[44px] touch-manipulation"
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            <span className="hidden xs:inline">Previous</span>
           </Button>
           <div className="flex items-center gap-1">
             <span className="text-sm font-medium">{currentPage}</span>
@@ -518,8 +532,9 @@ export default function ChargebacksPage() {
             size="sm"
             onClick={() => setPage(currentPage + 1)}
             disabled={!hasNext || isLoading}
+            className="min-h-[44px] touch-manipulation"
           >
-            Next
+            <span className="hidden xs:inline">Next</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

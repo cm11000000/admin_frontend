@@ -234,7 +234,7 @@ export default function DashboardPage() {
             <label
               key={option.value}
               onClick={() => handleDateRangeChange(option.value)}
-              className={`${selectedDateOption === option.value ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500 shadow-lg shadow-orange-500/25' : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400'} flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 rounded-lg md:rounded-xl cursor-pointer border transition-all duration-200 touch-manipulation min-h-[44px]`}
+              className={`${selectedDateOption === option.value ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500 shadow-lg shadow-orange-500/25' : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400'} flex items-center gap-2 px-3 md:px-5 py-2 md:py-3 rounded-lg md:rounded-xl cursor-pointer border transition-all duration-200 min-h-[44px] touch-manipulation`}
             >
               <input
                 type="radio"
@@ -270,7 +270,7 @@ export default function DashboardPage() {
                 />
               </div>
               <div className="md:col-span-2 flex items-end">
-                <button onClick={() => loadGMVDataWithDates(fromDate, toDate, '6')} className="w-full min-h-[52px] px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-xl transition-all shadow-lg shadow-orange-500/25 touch-manipulation">Search →</button>
+                <button onClick={() => loadGMVDataWithDates(fromDate, toDate, '6')} className="w-full px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-xl transition-all shadow-lg shadow-orange-500/25 min-h-[44px] touch-manipulation">Search →</button>
               </div>
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="md:col-span-2">
-              <button onClick={loadTransactionDetails} className="w-full min-h-[52px] px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-xl transition-all shadow-lg shadow-orange-500/25 touch-manipulation">View Transaction Details →</button>
+              <button onClick={loadTransactionDetails} className="w-full px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-xl transition-all shadow-lg shadow-orange-500/25 min-h-[44px] touch-manipulation">View Transaction Details →</button>
             </div>
         </div>
       </div>
@@ -322,7 +322,7 @@ export default function DashboardPage() {
               <input type="search" autoComplete="off" value={searchTerm} onChange={(e) => handleSearch(e.target.value)} placeholder="Search by client code or name..." className="w-full pl-10 md:pl-12 pr-3 md:pr-4 py-2.5 md:py-3 bg-white border border-gray-300 rounded-xl text-gray-900 text-xs md:text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all min-h-[44px]" />
             </div>
             <div className="flex justify-end">
-              <button onClick={handleExportToExcel} className="w-full sm:w-auto min-h-[52px] px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs md:text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/25 touch-manipulation">
+              <button onClick={handleExportToExcel} className="w-full sm:w-auto px-4 md:px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs md:text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/25 min-h-[44px] touch-manipulation">
                 <Download className="w-4 h-4" />
                 Export to Excel
               </button>
@@ -398,16 +398,16 @@ export default function DashboardPage() {
                 <table id="txnDataTable" className="min-w-full border-collapse">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                   <tr>
-                    <th className="sticky left-0 z-20 bg-white px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">#</th>
-                    <th className="sticky left-[60px] z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Client Code</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Client's Name</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Success</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Failed</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Aborted / Init</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Refund Init</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Refunded</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Total</th>
-                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">GMV (INR)</th>
+                    <th className="sticky left-0 z-20 bg-white px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>#</th>
+                    <th className="sticky left-[60px] z-20 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client Code</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Client's Name</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Success</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Failed</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Aborted / Init</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Refund Init</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Refunded</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>Total</th>
+                    <th className="px-3 md:px-6 py-3 md:py-4 text-right text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>GMV (INR)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">

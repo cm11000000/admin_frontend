@@ -641,7 +641,7 @@ export default function MerchantRefundRequestsPage() {
                   Array.from({ length: 6 }).map((_, rowIdx) => (
                     <tr key={`loading-${rowIdx}`} className="animate-pulse">
                       {Array.from({ length: 15 }).map((__, cellIdx) => (
-                        <td key={cellIdx} className="px-3 md:px-4 py-3">
+                        <td key={cellIdx} className="px-3 md:px-6 py-2.5 md:py-4">
                           <div className="h-4 bg-gray-200 rounded" />
                         </td>
                       ))}
@@ -649,7 +649,7 @@ export default function MerchantRefundRequestsPage() {
                   ))
                 ) : paginatedRefunds.length === 0 ? (
                   <tr>
-                    <td colSpan={15} className="px-3 md:px-4 py-8 md:py-12 text-center text-gray-700">
+                    <td colSpan={15} className="px-4 py-10 text-center text-gray-600 text-sm">
                       No matching refund requests found
                     </td>
                   </tr>
@@ -660,34 +660,34 @@ export default function MerchantRefundRequestsPage() {
                     const statusClass = statusChipClass(status);
 
                     return (
-                      <tr key={`${refund.txn_id}-${index}`} className="hover:bg-gray-50 transition">
-                        <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.client_code || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 font-semibold whitespace-nowrap">{refund.txn_id || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.client_txn_id || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-right whitespace-nowrap">
+                      <tr key={`${refund.txn_id}-${index}`} className="hover:bg-gray-50 transition-colors">
+                        <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.client_code || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-semibold whitespace-nowrap">{refund.txn_id || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.client_txn_id || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right whitespace-nowrap">
                           <span className={Number(refund.paid_amount) > 0 ? 'text-green-700' : 'text-gray-900'}>
                             {formatAmount(refund.paid_amount)}
                           </span>
                         </td>
-                        <td className="px-3 md:px-4 py-3 text-right whitespace-nowrap">
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right whitespace-nowrap">
                           <span className={Number(refund.udf2) > 0 ? 'text-amber-700' : 'text-gray-900'}>
                             {formatAmount(refund.udf2)}
                           </span>
                         </td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap text-xs">{formatDate(refund.trans_date)}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap text-xs">{formatDate(refund.udf20)}</td>
-                        <td className="px-3 md:px-4 py-3 whitespace-nowrap">
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{formatDate(refund.trans_date)}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{formatDate(refund.udf20)}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm whitespace-nowrap">
                           <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${statusClass}`}>
                             {status.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.payee_first_name || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.payee_mob || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 truncate max-w-[180px]">{refund.payee_email || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.udf3 || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.payment_mode || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 text-gray-900 whitespace-nowrap">{refund.udf1 || 'N/A'}</td>
-                        <td className="px-3 md:px-4 py-3 whitespace-nowrap">
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.payee_first_name || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.payee_mob || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 truncate max-w-[180px]">{refund.payee_email || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.udf3 || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.payment_mode || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{refund.udf1 || 'N/A'}</td>
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm whitespace-nowrap">
                           {allowRefund ? (
                             <button
                               onClick={() => handleRefundClick(refund.txn_id)}
@@ -719,7 +719,7 @@ export default function MerchantRefundRequestsPage() {
                     setPageSize(Number(event.target.value));
                     setCurrentPage(0);
                   }}
-                  className="bg-gray-100 text-gray-900 border border-gray-300 rounded px-2 py-1 h-11 md:h-9 min-h-[44px] md:min-h-[36px] touch-manipulation"
+                  className="bg-gray-100 text-gray-900 border border-gray-300 rounded px-3 md:px-4 py-2.5 h-11 md:h-9 min-h-[44px] md:min-h-[36px] touch-manipulation"
                 >
                   {[10, 25, 50, 100, 200, 300, 400, 500].map((size) => (
                     <option key={size} value={size}>

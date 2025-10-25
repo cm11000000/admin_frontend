@@ -103,111 +103,115 @@ export default function SettlePaisaReportPage() {
   const paginatedData = mockData.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="space-y-6 p-4 md:p-6 lg:p-8 bg-white min-h-screen">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <Link
             href="/reports"
-            className="rounded-lg border border-gray-200 p-2 hover:bg-gray-50"
+            className="p-2 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl text-gray-700 hover:text-gray-900 hover:border-gray-300 transition-all"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
               Settle Paisa Report
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
               Track settlement transactions and payouts
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
           <button
             onClick={() => handleExport('csv')}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="min-h-[44px] px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-xs md:text-sm font-medium rounded-lg hover:bg-gray-50 transition-all touch-manipulation flex items-center justify-center gap-2"
           >
             <FileText className="h-4 w-4" />
-            CSV
+            <span className="hidden xs:inline">CSV</span>
           </button>
           <button
             onClick={() => handleExport('excel')}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="min-h-[44px] px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-xs md:text-sm font-medium rounded-lg hover:bg-gray-50 transition-all touch-manipulation flex items-center justify-center gap-2"
           >
             <FileSpreadsheet className="h-4 w-4" />
-            Excel
+            <span className="hidden xs:inline">Excel</span>
           </button>
           <button
             onClick={() => handleExport('pdf')}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="min-h-[44px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all touch-manipulation flex items-center justify-center gap-2"
           >
             <FileDown className="h-4 w-4" />
-            PDF
+            <span className="hidden xs:inline">PDF</span>
           </button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Total Settlements</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
+      <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+          <p className="text-xs md:text-sm text-gray-600 mb-2 font-light" style={{ letterSpacing: '-0.01em' }}>Total Settlements</p>
+          <p className="text-xl md:text-2xl font-extrabold text-gray-900">
             {totalSettlements}
           </p>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Completed</p>
-          <p className="mt-2 text-2xl font-bold text-green-600">
+        <div className="bg-white/90 backdrop-blur-xl border border-green-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+          <p className="text-xs md:text-sm text-green-600 mb-2 font-light" style={{ letterSpacing: '-0.01em' }}>Completed</p>
+          <p className="text-xl md:text-2xl font-extrabold text-green-600">
             {completedSettlements}
           </p>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Total Gross Amount</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+          <p className="text-xs md:text-sm text-gray-600 mb-2 font-light" style={{ letterSpacing: '-0.01em' }}>Total Gross Amount</p>
+          <p className="text-xl md:text-2xl font-extrabold text-gray-900">
             ₹{totalGrossAmount.toLocaleString()}
           </p>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Total Net Amount</p>
-          <p className="mt-2 text-2xl font-bold text-blue-600">
+        <div className="bg-white/90 backdrop-blur-xl border border-orange-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+          <p className="text-xs md:text-sm text-orange-600 mb-2 font-light" style={{ letterSpacing: '-0.01em' }}>Total Net Amount</p>
+          <p className="text-xl md:text-2xl font-extrabold text-orange-600">
             ₹{totalNetAmount.toLocaleString()}
           </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+        <div className="mb-4 md:mb-6">
+          <h3 className="text-base md:text-lg font-extrabold text-gray-900 mb-0.5 md:mb-1" style={{ letterSpacing: '-0.02em' }}>Search Filters</h3>
+          <p className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>Select filters to narrow down your search</p>
+        </div>
+        <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
               From Date
             </label>
             <input
               type="date"
               value={dateRange.from}
               onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 md:px-4 py-2.5 text-xs md:text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 touch-manipulation"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
               To Date
             </label>
             <input
               type="date"
               value={dateRange.to}
               onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 md:px-4 py-2.5 text-xs md:text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 touch-manipulation"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
               Client Name
             </label>
             <input
@@ -215,18 +219,18 @@ export default function SettlePaisaReportPage() {
               value={clientFilter}
               onChange={(e) => setClientFilter(e.target.value)}
               placeholder="Search client..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 md:px-4 py-2.5 text-xs md:text-sm placeholder-gray-500 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 touch-manipulation"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="block text-xs md:text-sm font-extrabold text-gray-700 mb-1.5 md:mb-2" style={{ letterSpacing: '-0.02em' }}>
               Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 md:px-4 py-2.5 text-xs md:text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 touch-manipulation"
             >
               <option value="all">All Status</option>
               <option value="completed">Completed</option>
@@ -239,9 +243,9 @@ export default function SettlePaisaReportPage() {
       </div>
 
       {/* Data Table */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 p-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+      <div className="overflow-hidden bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl">
+        <div className="border-b border-gray-200 p-4 md:p-6">
+          <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
             Settlement Details
           </h2>
         </div>
@@ -320,44 +324,44 @@ export default function SettlePaisaReportPage() {
         {/* Desktop View - Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Settlement ID
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Client
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Date
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Txns
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Gross Amount
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Commission
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Net Amount
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Payment Mode
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   UTR Number
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
+                <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                   Status
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {paginatedData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm font-medium text-gray-900">
                     {item.settlementId}
                   </td>
                   <td className="px-4 py-3">
@@ -412,22 +416,22 @@ export default function SettlePaisaReportPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-200 p-4">
-            <p className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, mockData.length)} of {mockData.length} entries
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-200 px-4 md:px-6 py-3 md:py-4">
+            <p className="text-xs md:text-sm text-gray-600 text-center sm:text-left font-light" style={{ letterSpacing: '-0.01em' }}>
+              Showing <span className="font-extrabold text-gray-900">{startIndex + 1}</span> to <span className="font-extrabold text-gray-900">{Math.min(startIndex + itemsPerPage, mockData.length)}</span> of <span className="font-extrabold text-orange-600">{mockData.length}</span> entries
             </p>
             <div className="flex gap-2">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(currentPage - 1)}
-                className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[44px] px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-xs md:text-sm font-medium rounded-lg hover:bg-gray-50 transition-all disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
               >
                 Previous
               </button>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(currentPage + 1)}
-                className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[44px] px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-xs md:text-sm font-medium rounded-lg hover:bg-gray-50 transition-all disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
               >
                 Next
               </button>

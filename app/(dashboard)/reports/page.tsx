@@ -141,13 +141,13 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header - Light theme */}
-      <div className="pb-4 border-b border-gray-200">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+      <div className="pb-3 md:pb-4 border-b border-gray-200">
+        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
           Reports & Analytics
         </h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
           Comprehensive reporting and analytics for all your payment data
         </p>
       </div>
@@ -157,87 +157,87 @@ export default function ReportsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4"
         >
-          <div className="bg-white/90 backdrop-blur-xl border border-blue-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-200">
+          <div className="bg-white/90 backdrop-blur-xl border border-blue-200 rounded-xl md:rounded-2xl p-4 md:p-5 shadow-lg hover:shadow-xl transition-all duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600 mb-1 font-medium">
+                <p className="text-xs md:text-sm text-blue-600 mb-1 font-medium">
                   Total Volume
                 </p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-xl md:text-2xl font-bold text-blue-600">
                   ₹{(summary.total_volume || 0).toLocaleString()}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-blue-600" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <DollarSign className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
               </div>
             </div>
-            <div className="mt-2 flex items-center gap-1 text-sm">
-              <ArrowUpRight className="h-4 w-4 text-green-600" />
+            <div className="mt-2 flex items-center gap-1 text-xs md:text-sm">
+              <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
               <span className="text-green-600 font-medium">12.5%</span>
               <span className="text-gray-500">vs last period</span>
             </div>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-green-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-200">
+          <div className="bg-white/90 backdrop-blur-xl border border-green-200 rounded-xl md:rounded-2xl p-4 md:p-5 shadow-lg hover:shadow-xl transition-all duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 mb-1 font-medium">
+                <p className="text-xs md:text-sm text-green-600 mb-1 font-medium">
                   Transactions
                 </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xl md:text-2xl font-bold text-green-600">
                   {(summary.transactions || 0).toLocaleString()}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <Activity className="h-6 w-6 text-green-600" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <Activity className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
               </div>
             </div>
-            <div className="mt-2 flex items-center gap-1 text-sm">
-              <ArrowUpRight className="h-4 w-4 text-green-600" />
+            <div className="mt-2 flex items-center gap-1 text-xs md:text-sm">
+              <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
               <span className="text-green-600 font-medium">8.2%</span>
               <span className="text-gray-500">vs last period</span>
             </div>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-purple-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-200">
+          <div className="bg-white/90 backdrop-blur-xl border border-purple-200 rounded-xl md:rounded-2xl p-4 md:p-5 shadow-lg hover:shadow-xl transition-all duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-600 mb-1 font-medium">
+                <p className="text-xs md:text-sm text-purple-600 mb-1 font-medium">
                   Success Rate
                 </p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-xl md:text-2xl font-bold text-purple-600">
                   {(summary.success_rate || 0).toFixed(1)}%
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
               </div>
             </div>
-            <div className="mt-2 flex items-center gap-1 text-sm">
-              <ArrowUpRight className="h-4 w-4 text-green-600" />
+            <div className="mt-2 flex items-center gap-1 text-xs md:text-sm">
+              <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
               <span className="text-green-600 font-medium">2.1%</span>
               <span className="text-gray-500">vs last period</span>
             </div>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-orange-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-200">
+          <div className="bg-white/90 backdrop-blur-xl border border-orange-200 rounded-xl md:rounded-2xl p-4 md:p-5 shadow-lg hover:shadow-xl transition-all duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-600 mb-1 font-medium">
+                <p className="text-xs md:text-sm text-orange-600 mb-1 font-medium">
                   Settlements
                 </p>
-                <p className="text-2xl font-bold text-orange-600">
+                <p className="text-xl md:text-2xl font-bold text-orange-600">
                   {(summary.settlements || 0).toLocaleString()}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <FileText className="h-6 w-6 text-orange-600" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
               </div>
             </div>
-            <div className="mt-2 flex items-center gap-1 text-sm">
-              <ArrowDownRight className="h-4 w-4 text-red-600" />
+            <div className="mt-2 flex items-center gap-1 text-xs md:text-sm">
+              <ArrowDownRight className="h-3 w-3 md:h-4 md:w-4 text-red-600" />
               <span className="text-red-600 font-medium">3.1%</span>
               <span className="text-gray-500">vs last period</span>
             </div>
@@ -247,10 +247,10 @@ export default function ReportsPage() {
 
       {/* Report Categories */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">
+        <h2 className="mb-3 md:mb-4 text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
           Report Categories
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {reportCategories.map((category, index) => (
             <ReportCard
               key={category.id}
@@ -269,32 +269,32 @@ export default function ReportsPage() {
       {/* Recent Reports - Light glass morphism */}
       {recentReports && recentReports.length > 0 && (
         <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+          <h2 className="mb-3 md:mb-4 text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
             Recent Reports
           </h2>
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
             <div className="divide-y divide-gray-200">
               {recentReports.map((report) => (
                 <div
                   key={report.id}
-                  className="flex items-center justify-between p-4 transition-colors hover:bg-gray-50"
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-3 md:p-4 transition-colors hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-blue-600" />
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 text-sm md:text-base">
                         {report.title}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs md:text-sm text-gray-600">
                         Generated {new Date(report.generated_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      className={`rounded-full px-2.5 md:px-3 py-1 text-xs font-semibold ${
                         report.status === 'completed'
                           ? 'bg-green-100 text-green-700 border border-green-200'
                           : 'bg-yellow-100 text-yellow-700 border border-yellow-200'

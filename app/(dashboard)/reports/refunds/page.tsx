@@ -63,9 +63,9 @@ export default function RefundReportPage() {
   const chartType = selectedChartType.refunds || 'line';
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <Link
             href="/reports"
@@ -74,16 +74,16 @@ export default function RefundReportPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
               Refund Report
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
               Track refund patterns and processing
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
           <DateRangePicker
             value={refundFilters.dateRange}
             onChange={setDateRange}
@@ -97,9 +97,9 @@ export default function RefundReportPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4"
         >
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl p-5 shadow-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-gray-600 mb-2">
               Total Refunds
             </p>
@@ -108,7 +108,7 @@ export default function RefundReportPage() {
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-green-500/30 rounded-xl p-5 shadow-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-green-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-green-300 mb-2">
               Success Rate
             </p>
@@ -117,7 +117,7 @@ export default function RefundReportPage() {
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-[#FF8800]/30 rounded-xl p-5 shadow-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-orange-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-orange-300 mb-2">
               Total Amount
             </p>
@@ -126,7 +126,7 @@ export default function RefundReportPage() {
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl p-5 shadow-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-gray-600 mb-2">
               Avg Refund
             </p>
@@ -138,8 +138,8 @@ export default function RefundReportPage() {
       )}
 
       {/* Chart Controls */}
-      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+        <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
           Refund Trends
         </h2>
         <ChartSelector
@@ -171,7 +171,7 @@ export default function RefundReportPage() {
 
       {/* Breakdown Charts */}
       {report?.breakdown && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 md:gap-4 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -212,18 +212,18 @@ export default function RefundReportPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
+          className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden"
         >
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900">
+          <div className="border-b border-gray-200 p-4 md:p-6">
+            <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
               Refund Details
             </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <tr className="border-b-2 border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <tr>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Refund ID
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">

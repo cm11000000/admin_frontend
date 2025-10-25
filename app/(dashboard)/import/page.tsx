@@ -78,22 +78,26 @@ export default function ImportPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-3xl font-bold">Bulk Import</h1>
-          <p className="text-slate-400 mt-1">Import data from CSV or Excel files</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+            Bulk Import
+          </h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
+            Import data from CSV or Excel files
+          </p>
         </div>
         {!showWizard && (
-          <Button onClick={() => setShowWizard(true)}>
+          <Button onClick={() => setShowWizard(true)} className="min-h-[44px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all">
             <Upload className="h-4 w-4 mr-2" />
-            Start Import
+            <span className="hidden xs:inline">Start </span>Import
           </Button>
         )}
       </div>
 
       {showWizard ? (
-        <div className="bg-white border border-slate-700/50 rounded-lg p-6">
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
           <ImportWizard
             onComplete={handleImportComplete}
             onCancel={() => setShowWizard(false)}
@@ -101,30 +105,30 @@ export default function ImportPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {importTypes.map((type) => (
               <button
                 key={type.type}
                 onClick={() => setShowWizard(true)}
-                className="p-6 bg-white border-2 border-slate-700/50 rounded-lg hover:border-primary hover:shadow-md transition-all text-left"
+                className="bg-white/90 backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 shadow-xl p-4 md:p-5 hover:shadow-2xl transition-all text-left min-h-[44px] touch-manipulation"
               >
-                <div className="text-4xl mb-3">{type.icon}</div>
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <div className="text-3xl md:text-4xl mb-3">{type.icon}</div>
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">
                   {type.title}
                 </h3>
-                <p className="text-sm text-slate-400">{type.description}</p>
+                <p className="text-xs md:text-sm text-gray-600">{type.description}</p>
               </button>
             ))}
           </div>
 
-          <div className="p-8 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-4">
-              <FileSpreadsheet className="h-12 w-12 text-blue-600 flex-shrink-0" />
+          <div className="bg-white/90 backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 shadow-xl p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <FileSpreadsheet className="h-10 w-10 md:h-12 md:w-12 text-blue-600 flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                <h3 className="text-base md:text-lg font-semibold text-blue-900 mb-2">
                   Import Guidelines
                 </h3>
-                <ul className="space-y-2 text-sm text-blue-800">
+                <ul className="space-y-2 text-xs md:text-sm text-blue-800">
                   <li>• Download the template for your import type</li>
                   <li>• Fill in all required fields marked with asterisk (*)</li>
                   <li>• Ensure data formats match the template</li>
@@ -139,40 +143,41 @@ export default function ImportPage() {
       )}
 
       {importResult && (
-        <div className="p-6 bg-white border border-slate-700/50 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Import Results</h2>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-600">Total Rows</p>
-              <p className="text-2xl font-bold text-blue-900">
+        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-4 md:p-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-4">Import Results</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-xs md:text-sm text-blue-600">Total Rows</p>
+              <p className="text-xl md:text-2xl font-bold text-blue-900">
                 {importResult.totalRows}
               </p>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-600">Success</p>
-              <p className="text-2xl font-bold text-green-900">
+            <div className="p-3 md:p-4 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-xs md:text-sm text-green-600">Success</p>
+              <p className="text-xl md:text-2xl font-bold text-green-900">
                 {importResult.successCount}
               </p>
             </div>
-            <div className="p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-red-600">Errors</p>
-              <p className="text-2xl font-bold text-red-900">
+            <div className="p-3 md:p-4 bg-red-50 rounded-lg border border-red-200">
+              <p className="text-xs md:text-sm text-red-600">Errors</p>
+              <p className="text-xl md:text-2xl font-bold text-red-900">
                 {importResult.errorCount}
               </p>
             </div>
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <p className="text-sm text-yellow-600">Skipped</p>
-              <p className="text-2xl font-bold text-yellow-900">
+            <div className="p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p className="text-xs md:text-sm text-yellow-600">Skipped</p>
+              <p className="text-xl md:text-2xl font-bold text-yellow-900">
                 {importResult.skippedCount}
               </p>
             </div>
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-col sm:flex-row gap-2 md:gap-3 mt-4">
             {importResult.successFileUrl && (
               <Button
                 variant="outline"
                 onClick={() => window.open(importResult.successFileUrl, '_blank')}
+                className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm font-medium"
               >
                 Download Success Report
               </Button>
@@ -181,6 +186,7 @@ export default function ImportPage() {
               <Button
                 variant="outline"
                 onClick={() => window.open(importResult.errorFileUrl, '_blank')}
+                className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm font-medium"
               >
                 Download Error Report
               </Button>

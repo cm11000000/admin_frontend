@@ -91,31 +91,33 @@ export default function AssistantPage() {
   )
 
   return (
-    <div className="min-h-screen">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="mt-2 mb-4 px-2">
-        <div className="flex items-center justify-between rounded-2xl border border-gray-200/80 bg-white/90 px-4 py-3 shadow-sm">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Ops Assistant</h1>
-            <p className="text-xs text-gray-500">Ask in English or Hindi; export reports; check transaction status.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-500">Language</label>
-            <select
-              value={lang}
-              onChange={(e) => setLang(e.target.value as any)}
-              className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-700"
-            >
-              <option value="auto">Auto</option>
-              <option value="en">English</option>
-              <option value="hi">हिन्दी</option>
-            </select>
-          </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+            Ops Assistant
+          </h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
+            Ask in English or Hindi; export reports; check transaction status
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs md:text-sm text-gray-600">Language</label>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as any)}
+            className="min-h-[44px] px-3 md:px-4 py-2 text-xs md:text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-colors"
+          >
+            <option value="auto">Auto</option>
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+          </select>
         </div>
       </div>
 
       {/* Quick actions */}
-      <div className="px-2 mb-4">
+      <div>
         <div className="flex flex-wrap gap-2">
           {[
             { label: 'Refunds last 7 days', q: 'Show refunds last 7 days' },
@@ -128,7 +130,7 @@ export default function AssistantPage() {
               key={idx}
               disabled={busy}
               onClick={() => ask(chip.q)}
-              className="text-xs md:text-sm rounded-full border border-gray-200/80 bg-white/90 hover:bg-gray-50 px-3 py-1.5 shadow-sm disabled:opacity-50"
+              className="min-h-[44px] touch-manipulation text-xs md:text-sm rounded-full border border-gray-200 bg-white/90 hover:bg-gray-50 px-3 md:px-4 py-2 shadow-sm disabled:opacity-50 transition-colors"
             >
               {chip.label}
             </button>
@@ -137,9 +139,9 @@ export default function AssistantPage() {
       </div>
 
       {/* Chat area */}
-      <div className="px-2">
-        <div className="rounded-2xl border border-gray-200/80 bg-gradient-to-br from-gray-50 via-white to-gray-50 shadow-sm">
-          <div className="flex flex-col p-4 max-h-[62vh] overflow-y-auto">
+      <div>
+        <div className="bg-white/90 backdrop-blur-xl rounded-xl md:rounded-2xl border border-gray-200 shadow-xl">
+          <div className="flex flex-col p-3 md:p-4 max-h-[62vh] overflow-y-auto">
             {messages.length === 0 && (
               <div className="text-sm text-gray-500">
                 Examples: “Show refunds for QCCLI last 7 days”, “What’s the status of QCCLI-SBI-TODAY?”, “Download settlement report for QCCLI last week”.
@@ -200,19 +202,19 @@ export default function AssistantPage() {
           </div>
 
           {/* Input */}
-          <form onSubmit={onSubmit} className="border-t border-gray-200 px-3 py-3 bg-white/90 rounded-b-2xl">
+          <form onSubmit={onSubmit} className="border-t border-gray-200 px-3 md:px-4 py-3 bg-white/90 rounded-b-xl md:rounded-b-2xl">
             <div className="flex items-center gap-2">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={pendingNeeds.length ? `Add missing: ${pendingNeeds.join(', ')}` : 'Type your question...'}
-                className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9933]/40 bg-white text-gray-900"
+                className="flex-1 min-h-[44px] rounded-xl border border-gray-300 px-3 md:px-4 py-2.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 bg-white text-gray-900 transition-colors"
                 disabled={busy}
               />
               <button
                 type="submit"
                 disabled={busy}
-                className="rounded-xl bg-gradient-to-r from-[#5CBBF6] to-[#5CBBF6]/80 text-white text-sm px-4 py-2 shadow hover:opacity-95 disabled:opacity-50"
+                className="min-h-[44px] rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium px-4 md:px-6 py-2.5 shadow-md hover:shadow-lg disabled:opacity-50 transition-all touch-manipulation"
               >
                 {busy ? 'Sending...' : 'Send'}
               </button>

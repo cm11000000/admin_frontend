@@ -210,7 +210,7 @@ export default function SettlementPage() {
                         <button
                           onClick={handleUpload}
                           disabled={!selectedFile || isUploading}
-                          className="flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-h-[52px] touch-manipulation"
+                          className="flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
                         >
                           {isUploading ? (
                             <>
@@ -318,14 +318,14 @@ export default function SettlementPage() {
                         setFilterDate('')
                         loadImportBatches()
                       }}
-                      className="px-4 md:px-5 py-2.5 md:py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors text-xs md:text-sm min-h-[52px] touch-manipulation"
+                      className="px-4 md:px-6 py-2.5 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors text-xs md:text-sm min-h-[44px] touch-manipulation"
                     >
                       Clear Filters
                     </button>
                     <button
                       onClick={loadImportBatches}
                       disabled={isLoadingBatches}
-                      className="px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 text-xs md:text-sm min-h-[52px] touch-manipulation"
+                      className="px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 text-xs md:text-sm min-h-[44px] touch-manipulation"
                     >
                       {isLoadingBatches ? 'Loading...' : 'Apply Filters →'}
                     </button>

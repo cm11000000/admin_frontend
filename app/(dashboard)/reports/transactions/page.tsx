@@ -71,14 +71,14 @@ export default function TransactionReportPage() {
   const chartType = selectedChartType.transactions || 'line';
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             href="/reports"
             className="p-2 bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl text-gray-700 hover:text-gray-900 hover:border-gray-300 transition-all"
@@ -86,12 +86,12 @@ export default function TransactionReportPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Transaction Report</h1>
-            <p className="text-gray-600">Detailed transaction analytics and trends</p>
+            <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>Transaction Report</h1>
+            <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>Detailed transaction analytics and trends</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
           <DateRangePicker
             value={transactionFilters.dateRange}
             onChange={setDateRange}
@@ -105,9 +105,9 @@ export default function TransactionReportPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-4"
         >
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-6 shadow-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-gray-600 mb-2">
               Total Transactions
             </p>
@@ -116,7 +116,7 @@ export default function TransactionReportPage() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 backdrop-blur-xl border border-green-500/30 rounded-2xl p-6 shadow-xl">
+          <div className="bg-gradient-to-br from-green-500/10 to-green-600/10 backdrop-blur-xl border border-green-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-green-300 mb-2">
               Success Rate
             </p>
@@ -125,7 +125,7 @@ export default function TransactionReportPage() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 backdrop-blur-xl border border-orange-500/30 rounded-2xl p-6 shadow-xl">
+          <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 backdrop-blur-xl border border-orange-500/30 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-orange-300 mb-2">
               Total Amount
             </p>
@@ -134,7 +134,7 @@ export default function TransactionReportPage() {
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-6 shadow-xl">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
             <p className="text-sm text-gray-600 mb-2">
               Avg Transaction
             </p>
@@ -146,8 +146,8 @@ export default function TransactionReportPage() {
       )}
 
       {/* Chart Controls */}
-      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-6 shadow-xl">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex items-center justify-between bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl">
+        <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
           Transaction Trends
         </h2>
         <ChartSelector
@@ -179,7 +179,7 @@ export default function TransactionReportPage() {
 
       {/* Breakdown Charts */}
       {report?.breakdown && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 md:gap-4 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -220,66 +220,66 @@ export default function TransactionReportPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="overflow-hidden bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-xl"
+          className="overflow-hidden bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl"
         >
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900">
+          <div className="border-b border-gray-200 p-4 md:p-6">
+            <h2 className="text-base md:text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
               Transaction Details
             </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
-                <tr className="bg-white border-b border-gray-200">
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-700 tracking-wider">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                <tr>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Transaction ID
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-700 tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Client
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-700 tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Amount
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-700 tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-700 tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Payment Method
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase text-gray-700 tracking-wider">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-left text-[10px] md:text-xs font-extrabold text-gray-700 uppercase whitespace-nowrap" style={{ letterSpacing: '-0.02em' }}>
                     Date
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {report.transactions.slice(0, 20).map((txn) => (
-                  <tr key={txn.transaction_id} className="hover:bg-gray-100 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-900 font-mono">
+                  <tr key={txn.transaction_id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-mono">
                       {txn.transaction_id}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900">
                       {txn.client_name}
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-orange-400">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm font-semibold text-orange-600">
                       ₹{txn.amount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                           txn.status === 'success'
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            ? 'bg-green-500/20 text-green-600 border border-green-500/30'
                             : txn.status === 'failed'
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            ? 'bg-red-500/20 text-red-600 border border-red-500/30'
+                            : 'bg-yellow-500/20 text-yellow-600 border border-yellow-500/30'
                         }`}
                       >
                         {txn.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">
                       {txn.payment_method}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600">
                       {new Date(txn.transaction_date).toLocaleDateString()}
                     </td>
                   </tr>
@@ -290,16 +290,16 @@ export default function TransactionReportPage() {
 
           {/* Pagination */}
           {report.pagination && report.pagination.total_pages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-200 p-4">
-              <p className="text-sm text-gray-600">
-                Showing {report.transactions.length} of {report.pagination.total} transactions
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-200 px-4 md:px-6 py-3 md:py-4">
+              <p className="text-xs md:text-sm text-gray-600 text-center sm:text-left font-light" style={{ letterSpacing: '-0.01em' }}>
+                Showing <span className="font-extrabold text-gray-900">{report.transactions.length}</span> of <span className="font-extrabold text-orange-600">{report.pagination.total}</span> transactions
               </p>
               <div className="flex gap-2">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={report.pagination.page === 1}
-                  className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded-xl hover:text-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-[44px] px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-xs md:text-sm"
                 >
                   Previous
                 </motion.button>
@@ -307,7 +307,7 @@ export default function TransactionReportPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={report.pagination.page === report.pagination.total_pages}
-                  className="px-4 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded-xl hover:text-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-[44px] px-4 md:px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-xs md:text-sm"
                 >
                   Next
                 </motion.button>

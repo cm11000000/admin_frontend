@@ -148,76 +148,78 @@ export default function QRCodesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-3 md:pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">QR Codes</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+            QR Codes
+          </h1>
+          <p className="text-gray-600 text-xs md:text-sm mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
             Generate and manage payment QR codes
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => fetchQRCodes()}
+            className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm font-medium"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            <span className="hidden xs:inline">Refresh</span>
           </Button>
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setShowBulkDialog(true)}
+            className="min-h-[44px] px-4 md:px-6 py-2.5 text-xs md:text-sm font-medium"
           >
-            Bulk Generate
+            <span className="hidden xs:inline">Bulk </span>Generate
           </Button>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+          <Button onClick={() => setShowCreateDialog(true)} className="min-h-[44px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all">
             <Plus className="h-4 w-4 mr-2" />
-            Generate QR
+            <span className="hidden xs:inline">Generate </span>QR
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow duration-300">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 hover:shadow-2xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Total QR Codes</span>
-            <QrCodeIcon className="h-4 w-4 text-gray-400" />
+            <span className="text-xs md:text-sm text-gray-600">Total QR Codes</span>
+            <QrCodeIcon className="h-3 w-3 md:h-4 md:w-4 text-gray-400" />
           </div>
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-xl md:text-2xl font-bold text-gray-900">
             {qrCodes.length}
           </div>
         </Card>
 
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow duration-300">
+        <Card className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 hover:shadow-2xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Total Scans</span>
-            <Eye className="h-4 w-4 text-gray-400" />
+            <span className="text-xs md:text-sm text-gray-600">Total Scans</span>
+            <Eye className="h-3 w-3 md:h-4 md:w-4 text-gray-400" />
           </div>
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-xl md:text-2xl font-bold text-gray-900">
             {qrCodes.reduce((sum, qr) => sum + qr.scanCount, 0)}
           </div>
         </Card>
 
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow duration-300">
+        <Card className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 hover:shadow-2xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Conversions</span>
-            <BarChart3 className="h-4 w-4 text-gray-400" />
+            <span className="text-xs md:text-sm text-gray-600">Conversions</span>
+            <BarChart3 className="h-3 w-3 md:h-4 md:w-4 text-gray-400" />
           </div>
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-xl md:text-2xl font-bold text-gray-900">
             {qrCodes.reduce((sum, qr) => sum + qr.conversionCount, 0)}
           </div>
         </Card>
 
-        <Card className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow duration-300">
+        <Card className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 hover:shadow-2xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Avg. Conversion</span>
-            <BarChart3 className="h-4 w-4 text-gray-400" />
+            <span className="text-xs md:text-sm text-gray-600">Avg. Conversion</span>
+            <BarChart3 className="h-3 w-3 md:h-4 md:w-4 text-gray-400" />
           </div>
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-xl md:text-2xl font-bold text-gray-900">
             {qrCodes.length > 0
               ? ((qrCodes.reduce((sum, qr) => sum + qr.conversionCount, 0) /
                   qrCodes.reduce((sum, qr) => sum + qr.scanCount, 0)) * 100 || 0).toFixed(1)
@@ -228,27 +230,27 @@ export default function QRCodesPage() {
 
       {/* QR Codes Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
           {[...Array(8)].map((_, i) => (
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
       ) : qrCodes.length === 0 ? (
-        <Card className="p-12 text-center">
-          <QrCodeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No QR codes yet</h3>
-          <p className="text-gray-600 mb-6">
+        <Card className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-8 md:p-12 text-center">
+          <QrCodeIcon className="h-10 w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">No QR codes yet</h3>
+          <p className="text-xs md:text-sm text-gray-600 mb-6">
             Generate your first QR code to get started
           </p>
-          <Button onClick={() => setShowCreateDialog(true)}>
+          <Button onClick={() => setShowCreateDialog(true)} className="min-h-[44px] px-4 md:px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs md:text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all">
             <Plus className="h-4 w-4 mr-2" />
             Generate QR Code
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
           {qrCodes.map((qrCode) => (
-            <Card key={qrCode.id} className="p-4 hover:shadow-lg transition-shadow">
+            <Card key={qrCode.id} className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 hover:shadow-2xl transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 truncate">{qrCode.name}</h3>

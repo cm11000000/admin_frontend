@@ -35,18 +35,18 @@ export default function UsersPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">User Management</h1>
-            <p className="text-sm text-gray-600">Manage system users, roles and permissions</p>
+            <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>User Management</h1>
+            <p className="text-xs md:text-sm text-gray-600 mt-1.5 md:mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>Manage system users, roles and permissions</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all">
+            <button className="flex items-center gap-2 min-h-[44px] touch-manipulation px-3 md:px-4 py-2.5 md:py-3 bg-white border border-gray-300 rounded-lg text-xs md:text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all">
               <RefreshCw className="w-4 h-4" />
               <span className="hidden sm:inline">Refresh</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all">
+            <button className="flex items-center gap-2 min-h-[44px] touch-manipulation px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all text-xs md:text-sm">
               <Plus className="w-4 h-4" />
               <span>Add User</span>
             </button>
@@ -85,7 +85,7 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-3 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 shadow-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -93,7 +93,7 @@ export default function UsersPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search users..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              className="w-full min-h-[44px] pl-10 pr-4 py-2.5 md:py-3 bg-gray-50 border border-gray-200 rounded-lg text-xs md:text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             />
           </div>
         </div>
@@ -101,15 +101,15 @@ export default function UsersPage() {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
           <div className="divide-y divide-gray-200">
             {filteredUsers.map((user) => (
-              <div key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={user.id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex items-center gap-4 flex-1">
                     <div className="w-12 h-12 bg-gradient-to-tr from-orange-500/20 to-orange-600/20 rounded-lg flex items-center justify-center">
                       <Users className="w-6 h-6 text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">{user.name}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                      <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-1">{user.name}</h3>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                           <Mail className="w-3 h-3" />
                           <span>{user.email}</span>
@@ -124,18 +124,18 @@ export default function UsersPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className={`px-2.5 md:px-3 py-1.5 md:py-2 rounded-full text-xs font-medium ${
                       user.active
                         ? 'bg-green-500/20 text-green-600 border border-green-500/30'
                         : 'bg-red-500/20 text-red-600 border border-red-500/30'
                     }`}>
                       {user.active ? 'Active' : 'Inactive'}
                     </span>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button className="min-h-[44px] min-w-[44px] touch-manipulation flex items-center justify-center p-2.5 md:p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                       <Edit className="w-5 h-5" />
                     </button>
-                    <button className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                    <button className="min-h-[44px] min-w-[44px] touch-manipulation flex items-center justify-center p-2.5 md:p-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
