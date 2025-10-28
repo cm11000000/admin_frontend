@@ -1,0 +1,236 @@
+name: Deploy to Production V2 (S3 + CloudFront)
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-south-1
+  NODE_VERSION: '18'
+  PROD_S3_BUCKET: admin-v2.sabpaisa.in
+  # CloudFront distribution will be created on first run, then add ID here
+  # PROD_CLOUDFRONT_DISTRIBUTION_ID: (will be set after first deployment)
+
+jobs:
+  deploy:
+    name: Build and Deploy to Production V2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build static export
+        run: npm run build:static
+        env:
+          NEXT_PUBLIC_STATIC_EXPORT: 'true'
+          NODE_ENV: production
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create S3 bucket if not exists
+        run: |
+          if ! aws s3api head-bucket --bucket "${{ env.PROD_S3_BUCKET }}" 2>/dev/null; then
+            echo "Creating S3 bucket: ${{ env.PROD_S3_BUCKET }}..."
+            aws s3api create-bucket \
+              --bucket "${{ env.PROD_S3_BUCKET }}" \
+              --region ${{ env.AWS_REGION }} \
+              --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }}
+
+            # Enable static website hosting
+            aws s3 website "s3://${{ env.PROD_S3_BUCKET }}" \
+              --index-document index.html \
+              --error-document index.html
+
+            # Set public read policy
+            aws s3api put-bucket-policy \
+              --bucket "${{ env.PROD_S3_BUCKET }}" \
+              --policy '{
+                "Version": "2012-10-17",
+                "Statement": [{
+                  "Sid": "PublicReadGetObject",
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": "s3:GetObject",
+                  "Resource": "arn:aws:s3:::${{ env.PROD_S3_BUCKET }}/*"
+                }]
+              }'
+
+            echo "✅ S3 bucket created and configured"
+          else
+            echo "✅ S3 bucket already exists"
+          fi
+
+      - name: Deploy static files to S3
+        run: |
+          echo "Deploying to S3 bucket: ${{ env.PROD_S3_BUCKET }}"
+
+          # Upload JS/CSS/JSON with immutable cache (1 year)
+          aws s3 sync out/ s3://${{ env.PROD_S3_BUCKET }}/ \
+            --delete \
+            --exclude "*.html" \
+            --cache-control "public, max-age=31536000, immutable"
+
+          # Upload HTML files with no-cache
+          aws s3 sync out/ s3://${{ env.PROD_S3_BUCKET }}/ \
+            --delete \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "public, max-age=0, must-revalidate"
+
+          echo "✅ Files uploaded to S3"
+
+      - name: Create CloudFront distribution if not exists
+        id: cloudfront
+        run: |
+          # Check if distribution exists by checking tag or comment
+          EXISTING_DIST=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='Admin Portal V2'].Id" --output text)
+
+          if [ -z "$EXISTING_DIST" ]; then
+            echo "Creating CloudFront distribution for admin-v2..."
+
+            # Create distribution config
+            cat > /tmp/cf-config.json << 'CFEOF'
+          {
+            "CallerReference": "admin-v2-$(date +%s)",
+            "Comment": "Admin Portal V2",
+            "Enabled": true,
+            "DefaultRootObject": "index.html",
+            "Origins": {
+              "Quantity": 1,
+              "Items": [
+                {
+                  "Id": "S3-admin-v2",
+                  "DomainName": "${{ env.PROD_S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com",
+                  "S3OriginConfig": {
+                    "OriginAccessIdentity": ""
+                  }
+                }
+              ]
+            },
+            "DefaultCacheBehavior": {
+              "TargetOriginId": "S3-admin-v2",
+              "ViewerProtocolPolicy": "redirect-to-https",
+              "AllowedMethods": {
+                "Quantity": 2,
+                "Items": ["HEAD", "GET"],
+                "CachedMethods": {
+                  "Quantity": 2,
+                  "Items": ["HEAD", "GET"]
+                }
+              },
+              "Compress": true,
+              "ForwardedValues": {
+                "QueryString": false,
+                "Cookies": {
+                  "Forward": "none"
+                }
+              },
+              "MinTTL": 0,
+              "TrustedSigners": {
+                "Enabled": false,
+                "Quantity": 0
+              }
+            },
+            "CustomErrorResponses": {
+              "Quantity": 2,
+              "Items": [
+                {
+                  "ErrorCode": 403,
+                  "ResponsePagePath": "/index.html",
+                  "ResponseCode": "200",
+                  "ErrorCachingMinTTL": 300
+                },
+                {
+                  "ErrorCode": 404,
+                  "ResponsePagePath": "/index.html",
+                  "ResponseCode": "200",
+                  "ErrorCachingMinTTL": 300
+                }
+              ]
+            }
+          }
+          CFEOF
+
+            # Create the distribution
+            DIST_OUTPUT=$(aws cloudfront create-distribution --distribution-config file:///tmp/cf-config.json)
+            DIST_ID=$(echo "$DIST_OUTPUT" | jq -r '.Distribution.Id')
+            DIST_DOMAIN=$(echo "$DIST_OUTPUT" | jq -r '.Distribution.DomainName')
+
+            echo "distribution_id=$DIST_ID" >> $GITHUB_OUTPUT
+            echo "distribution_domain=$DIST_DOMAIN" >> $GITHUB_OUTPUT
+            echo "created=true" >> $GITHUB_OUTPUT
+
+            echo "✅ CloudFront distribution created: $DIST_ID"
+            echo "📍 CloudFront URL: https://$DIST_DOMAIN"
+            echo ""
+            echo "⚠️  IMPORTANT: Add this to the workflow file env section:"
+            echo "   PROD_CLOUDFRONT_DISTRIBUTION_ID: $DIST_ID"
+          else
+            echo "distribution_id=$EXISTING_DIST" >> $GITHUB_OUTPUT
+            echo "created=false" >> $GITHUB_OUTPUT
+            echo "✅ Using existing CloudFront distribution: $EXISTING_DIST"
+          fi
+
+      - name: Invalidate CloudFront cache
+        if: steps.cloudfront.outputs.distribution_id != ''
+        run: |
+          echo "Invalidating CloudFront cache..."
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cloudfront.outputs.distribution_id }} \
+            --paths "/*"
+          echo "✅ Cache invalidation started"
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Production V2 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Production V2" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**S3 Bucket:** ${{ env.PROD_S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.cloudfront.outputs.distribution_id }}" != "" ]; then
+            echo "**CloudFront ID:** ${{ steps.cloudfront.outputs.distribution_id }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📍 Access URLs:" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Website:** http://${{ env.PROD_S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.cloudfront.outputs.distribution_domain }}" != "" ]; then
+            echo "- **CloudFront:** https://${{ steps.cloudfront.outputs.distribution_domain }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.cloudfront.outputs.created }}" == "true" ]; then
+            echo "### ⚠️ Action Required:" >> $GITHUB_STEP_SUMMARY
+            echo "CloudFront distribution was created. Please add this to the workflow env section:" >> $GITHUB_STEP_SUMMARY
+            echo '```yaml' >> $GITHUB_STEP_SUMMARY
+            echo "PROD_CLOUDFRONT_DISTRIBUTION_ID: ${{ steps.cloudfront.outputs.distribution_id }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⏳ CloudFront deployment in progress (~10-15 minutes for first deployment)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏳ CloudFront cache invalidation in progress (1-2 minutes)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** This is V2 deployment and won't affect the existing production (admin.sabpaisa.in)" >> $GITHUB_STEP_SUMMARY
