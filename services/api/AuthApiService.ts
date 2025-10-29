@@ -183,7 +183,7 @@ class AuthApiService {
   }
 
   /**
-   * Logout - Clear tokens from localStorage and cookies
+   * Logout - Clear tokens from localStorage and sessionStorage
    */
   logout(): void {
     if (typeof window === 'undefined') return
@@ -205,18 +205,7 @@ class AuthApiService {
       sessionStorage.removeItem('RatingUser')
     } catch {}
 
-    // Clear cookies by setting Max-Age=0 (expires immediately)
-    const host = (typeof location !== 'undefined' ? location.hostname : '') || ''
-    const domainAttr = (host.endsWith('.sabpaisa.in') || host === 'sabpaisa.in')
-      ? '; Domain=.sabpaisa.in'
-      : ''
-
-    // Clear access_token cookie
-    document.cookie = `access_token=; Path=/; Max-Age=0${domainAttr}`
-    // Clear refresh_token cookie
-    document.cookie = `refresh_token=; Path=/; Max-Age=0${domainAttr}`
-
-    console.log('[Auth] User logged out successfully (localStorage, sessionStorage, and cookies cleared)')
+    console.log('[Auth] User logged out successfully')
   }
 
   /**
@@ -314,30 +303,9 @@ class AuthApiService {
       console.warn('[Auth] Failed to persist session auth state', sessionError)
     }
 
-    // Also store in cookies for middleware access
-    // Persist cookies for 7 days to control frontend session window
-    // Add Secure on HTTPS for production security
-    const sevenDays = 7 * 24 * 60 * 60
-    const isHttps = typeof location !== 'undefined' && location.protocol === 'https:'
-    const secureAttr = isHttps ? '; Secure' : ''
-    const host = (typeof location !== 'undefined' ? location.hostname : '') || ''
-
-    // Cookie domain strategy:
-    // 1. For .sabpaisa.in domains: Use Domain=.sabpaisa.in (allows subdomain sharing)
-    // 2. For CloudFront/other domains: No Domain attribute (cookie bound to exact hostname)
-    // This ensures cookies work whether accessed via adminv2.sabpaisa.in or d1xzmfw9e4a2at.cloudfront.net
-    const domainAttr = (host.endsWith('.sabpaisa.in') || host === 'sabpaisa.in')
-      ? '; Domain=.sabpaisa.in'
-      : ''
-
-    if (access) {
-      document.cookie = `access_token=${access}; Path=/; Max-Age=${sevenDays}; SameSite=Lax${secureAttr}${domainAttr}`
-      console.log(`[Auth] Set access_token cookie for host: ${host}${domainAttr ? ' (domain: .sabpaisa.in)' : ' (no domain attr)'}`)
-    }
-    if (refresh) {
-      document.cookie = `refresh_token=${refresh}; Path=/; Max-Age=${sevenDays}; SameSite=Lax${secureAttr}${domainAttr}`
-      console.log(`[Auth] Set refresh_token cookie for host: ${host}${domainAttr ? ' (domain: .sabpaisa.in)' : ' (no domain attr)'}`)
-    }
+    // Note: For static export, we only use localStorage (not cookies)
+    // Middleware doesn't work with cookies in client-only builds
+    // Auth is now handled by client-side AuthGuard component
 
     // Store userName for Django backend API calls (matches Angular implementation)
     const userName = resp?.userName || resp?.email || resp?.userEmail || resp?.clientUserId
