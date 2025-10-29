@@ -7,6 +7,14 @@ export function middleware(req: NextRequest) {
   const access = cookies.get('access_token')?.value || ''
   const refresh = cookies.get('refresh_token')?.value || ''
 
+  // Debug logging for auth state (disable in production by removing this block)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[Middleware] Path: ${nextUrl.pathname}`)
+    console.log(`[Middleware] Has access_token: ${!!access}`)
+    console.log(`[Middleware] Has refresh_token: ${!!refresh}`)
+    console.log(`[Middleware] All cookies:`, req.cookies.getAll().map(c => c.name))
+  }
+
   // Special handling for root: redirect to dashboard if logged in, else to login
   if (nextUrl.pathname === '/') {
     const url = nextUrl.clone()
@@ -15,8 +23,9 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Protected routes: require auth
+  // Protected routes: require auth (either access OR refresh token present)
   if (!access && !refresh) {
+    console.warn(`[Middleware] No auth tokens found, redirecting to login from ${nextUrl.pathname}`)
     const url = nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('returnUrl', nextUrl.pathname + (nextUrl.search || ''))

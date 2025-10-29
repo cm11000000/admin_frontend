@@ -36,10 +36,10 @@ jobs:
         env:
           NEXT_PUBLIC_STATIC_EXPORT: 'true'
           NODE_ENV: production
-          NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION: 'true'
-          # Encryption keys (provide via GitHub Secrets)
-          NEXT_PUBLIC_AUTH_KEY: ${{ secrets.PROD_AUTH_KEY }}
-          NEXT_PUBLIC_AUTH_IV: ${{ secrets.PROD_AUTH_IV }}
+          NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION: 'false'
+          # Encryption keys from .env.local (not using secrets for now)
+          NEXT_PUBLIC_AUTH_KEY: '2k4Tj2NNnr98/vgJkQNKlPDvDvp3WlOyEMw59EnWweQ='
+          NEXT_PUBLIC_AUTH_IV: '4w9FC+U1JNF3yyHEu6zNlWjnWEeZhMV8EKyCCNeT9rSE2W5kaxO35h/mnWfGut8X'
           # V2 Backend API URLs - Custom Domains with URL prefixes
           NEXT_PUBLIC_ADMIN_API_URL: 'https://adminapiv2.sabpaisa.in/admin-hackathon'
           NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in/report-hackathon'
@@ -48,6 +48,7 @@ jobs:
           # COB APIs (Production) - Using cobawsapi for CORS support
           NEXT_PUBLIC_COB_API_URL: 'https://cobawsapi.sabpaisa.in'
           NEXT_PUBLIC_COB_AWS_API_URL: 'https://cobawsapi.sabpaisa.in'
+          NEXT_PUBLIC_COB_AUTH_KEY: '2044c5ea-d46f-4e9e-8b7a-2aa73ce44e69'
           NEXT_PUBLIC_COBKYC_URL: 'https://cobkyc.sabpaisa.in'
 
       - name: Configure AWS credentials

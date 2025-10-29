@@ -183,11 +183,12 @@ class AuthApiService {
   }
 
   /**
-   * Logout - Clear tokens from localStorage
+   * Logout - Clear tokens from localStorage and cookies
    */
   logout(): void {
     if (typeof window === 'undefined') return
-    // Clear both token key formats
+
+    // Clear localStorage
     localStorage.removeItem('access_token')
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refresh_token')
@@ -195,12 +196,27 @@ class AuthApiService {
     localStorage.removeItem('user')
     localStorage.removeItem('userName')
     localStorage.removeItem('remember_me')
+    localStorage.removeItem('loginId')
+
+    // Clear sessionStorage
     try {
       sessionStorage.removeItem('bean')
       sessionStorage.removeItem('loginedUser')
       sessionStorage.removeItem('RatingUser')
     } catch {}
-    console.log('[Auth] User logged out successfully')
+
+    // Clear cookies by setting Max-Age=0 (expires immediately)
+    const host = (typeof location !== 'undefined' ? location.hostname : '') || ''
+    const domainAttr = (host.endsWith('.sabpaisa.in') || host === 'sabpaisa.in')
+      ? '; Domain=.sabpaisa.in'
+      : ''
+
+    // Clear access_token cookie
+    document.cookie = `access_token=; Path=/; Max-Age=0${domainAttr}`
+    // Clear refresh_token cookie
+    document.cookie = `refresh_token=; Path=/; Max-Age=0${domainAttr}`
+
+    console.log('[Auth] User logged out successfully (localStorage, sessionStorage, and cookies cleared)')
   }
 
   /**
@@ -299,19 +315,28 @@ class AuthApiService {
     }
 
     // Also store in cookies for middleware access
-    // Persist cookies for 1 day to control frontend session window
-    // Add Secure on HTTPS and set Domain for first-party prod domains to survive refresh and subdomain changes
-    const oneDay = 24 * 60 * 60
+    // Persist cookies for 7 days to control frontend session window
+    // Add Secure on HTTPS for production security
+    const sevenDays = 7 * 24 * 60 * 60
     const isHttps = typeof location !== 'undefined' && location.protocol === 'https:'
     const secureAttr = isHttps ? '; Secure' : ''
     const host = (typeof location !== 'undefined' ? location.hostname : '') || ''
-    // Only set Domain for known first-party domain to avoid Public Suffix issues (e.g., cloudfront.net)
-    const domainAttr = host.endsWith('.sabpaisa.in') || host === 'sabpaisa.in' ? '; Domain=.sabpaisa.in' : ''
+
+    // Cookie domain strategy:
+    // 1. For .sabpaisa.in domains: Use Domain=.sabpaisa.in (allows subdomain sharing)
+    // 2. For CloudFront/other domains: No Domain attribute (cookie bound to exact hostname)
+    // This ensures cookies work whether accessed via adminv2.sabpaisa.in or d1xzmfw9e4a2at.cloudfront.net
+    const domainAttr = (host.endsWith('.sabpaisa.in') || host === 'sabpaisa.in')
+      ? '; Domain=.sabpaisa.in'
+      : ''
+
     if (access) {
-      document.cookie = `access_token=${access}; Path=/; Max-Age=${oneDay}; SameSite=Lax${secureAttr}${domainAttr}`
+      document.cookie = `access_token=${access}; Path=/; Max-Age=${sevenDays}; SameSite=Lax${secureAttr}${domainAttr}`
+      console.log(`[Auth] Set access_token cookie for host: ${host}${domainAttr ? ' (domain: .sabpaisa.in)' : ' (no domain attr)'}`)
     }
     if (refresh) {
-      document.cookie = `refresh_token=${refresh}; Path=/; Max-Age=${oneDay}; SameSite=Lax${secureAttr}${domainAttr}`
+      document.cookie = `refresh_token=${refresh}; Path=/; Max-Age=${sevenDays}; SameSite=Lax${secureAttr}${domainAttr}`
+      console.log(`[Auth] Set refresh_token cookie for host: ${host}${domainAttr ? ' (domain: .sabpaisa.in)' : ' (no domain attr)'}`)
     }
 
     // Store userName for Django backend API calls (matches Angular implementation)
