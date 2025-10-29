@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server'
 export function middleware(req: NextRequest) {
   const { cookies, nextUrl } = req
   const access = cookies.get('access_token')?.value || ''
+  const refresh = cookies.get('refresh_token')?.value || ''
 
   // Special handling for root: redirect to dashboard if logged in, else to login
   if (nextUrl.pathname === '/') {
@@ -15,7 +16,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Protected routes: require auth
-  if (!access) {
+  if (!access && !refresh) {
     const url = nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('returnUrl', nextUrl.pathname + (nextUrl.search || ''))

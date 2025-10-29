@@ -36,6 +36,7 @@ jobs:
         env:
           NEXT_PUBLIC_STATIC_EXPORT: 'true'
           NODE_ENV: production
+          NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION: 'true'
           # V2 Backend API URLs - Custom Domains with URL prefixes
           NEXT_PUBLIC_ADMIN_API_URL: 'https://adminapiv2.sabpaisa.in/admin-hackathon'
           NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in/report-hackathon'

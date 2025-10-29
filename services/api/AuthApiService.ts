@@ -262,12 +262,18 @@ class AuthApiService {
 
     // Also store in cookies for middleware access
     // Persist cookies for 1 day to control frontend session window
+    // Add Secure on HTTPS and set Domain for first-party prod domains to survive refresh and subdomain changes
     const oneDay = 24 * 60 * 60
+    const isHttps = typeof location !== 'undefined' && location.protocol === 'https:'
+    const secureAttr = isHttps ? '; Secure' : ''
+    const host = (typeof location !== 'undefined' ? location.hostname : '') || ''
+    // Only set Domain for known first-party domain to avoid Public Suffix issues (e.g., cloudfront.net)
+    const domainAttr = host.endsWith('.sabpaisa.in') || host === 'sabpaisa.in' ? '; Domain=.sabpaisa.in' : ''
     if (access) {
-      document.cookie = `access_token=${access}; path=/; max-age=${oneDay}; SameSite=Lax`
+      document.cookie = `access_token=${access}; Path=/; Max-Age=${oneDay}; SameSite=Lax${secureAttr}${domainAttr}`
     }
     if (refresh) {
-      document.cookie = `refresh_token=${refresh}; path=/; max-age=${oneDay}; SameSite=Lax`
+      document.cookie = `refresh_token=${refresh}; Path=/; Max-Age=${oneDay}; SameSite=Lax${secureAttr}${domainAttr}`
     }
 
     // Store userName for Django backend API calls (matches Angular implementation)
