@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { getAccessToken, isTokenExpired } from '@/lib/auth'
 
@@ -14,28 +14,26 @@ import { getAccessToken, isTokenExpired } from '@/lib/auth'
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [isChecking, setIsChecking] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  const checkAuth = useCallback(() => {
-    // Public routes that don't require authentication
-    const publicRoutes = ['/login', '/login/forgot']
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  // Public routes that don't require authentication - always render immediately
+  const publicRoutes = ['/login', '/login/forgot']
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
-    if (isPublicRoute) {
-      setIsChecking(false)
-      setIsAuthenticated(true)
-      return
-    }
+  // For public routes, always render children immediately (no auth check needed)
+  if (isPublicRoute) {
+    return <>{children}</>
+  }
 
+  // For protected routes, check auth
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
     // Check authentication
     const token = getAccessToken()
 
     if (!token) {
       // No token found - redirect to login
       console.log('[AuthGuard] No token found, redirecting to login')
-      setIsAuthenticated(false)
-      setIsChecking(false)
       const returnUrl = pathname !== '/' ? pathname : ''
       const loginUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
       router.replace(loginUrl)
@@ -45,8 +43,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     // Check if token is expired
     if (isTokenExpired(token)) {
       console.log('[AuthGuard] Token expired, redirecting to login')
-      setIsAuthenticated(false)
-      setIsChecking(false)
       // Clear expired token
       localStorage.removeItem('access_token')
       localStorage.removeItem('accessToken')
@@ -56,21 +52,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Token exists and is valid - allow access
     console.log('[AuthGuard] Token found and valid, allowing access')
-    setIsAuthenticated(true)
-    setIsChecking(false)
+    setIsReady(true)
   }, [pathname, router])
 
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
-
-  // Show nothing while checking auth (prevents flash of protected content)
-  if (isChecking) {
-    return null
-  }
-
-  // Only render children if authenticated or on public route
-  if (!isAuthenticated) {
+  // For protected routes, show nothing until auth check completes
+  if (!isReady) {
     return null
   }
 
