@@ -12,7 +12,11 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   const pathname = usePathname()
   const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true'
   const refreshTimer = useRef<number | null>(null)
-  const [isAuthChecking, setIsAuthChecking] = useState(true)
+
+  // Initialize auth check state - start with false to avoid showing spinner on refresh
+  // The useEffect will handle redirect if not authenticated
+  const [isAuthChecking, setIsAuthChecking] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   // Safely decode JWT payload to read exp
   const decodeJwt = (token: string): any | null => {
@@ -81,9 +85,11 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   }
 
   useEffect(() => {
+    setIsMounted(true)
     console.log('[Dashboard Layout] useEffect triggered', {
       pathname,
       isAuthChecking,
+      isMounted,
       timestamp: new Date().toISOString()
     })
 
@@ -142,8 +148,7 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
 
     // Authentication passed - allow page to render
-    console.log('[Dashboard Layout] AUTHENTICATED - Setting isAuthChecking to false')
-    setIsAuthChecking(false)
+    console.log('[Dashboard Layout] AUTHENTICATED - Component can render')
 
     // Proactive refresh cycle based on token exp instead of hard logout
     scheduleProactiveRefresh()
@@ -158,23 +163,11 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
   }, [])
 
-  // Show loader while checking auth - prevents white screen/flicker
-  // Based on StackOverflow solution: https://stackoverflow.com/q/66072892
-  // "wait for the authentication to happen before showing the page"
-  if (isAuthChecking) {
-    console.log('[Dashboard Layout] RENDERING: Loading spinner (isAuthChecking=true)')
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-          <p className="text-sm text-slate-600">Verifying authentication...</p>
-        </div>
-      </div>
-    )
-  }
+  // For static export: Always render immediately
+  // Auth check happens in useEffect and redirects if needed
+  // No loading state needed - COB-Frontend pattern
+  console.log('[Dashboard Layout] RENDERING: Dashboard content', { isMounted, isAuthChecking })
 
-  // Auth passed - render protected content
-  console.log('[Dashboard Layout] RENDERING: Dashboard content (isAuthChecking=false)')
   return (
     <DashboardLayout>
       {isStaticExport ? (
