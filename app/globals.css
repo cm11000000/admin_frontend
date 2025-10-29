@@ -83,6 +83,13 @@
     html {
       scroll-behavior: auto;
     }
+    /* Respect reduced motion: disable heavy decorative animations */
+    .animate-blob,
+    .animate-gradient,
+    .animate-float,
+    .animate-glow {
+      animation: none !important;
+    }
   }
 }
 

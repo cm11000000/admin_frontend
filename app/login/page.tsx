@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -18,7 +18,6 @@ import {
   Zap
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { getPasswordStrength } from '@/lib/auth'
 import MenuApiService from '@/services/api/MenuApiService'
 
 // Utility functions for input validation
@@ -42,9 +41,6 @@ function extractDigitsOnly(val: string): string {
 export default function LoginPage() {
   const router = useRouter()
   const { login, loginVerify, error, isLoading, clearError } = useAuthStore()
-
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -170,14 +166,6 @@ export default function LoginPage() {
 
   const displayError = localError || error
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-white relative overflow-hidden flex">
       {/* Animated Background - Matching Dashboard */}
@@ -231,6 +219,7 @@ export default function LoginPage() {
                 <img
                   src="/sabpaisa-logo.png"
                   alt="SabPaisa"
+                  decoding="async"
                   className="relative h-10 w-auto"
                 />
               </div>

@@ -1,10 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const router = useRouter();
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-orange-50 to-gray-50">
       {/* Animated background blobs */}
@@ -40,6 +38,7 @@ export default function Home() {
                   <img
                     src="/sabpaisa-logo.png"
                     alt="SabPaisa"
+                    decoding="async"
                     className="h-12 md:h-16 lg:h-20 w-auto relative z-10"
                   />
                 </div>
