@@ -41,9 +41,9 @@ jobs:
           NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in'
           NEXT_PUBLIC_REPORT_BASE_URL: 'https://reportapiv2.sabpaisa.in'
           NEXT_PUBLIC_TXN_HISTORY_DBS_URL: 'https://reportapiv2.sabpaisa.in'
-          # COB APIs (Production)
-          NEXT_PUBLIC_COB_API_URL: 'https://cobapi.sabpaisa.in'
-          NEXT_PUBLIC_COB_AWS_API_URL: 'https://cobapi.sabpaisa.in'
+          # COB APIs (Production) - Using cobawsapi for CORS support
+          NEXT_PUBLIC_COB_API_URL: 'https://cobawsapi.sabpaisa.in'
+          NEXT_PUBLIC_COB_AWS_API_URL: 'https://cobawsapi.sabpaisa.in'
           NEXT_PUBLIC_COBKYC_URL: 'https://cobkyc.sabpaisa.in'
 
       - name: Configure AWS credentials

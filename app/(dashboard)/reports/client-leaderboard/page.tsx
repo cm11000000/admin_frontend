@@ -13,7 +13,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { formatCurrency } from '@/lib/utils';
 import { RefreshCw, Download, TrendingUp, DollarSign, Users, Calendar, BarChart3, Trophy, Crown, Medal, AlertCircle } from 'lucide-react';
 import { toast } from '@/lib/toast';
-import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Cell } from 'recharts';
+// Recharts is lazy-loaded at runtime to keep initial bundle light
 
 type DateRange = { from: string; to: string };
 
@@ -26,6 +26,12 @@ function last7(): DateRange {
 }
 
 export default function ClientLeaderboardPage() {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
   const [range, setRange] = useState<DateRange>(last7());
   const [dateFrom, setDateFrom] = useState(last7().from);
   const [dateTo, setDateTo] = useState(last7().to);
@@ -354,53 +360,58 @@ export default function ClientLeaderboardPage() {
             </CardHeader>
             <CardContent className="p-4 md:p-6 pt-0">
               <div className="h-[320px] sm:h-[400px] md:h-[480px] w-full overflow-hidden">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      type="category"
-                      dataKey="name"
-                      interval={0}
-                      tick={{ fontSize: 10, fill: '#6b7280' }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                    />
-                    <YAxis
-                      type="number"
-                      tick={{ fontSize: 11, fill: '#6b7280' }}
-                      tickFormatter={(value) =>
-                        metric === 'gmv'
-                          ? `₹${(value / 1000000).toFixed(1)}M`
-                          : value.toLocaleString()
-                      }
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                      formatter={(value: any) =>
-                        metric === 'gmv'
-                          ? formatCurrency(value)
-                          : value.toLocaleString()
-                      }
-                      labelFormatter={(label) => `Client: ${label}`}
-                    />
-                    <Bar
-                      dataKey="value"
-                      name={metric === 'gmv' ? 'GMV' : 'Transactions'}
-                      radius={[8, 8, 0, 0]}
-                      barSize={window.innerWidth < 640 ? 25 : 35}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={getBarColor(index)} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.BarChart data={chartData} layout="horizontal">
+                      <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <Rc.XAxis
+                        type="category"
+                        dataKey="name"
+                        interval={0}
+                        tick={{ fontSize: 10, fill: '#6b7280' }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                      />
+                      <Rc.YAxis
+                        type="number"
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        tickFormatter={(value: any) =>
+                          metric === 'gmv'
+                            ? `₹${(value / 1000000).toFixed(1)}M`
+                            : Number(value).toLocaleString()
+                        }
+                      />
+                      <Rc.Tooltip
+                        contentStyle={{
+                          backgroundColor: '#fff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '12px'
+                        }}
+                        formatter={(value: any) =>
+                          metric === 'gmv'
+                            ? formatCurrency(value)
+                            : Number(value).toLocaleString()
+                        }
+                        labelFormatter={(label) => `Client: ${label}`}
+                      />
+                      <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      <Rc.Bar
+                        dataKey="value"
+                        name={metric === 'gmv' ? 'GMV' : 'Transactions'}
+                        radius={[8, 8, 0, 0]}
+                        barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 25 : 35}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Rc.Cell key={`cell-${index}`} fill={getBarColor(index)} />
+                        ))}
+                      </Rc.Bar>
+                    </Rc.BarChart>
+                  </Rc.ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                )}
               </div>
             </CardContent>
           </Card>

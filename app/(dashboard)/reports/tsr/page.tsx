@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Download, Search, Filter, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import DateRangePicker from '@/components/reports/DateRangePicker';
 import type { DateRange } from '@/types/reports';
 import toast from 'react-hot-toast';
+import { VIRT_THRESHOLD } from '@/config/perf';
 
 interface TSRRecord {
   tsrId: string;
@@ -164,6 +165,33 @@ export default function TSRReportPage() {
 
     return matchesSearch && matchesStatus && matchesPaymentMode;
   }) || [];
+
+  // Virtualization for large result sets (desktop table)
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const [virtScrollTop, setVirtScrollTop] = useState(0);
+  const [virtViewportHeight, setVirtViewportHeight] = useState(0);
+  const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
+  const virtualizationEnabled = filteredRecords.length > VIRT_THRESHOLD;
+
+  useEffect(() => {
+    if (!virtualizationEnabled) return;
+    const measure = () => {
+      const el = tableScrollRef.current;
+      if (!el) return;
+      setVirtViewportHeight(el.clientHeight || 0);
+      const firstRow = el.querySelector('tbody tr') as HTMLElement | null;
+      const h = firstRow?.offsetHeight || 56;
+      setVirtRowHeight(h);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [virtualizationEnabled, filteredRecords.length]);
+
+  const onTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!virtualizationEnabled) return;
+    setVirtScrollTop(e.currentTarget.scrollTop || 0);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -369,7 +397,12 @@ export default function TSRReportPage() {
           </h2>
         </div>
 
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto"
+          ref={tableScrollRef}
+          onScroll={onTableScroll}
+          style={virtualizationEnabled ? { maxHeight: '70vh', overflowY: 'auto' } : undefined}
+        >
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
@@ -418,47 +451,90 @@ export default function TSRReportPage() {
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((record) => (
-                  <tr key={record.tsrId} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-mono text-gray-900">
-                      {record.tsrId}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">
-                        <div className="font-medium text-gray-900">
-                          {record.merchantName}
+                virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
+                  (() => {
+                    const total = filteredRecords.length;
+                    const rh = virtRowHeight || 56;
+                    const overscan = 10;
+                    const startIndex = Math.max(0, Math.floor(virtScrollTop / rh) - overscan);
+                    const visibleCount = Math.ceil(virtViewportHeight / rh) + overscan * 2;
+                    const endIndex = Math.min(total, startIndex + visibleCount);
+                    const slice = filteredRecords.slice(startIndex, endIndex);
+                    const topPad = startIndex * rh;
+                    const bottomPad = Math.max(0, (total - endIndex) * rh);
+                    return (
+                      <>
+                        {topPad > 0 && (<tr style={{ height: topPad }}><td colSpan={9}></td></tr>)}
+                        {slice.map((record) => (
+                          <tr key={record.tsrId} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-mono text-gray-900">{record.tsrId}</td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm">
+                                <div className="font-medium text-gray-900">{record.merchantName}</div>
+                                <div className="text-gray-500">{record.merchantId}</div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{record.paymentMode}</td>
+                            <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">{formatCurrency(record.transactionAmount)}</td>
+                            <td className="px-4 py-3 text-right text-sm text-red-600">{formatCurrency(record.charges)}</td>
+                            <td className="px-4 py-3 text-right text-sm font-semibold text-green-600">{formatCurrency(record.settlementAmount)}</td>
+                            <td className="px-4 py-3">
+                              <Badge className={`${getStatusColor(record.status)} flex items-center gap-1 w-fit`}>
+                                {getStatusIcon(record.status)}
+                                {record.status}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-sm font-mono text-gray-900">{record.utr || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{new Date(record.settlementDate).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                        {bottomPad > 0 && (<tr style={{ height: bottomPad }}><td colSpan={9}></td></tr>)}
+                      </>
+                    );
+                  })()
+                ) : (
+                  filteredRecords.map((record) => (
+                    <tr key={record.tsrId} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm font-mono text-gray-900">
+                        {record.tsrId}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm">
+                          <div className="font-medium text-gray-900">
+                            {record.merchantName}
+                          </div>
+                          <div className="text-gray-500">
+                            {record.merchantId}
+                          </div>
                         </div>
-                        <div className="text-gray-500">
-                          {record.merchantId}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      {record.paymentMode}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
-                      {formatCurrency(record.transactionAmount)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-red-600">
-                      {formatCurrency(record.charges)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-semibold text-green-600">
-                      {formatCurrency(record.settlementAmount)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge className={`${getStatusColor(record.status)} flex items-center gap-1 w-fit`}>
-                        {getStatusIcon(record.status)}
-                        {record.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-mono text-gray-900">
-                      {record.utr || '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(record.settlementDate).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {record.paymentMode}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">
+                        {formatCurrency(record.transactionAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-red-600">
+                        {formatCurrency(record.charges)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-semibold text-green-600">
+                        {formatCurrency(record.settlementAmount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={`${getStatusColor(record.status)} flex items-center gap-1 w-fit`}>
+                          {getStatusIcon(record.status)}
+                          {record.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-mono text-gray-900">
+                        {record.utr || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {new Date(record.settlementDate).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>

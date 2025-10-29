@@ -14,7 +14,7 @@ import { Combobox } from '@/components/ui/combobox'
 import ReportApiService from '@/services/api/ReportApiService'
 import { resolveUserName } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts'
+// Recharts is lazy-loaded at runtime to reduce initial bundle
 import { Activity, TrendingUp, Building2, Calendar, Download, RefreshCw, BarChart3, CheckCircle } from 'lucide-react'
 
 type DateRange = { from: string; to: string }
@@ -26,6 +26,12 @@ function last7(): DateRange {
 }
 
 export default function EndpointHealthPage() {
+  const [Rc, setRc] = useState<any>(null)
+  useEffect(() => {
+    let mounted = true
+    import('recharts').then((mod) => mounted && setRc(mod))
+    return () => { mounted = false }
+  }, [])
   const [range, setRange] = useState<DateRange>(last7())
   const [clientCode, setClientCode] = useState<string>('ALL')
   const [loading, setLoading] = useState(true)
@@ -270,42 +276,40 @@ export default function EndpointHealthPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="name"
-                        interval={0}
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
-                        angle={-35}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="txns"
-                        name="Transactions"
-                        fill="url(#colorOrange)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 30 : 40}
-                      />
-                      <defs>
-                        <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={chartData}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis
+                          dataKey="name"
+                          interval={0}
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          angle={-35}
+                          textAnchor="end"
+                          height={70}
+                        />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Bar dataKey="txns" name="Transactions" fill="url(#colorOrange)" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 40} />
+                        <defs>
+                          <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
+                          </linearGradient>
+                        </defs>
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -320,42 +324,40 @@ export default function EndpointHealthPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="name"
-                        interval={0}
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
-                        angle={-35}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} domain={[0, 100]} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="success_rate"
-                        name="Success Rate (%)"
-                        fill="url(#colorGreen)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 30 : 40}
-                      />
-                      <defs>
-                        <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor="#34d399" stopOpacity={0.7}/>
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={chartData}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis
+                          dataKey="name"
+                          interval={0}
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          angle={-35}
+                          textAnchor="end"
+                          height={70}
+                        />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} domain={[0, 100]} />
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Bar dataKey="success_rate" name="Success Rate (%)" fill="url(#colorGreen)" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 40} />
+                        <defs>
+                          <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor="#34d399" stopOpacity={0.7}/>
+                          </linearGradient>
+                        </defs>
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>

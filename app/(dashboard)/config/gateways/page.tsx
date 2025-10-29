@@ -239,41 +239,26 @@ export default function GatewaysPage() {
               </div>
               <div className="p-4 md:p-6 pt-4">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={generatePerformanceData()}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        angle={-20}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="successRate"
-                        name="Success Rate %"
-                        fill="url(#colorOrange)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 30 : 40}
-                      />
-                      <defs>
-                        <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={generatePerformanceData()}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} angle={-20} textAnchor="end" height={60} />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Bar dataKey="successRate" name="Success Rate %" fill="url(#colorOrange)" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 40} />
+                        <defs>
+                          <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
+                          </linearGradient>
+                        </defs>
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </div>
             </div>
@@ -289,49 +274,26 @@ export default function GatewaysPage() {
               </div>
               <div className="p-4 md:p-6 pt-4">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={generateTrendData()}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                        formatter={(value: any) => {
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.LineChart data={generateTrendData()}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} formatter={(value: any) => {
                           if (typeof value === 'number' && value > 1000) {
                             return `₹${(value / 1000000).toFixed(2)}M`
                           }
                           return value
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="volume"
-                        name="Volume"
-                        stroke="#f97316"
-                        strokeWidth={3}
-                        dot={{ fill: '#f97316', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="transactions"
-                        name="Transactions"
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        dot={{ fill: '#10b981', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                        }} />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Line type="monotone" dataKey="volume" name="Volume" stroke="#f97316" strokeWidth={3} dot={{ fill: '#f97316', r: 4 }} activeDot={{ r: 6 }} />
+                        <Rc.Line type="monotone" dataKey="transactions" name="Transactions" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} activeDot={{ r: 6 }} />
+                      </Rc.LineChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </div>
             </div>

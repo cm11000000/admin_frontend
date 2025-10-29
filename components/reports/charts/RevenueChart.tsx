@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { formatCurrency, formatNumber } from '@/lib/exportUtils';
 
@@ -61,6 +60,12 @@ export default function RevenueChart({
   compareData,
   loading = false,
 }: RevenueChartProps) {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
   if (loading) {
     return (
       <Card className="p-6">
@@ -99,37 +104,38 @@ export default function RevenueChart({
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart
+      {Rc ? (
+        <Rc.ResponsiveContainer width="100%" height={height}>
+          <Rc.LineChart
           data={mergedData}
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis
+          >
+            <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <Rc.XAxis
             dataKey="label"
             tick={{ fill: '#64748b', fontSize: 12 }}
             tickLine={{ stroke: '#e2e8f0' }}
-          />
-          <YAxis
+            />
+            <Rc.YAxis
             yAxisId="left"
             tick={{ fill: '#64748b', fontSize: 12 }}
             tickLine={{ stroke: '#e2e8f0' }}
             tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
-          />
+            />
           {showTransactions && (
-            <YAxis
+            <Rc.YAxis
               yAxisId="right"
               orientation="right"
               tick={{ fill: '#64748b', fontSize: 12 }}
               tickLine={{ stroke: '#e2e8f0' }}
             />
           )}
-          <Tooltip content={<CustomTooltip />} />
-          <Legend
+          <Rc.Tooltip content={<CustomTooltip />} />
+          <Rc.Legend
             wrapperStyle={{ fontSize: '12px' }}
             iconType="circle"
           />
-          <Line
+          <Rc.Line
             yAxisId="left"
             type="monotone"
             dataKey="revenue"
@@ -140,7 +146,7 @@ export default function RevenueChart({
             name="Revenue"
           />
           {compareData && (
-            <Line
+            <Rc.Line
               yAxisId="left"
               type="monotone"
               dataKey="compareRevenue"
@@ -152,7 +158,7 @@ export default function RevenueChart({
             />
           )}
           {showTransactions && (
-            <Line
+            <Rc.Line
               yAxisId="right"
               type="monotone"
               dataKey="transactions"
@@ -162,8 +168,11 @@ export default function RevenueChart({
               name="Transactions"
             />
           )}
-        </LineChart>
-      </ResponsiveContainer>
+          </Rc.LineChart>
+        </Rc.ResponsiveContainer>
+      ) : (
+        <div style={{ height }} className="w-full rounded-lg bg-gray-100 animate-pulse" />
+      )}
     </Card>
   );
 }

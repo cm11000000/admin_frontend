@@ -16,9 +16,15 @@ import { formatCurrency, resolveUserName } from '@/lib/utils';
 import { RefreshCw, Download, TrendingUp, DollarSign, PieChart as LucidePieChart, Building2, Calendar, BarChart3, LineChart as LineChartIcon, AlertCircle, TrendingDown } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, PieChart as RPieChart, Pie, Cell, Legend } from 'recharts';
+// Recharts is lazy-loaded at runtime to reduce initial bundle
 
 export default function ChargebackAnalyticsPage() {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
   const { analytics, isLoading, fetchAnalytics } = useChargebackStore();
 
   // Filters
@@ -347,55 +353,22 @@ export default function ChargebackAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={analytics.monthlyTrend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        angle={-20}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="totalChargebacks"
-                        name="Total"
-                        stroke="#f97316"
-                        strokeWidth={3}
-                        dot={{ fill: '#f97316', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="wonChargebacks"
-                        name="Won"
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        dot={{ fill: '#10b981', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="lostChargebacks"
-                        name="Lost"
-                        stroke="#ef4444"
-                        strokeWidth={3}
-                        dot={{ fill: '#ef4444', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.LineChart data={analytics.monthlyTrend}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6b7280' }} angle={-20} textAnchor="end" height={60} />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Line type="monotone" dataKey="totalChargebacks" name="Total" stroke="#f97316" strokeWidth={3} dot={{ fill: '#f97316', r: 4 }} activeDot={{ r: 6 }} />
+                        <Rc.Line type="monotone" dataKey="wonChargebacks" name="Won" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} activeDot={{ r: 6 }} />
+                        <Rc.Line type="monotone" dataKey="lostChargebacks" name="Lost" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444', r: 4 }} activeDot={{ r: 6 }} />
+                      </Rc.LineChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -410,36 +383,30 @@ export default function ChargebackAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RPieChart>
-                      <Pie
-                        data={[
-                          { name: 'Won', value: analytics.winLossRatio.won },
-                          { name: 'Lost', value: analytics.winLossRatio.lost },
-                        ]}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={window.innerWidth < 640 ? 50 : 60}
-                        outerRadius={window.innerWidth < 640 ? 90 : 110}
-                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        labelLine={true}
-                      >
-                        <Cell fill="#10b981" />
-                        <Cell fill="#ef4444" />
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    </RPieChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.PieChart>
+                        <Rc.Pie
+                          data={[{ name: 'Won', value: analytics.winLossRatio.won }, { name: 'Lost', value: analytics.winLossRatio.lost }]}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 60}
+                          outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 90 : 110}
+                          label={({name, percent}: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          labelLine={true}
+                        >
+                          <Rc.Cell fill="#10b981" />
+                          <Rc.Cell fill="#ef4444" />
+                        </Rc.Pie>
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      </Rc.PieChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -457,41 +424,25 @@ export default function ChargebackAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics.topReasonCodes}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="code"
-                        interval={0}
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
-                        angle={-35}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Bar
-                        dataKey="count"
-                        name="Count"
-                        fill="url(#colorOrange)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 30 : 40}
-                      />
-                      <defs>
-                        <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={analytics.topReasonCodes}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis dataKey="code" interval={0} tick={{ fontSize: 10, fill: '#6b7280' }} angle={-35} textAnchor="end" height={70} />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                        <Rc.Bar dataKey="count" name="Count" fill="url(#colorOrange)" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 40} />
+                        <defs>
+                          <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
+                          </linearGradient>
+                        </defs>
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -506,50 +457,22 @@ export default function ChargebackAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics.gatewayStats}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="gateway"
-                        interval={0}
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
-                        angle={-35}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="chargebacks"
-                        name="Chargebacks"
-                        fill="#f97316"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 20 : 25}
-                      />
-                      <Bar
-                        dataKey="won"
-                        name="Won"
-                        fill="#10b981"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 20 : 25}
-                      />
-                      <Bar
-                        dataKey="lost"
-                        name="Lost"
-                        fill="#ef4444"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 20 : 25}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={analytics.gatewayStats}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis dataKey="gateway" interval={0} tick={{ fontSize: 10, fill: '#6b7280' }} angle={-35} textAnchor="end" height={70} />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Bar dataKey="chargebacks" name="Chargebacks" fill="#f97316" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 25} />
+                        <Rc.Bar dataKey="won" name="Won" fill="#10b981" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 25} />
+                        <Rc.Bar dataKey="lost" name="Lost" fill="#ef4444" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 25} />
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -13,10 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
-  PieChart, Pie, Cell, BarChart, Bar, Legend
-} from 'recharts'
+// Recharts is lazy-loaded at runtime to keep initial bundle light
 import { Download, RefreshCw, LineChart as LineChartIcon, PieChart as LucidePieChart, BarChart3, TrendingUp, AlertCircle } from 'lucide-react'
 import FilterPanel from '@/components/filters/FilterPanel'
 import ReportApiService from '@/services/api/ReportApiService'
@@ -36,6 +33,12 @@ function last7(): DateRange {
 }
 
 export default function InsightsPage() {
+  const [Rc, setRc] = useState<any>(null)
+  useEffect(() => {
+    let mounted = true
+    import('recharts').then((mod) => mounted && setRc(mod))
+    return () => { mounted = false }
+  }, [])
   const [range, setRange] = useState<DateRange>(last7())
   const [clientCode, setClientCode] = useState<string>('ALL')
   const [groupBy, setGroupBy] = useState<'day'|'week'|'month'>('day')
@@ -261,55 +264,35 @@ export default function InsightsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendSeries}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="label"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        angle={trendSeries.length > 14 ? -20 : 0}
-                        textAnchor={trendSeries.length > 14 ? "end" : "middle"}
-                        height={trendSeries.length > 14 ? 60 : 30}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="total"
-                        name="Total"
-                        stroke="#6b7280"
-                        strokeWidth={3}
-                        dot={{ fill: '#6b7280', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="success"
-                        name="Success"
-                        stroke="#10B981"
-                        strokeWidth={3}
-                        dot={{ fill: '#10B981', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="failed"
-                        name="Failed"
-                        stroke="#EF4444"
-                        strokeWidth={3}
-                        dot={{ fill: '#EF4444', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.LineChart data={trendSeries}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis
+                          dataKey="label"
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          angle={trendSeries.length > 14 ? -20 : 0}
+                          textAnchor={trendSeries.length > 14 ? 'end' : 'middle'}
+                          height={trendSeries.length > 14 ? 60 : 30}
+                        />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Line type="monotone" dataKey="total" name="Total" stroke="#6b7280" strokeWidth={3} dot={{ fill: '#6b7280', r: 4 }} activeDot={{ r: 6 }} />
+                        <Rc.Line type="monotone" dataKey="success" name="Success" stroke="#10B981" strokeWidth={3} dot={{ fill: '#10B981', r: 4 }} activeDot={{ r: 6 }} />
+                        <Rc.Line type="monotone" dataKey="failed" name="Failed" stroke="#EF4444" strokeWidth={3} dot={{ fill: '#EF4444', r: 4 }} activeDot={{ r: 6 }} />
+                      </Rc.LineChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -324,35 +307,39 @@ export default function InsightsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={window.innerWidth < 640 ? 50 : 60}
-                        outerRadius={window.innerWidth < 640 ? 90 : 110}
-                        paddingAngle={3}
-                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        labelLine={true}
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.PieChart>
+                        <Rc.Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 60}
+                          outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 90 : 110}
+                          paddingAngle={3}
+                          label={({name, percent}: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          labelLine={true}
+                        >
+                          {pieData.map((entry: any, index: number) => (
+                            <Rc.Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Rc.Pie>
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      </Rc.PieChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -370,50 +357,36 @@ export default function InsightsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={funnelBreakdown}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="key"
-                        interval={0}
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
-                        angle={-35}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="success"
-                        stackId="a"
-                        fill="#10B981"
-                        name="Success"
-                        radius={[8, 8, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="failed"
-                        stackId="a"
-                        fill="#EF4444"
-                        name="Failed"
-                        radius={[8, 8, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="not_complete"
-                        stackId="a"
-                        fill="#F59E0B"
-                        name="Not Complete"
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={funnelBreakdown}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis
+                          dataKey="key"
+                          interval={0}
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          angle={-35}
+                          textAnchor="end"
+                          height={70}
+                        />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Bar dataKey="success" stackId="a" fill="#10B981" name="Success" radius={[8, 8, 0, 0]} />
+                        <Rc.Bar dataKey="failed" stackId="a" fill="#EF4444" name="Failed" radius={[8, 8, 0, 0]} />
+                        <Rc.Bar dataKey="not_complete" stackId="a" fill="#F59E0B" name="Not Complete" radius={[8, 8, 0, 0]} />
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -428,41 +401,39 @@ export default function InsightsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={failureSeries}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="key"
-                        interval={0}
-                        tick={{ fontSize: 10, fill: '#6b7280' }}
-                        angle={-35}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Bar
-                        dataKey="count"
-                        name="Count"
-                        fill="url(#colorOrange)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 30 : 40}
-                      />
-                      <defs>
-                        <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
-                          <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={failureSeries}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis
+                          dataKey="key"
+                          interval={0}
+                          tick={{ fontSize: 10, fill: '#6b7280' }}
+                          angle={-35}
+                          textAnchor="end"
+                          height={70}
+                        />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Bar dataKey="count" name="Count" fill="url(#colorOrange)" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 40} />
+                        <defs>
+                          <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.9}/>
+                            <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
+                          </linearGradient>
+                        </defs>
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>

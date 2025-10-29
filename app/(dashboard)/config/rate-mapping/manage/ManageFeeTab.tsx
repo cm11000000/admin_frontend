@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Search, Loader2, Pencil, FileText, PlusCircle, Trash2, RefreshCw, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import RateMappingApiService from '@/services/api/RateMappingApiService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { VIRT_THRESHOLD } from '@/config/perf';
 
 interface ClientOption {
   code: string;
@@ -202,6 +203,33 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
         .some((value) => value.toLowerCase().includes(term))
     );
   }, [feeRecords, tableSearch]);
+
+  // Virtualization state for potentially long fee lists
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const [virtScrollTop, setVirtScrollTop] = useState(0);
+  const [virtViewportHeight, setVirtViewportHeight] = useState(0);
+  const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
+  const virtualizationEnabled = filteredFees.length > VIRT_THRESHOLD;
+
+  useEffect(() => {
+    if (!virtualizationEnabled) return;
+    const measure = () => {
+      const el = tableScrollRef.current;
+      if (!el) return;
+      setVirtViewportHeight(el.clientHeight || 0);
+      const firstRow = el.querySelector('tbody tr') as HTMLElement | null;
+      const h = firstRow?.offsetHeight || 56;
+      setVirtRowHeight(h);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [virtualizationEnabled, filteredFees.length]);
+
+  const onTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!virtualizationEnabled) return;
+    setVirtScrollTop(e.currentTarget.scrollTop || 0);
+  };
 
   useEffect(() => {
     if (!selectedClient) {
@@ -562,7 +590,12 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             Edit requires remarks and logs an audit trail. Scroll horizontally to view all columns.
           </p>
         </div>
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto"
+          ref={tableScrollRef}
+          onScroll={onTableScroll}
+          style={virtualizationEnabled ? { maxHeight: '70vh', overflowY: 'auto' } : undefined}
+        >
           <div className="inline-block min-w-full align-middle">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -609,8 +642,113 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                   </tr>
                 )}
 
-                {!isLoading &&
-                  filteredFees.map((fee) => (
+                {!isLoading && virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
+                  (() => {
+                    const total = filteredFees.length;
+                    const rh = virtRowHeight || 56;
+                    const overscan = 10;
+                    const startIndex = Math.max(0, Math.floor(virtScrollTop / rh) - overscan);
+                    const visibleCount = Math.ceil(virtViewportHeight / rh) + overscan * 2;
+                    const endIndex = Math.min(total, startIndex + visibleCount);
+                    const slice = filteredFees.slice(startIndex, endIndex);
+                    const topPad = startIndex * rh;
+                    const bottomPad = Math.max(0, (total - endIndex) * rh);
+                    return (
+                      <>
+                        {topPad > 0 && (
+                          <tr style={{ height: topPad }}><td colSpan={7}></td></tr>
+                        )}
+                        {slice.map((fee) => (
+                          <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900">
+                              {fee.payMode || '-'}
+                            </td>
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600">
+                              {fee.endpoint || '-'}
+                            </td>
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-medium text-emerald-700">
+                              ₹{fee.slabFloor.toLocaleString()} – ₹{fee.slabCeiling.toLocaleString()}
+                            </td>
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm text-gray-600">
+                              <span className="font-medium text-gray-900">{fee.convcharges.toFixed(2)}</span>{' '}
+                              <span className="text-gray-600">({fee.convchargesType === 'fixed' ? '₹' : '%'})</span>
+                            </td>
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm text-gray-600">
+                              <span className="font-medium text-gray-900">{fee.endPointcharge.toFixed(2)}</span>{' '}
+                              <span className="text-gray-600">({fee.endPointchargesTypes === 'fixed' ? '₹' : '%'})</span>
+                            </td>
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm">
+                              <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                fee.gstType === 'percentage'
+                                  ? 'bg-blue-50 text-blue-700'
+                                  : 'bg-gray-50 text-gray-700'
+                              }`}>
+                                {fee.gstType}
+                              </span>
+                            </td>
+                            <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm">
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditModal(fee)}
+                                  className="min-h-[40px] touch-manipulation"
+                                >
+                                  <Pencil className="mr-1 h-3 w-3 md:h-4 md:w-4" /> Edit
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => openAddSlab(fee)}
+                                  disabled={!isAdmin}
+                                  className="min-h-[40px] touch-manipulation"
+                                >
+                                  <PlusCircle className="mr-1 h-3 w-3 md:h-4 md:w-4" /> Add Slab
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => openDeleteSlab(fee)}
+                                  disabled={!isAdmin}
+                                  className="min-h-[40px] touch-manipulation"
+                                >
+                                  <Trash2 className="mr-1 h-3 w-3 md:h-4 md:w-4" /> Delete
+                                </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => updateFeeForwarded(fee)}
+                                          disabled={Boolean(getFeeFwdDisabledReason(fee))}
+                                          className="min-h-[40px] touch-manipulation"
+                                        >
+                                          <RefreshCw className={`mr-1 h-3 w-3 md:h-4 md:w-4 ${isFFLoading ? 'animate-spin' : ''}`} />
+                                          Fee Fwd
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    {getFeeFwdDisabledReason(fee) && (
+                                      <TooltipContent>
+                                        <p>{getFeeFwdDisabledReason(fee)}</p>
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {bottomPad > 0 && (
+                          <tr style={{ height: bottomPad }}><td colSpan={7}></td></tr>
+                        )}
+                      </>
+                    );
+                  })()
+                ) : (
+                  !isLoading && filteredFees.map((fee) => (
                     <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
                       <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900">
                         {fee.payMode || '-'}
@@ -692,7 +830,8 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>

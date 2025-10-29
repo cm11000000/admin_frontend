@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend, PieChart as RPieChart, Pie, Cell } from 'recharts';
+// Recharts is lazy-loaded at runtime to reduce initial bundle
 import { MapPin, TrendingUp, Users, DollarSign, RefreshCw, Download, Calendar, BarChart3, PieChart as LucidePieChart } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -25,6 +25,12 @@ function last7(): DateRange {
 }
 
 export default function ZonePerformancePage() {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
   const [range, setRange] = useState<DateRange>(last7());
   const [loading, setLoading] = useState(true);
   const [zones, setZones] = useState<any[]>([]);
@@ -298,45 +304,32 @@ export default function ZonePerformancePage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={zoneChart}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="zone"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        angle={-20}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        formatter={(value: any, name: string) => {
-                          if (name === 'amount') return [formatCurrency(value), 'Amount'];
-                          return [value, 'Transactions'];
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="amount"
-                        name="Amount"
-                        fill="url(#colorOrange)"
-                        radius={[8, 8, 0, 0]}
-                        barSize={window.innerWidth < 640 ? 30 : 40}
-                      />
-                      <defs>
-                        <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7} />
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.BarChart data={zoneChart}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis dataKey="zone" tick={{ fontSize: 11, fill: '#6b7280' }} angle={-20} textAnchor="end" height={60} />
+                        <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip
+                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }}
+                          formatter={(value: any, name: string) => {
+                            if (name === 'amount') return [formatCurrency(value), 'Amount'];
+                            return [value, 'Transactions'];
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Bar dataKey="amount" name="Amount" fill="url(#colorOrange)" radius={[8, 8, 0, 0]} barSize={typeof window !== 'undefined' && window.innerWidth < 640 ? 30 : 40} />
+                        <defs>
+                          <linearGradient id="colorOrange" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.9} />
+                            <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7} />
+                          </linearGradient>
+                        </defs>
+                      </Rc.BarChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -351,35 +344,31 @@ export default function ZonePerformancePage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RPieChart>
-                      <Pie
-                        data={zonePieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={window.innerWidth < 640 ? 50 : 60}
-                        outerRadius={window.innerWidth < 640 ? 90 : 110}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        labelLine={true}
-                      >
-                        {zonePieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                        }}
-                        formatter={(value: any) => formatCurrency(value)}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    </RPieChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.PieChart>
+                        <Rc.Pie
+                          data={zonePieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 50 : 60}
+                          outerRadius={typeof window !== 'undefined' && window.innerWidth < 640 ? 90 : 110}
+                          label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          labelLine={true}
+                        >
+                          {zonePieData.map((entry: any, index: number) => (
+                            <Rc.Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Rc.Pie>
+                        <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} formatter={(value: any) => formatCurrency(value)} />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      </Rc.PieChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>

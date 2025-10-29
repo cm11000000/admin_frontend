@@ -8,8 +8,7 @@ const isStaticExport = process.env.STATIC_EXPORT === 'true'
 const nextConfig = {
   reactStrictMode: true,
 
-  // Enable SWC minification for faster builds
-  swcMinify: true,
+  // SWC minify is default in Next 15; remove explicit key to avoid warning
 
   // Strip console.* in production bundles (keeps error/warn)
   compiler: {

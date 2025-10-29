@@ -10,7 +10,7 @@ import { DatePicker } from '@/components/ui/date-picker'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts'
+// Recharts is lazy-loaded at runtime to reduce initial bundle
 import { RefreshCw, Download, TrendingUp, Users, Calendar, BarChart3 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
@@ -19,6 +19,12 @@ type DateRange = { from: string; to: string }
 function last7(): DateRange { const e=new Date(); const s=new Date(); s.setDate(e.getDate()-6); const f=(d:Date)=>d.toISOString().split('T')[0]||''; return {from:f(s),to:f(e)} }
 
 export default function ReferralTrendsPage() {
+  const [Rc, setRc] = useState<any>(null)
+  useEffect(() => {
+    let mounted = true
+    import('recharts').then((mod) => mounted && setRc(mod))
+    return () => { mounted = false }
+  }, [])
   const [range, setRange] = useState<DateRange>(last7())
   const [referralCode, setReferralCode] = useState('001996')
   const [groupBy, setGroupBy] = useState<'day'|'month'>('day')
@@ -231,46 +237,21 @@ export default function ReferralTrendsPage() {
             </CardHeader>
             <CardContent className="p-4 md:p-6 pt-0">
               <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={series}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 11, fill: '#6b7280' }}
-                      angle={-20}
-                      textAnchor="end"
-                      height={60}
-                    />
-                    <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    <Line
-                      type="monotone"
-                      dataKey="txn_count"
-                      name="Transactions"
-                      stroke="#f97316"
-                      strokeWidth={3}
-                      dot={{ fill: '#f97316', r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="paid_amount"
-                      name="Amount"
-                      stroke="#10b981"
-                      strokeWidth={3}
-                      dot={{ fill: '#10b981', r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.LineChart data={series}>
+                      <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <Rc.XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6b7280' }} angle={-20} textAnchor="end" height={60} />
+                      <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                      <Rc.Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }} />
+                      <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      <Rc.Line type="monotone" dataKey="txn_count" name="Transactions" stroke="#f97316" strokeWidth={3} dot={{ fill: '#f97316', r: 4 }} activeDot={{ r: 6 }} />
+                      <Rc.Line type="monotone" dataKey="paid_amount" name="Amount" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} activeDot={{ r: 6 }} />
+                    </Rc.LineChart>
+                  </Rc.ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full rounded-lg bg-gray-100 animate-pulse" />
+                )}
               </div>
             </CardContent>
           </Card>

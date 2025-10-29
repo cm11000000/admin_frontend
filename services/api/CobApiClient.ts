@@ -82,7 +82,8 @@ class SimpleFetchClient {
       console.log('[CobApiClient] Refreshing access token...');
 
       // Match Angular's exact endpoint and payload structure
-      const response = await fetch('https://stgcobapi.sabpaisa.in/auth-service/auth/refresh-token', {
+      const cobBaseUrl = process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobapi.sabpaisa.in';
+      const response = await fetch(`${cobBaseUrl}/auth-service/auth/refresh-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +301,7 @@ class SimpleFetchClient {
 }
 
 export const createCobClient = (): SimpleFetchClient => {
-  const base = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || 'https://stgcobapi.sabpaisa.in').replace(/\/$/, '');
+  const base = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobapi.sabpaisa.in').replace(/\/$/, '');
   return new SimpleFetchClient({
     baseURL: base,
     headers: {

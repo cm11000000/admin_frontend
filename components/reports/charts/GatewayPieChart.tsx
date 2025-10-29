@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { formatCurrency, formatPercentage } from '@/lib/exportUtils';
 
@@ -99,6 +98,12 @@ export default function GatewayPieChart({
   height = 300,
   loading = false,
 }: GatewayPieChartProps) {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
   if (loading) {
     return (
       <Card className="p-6">
@@ -129,29 +134,33 @@ export default function GatewayPieChart({
         {title}
       </h3>
 
-      <ResponsiveContainer width="100%" height={height}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderCustomizedLabel}
-            outerRadius={100}
-            fill="#8884d8"
-            dataKey="amount"
-            nameKey="gateway"
-            animationBegin={0}
-            animationDuration={800}
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-          <Legend content={<CustomLegend />} />
-        </PieChart>
-      </ResponsiveContainer>
+      {Rc ? (
+        <Rc.ResponsiveContainer width="100%" height={height}>
+          <Rc.PieChart>
+            <Rc.Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={renderCustomizedLabel as any}
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="amount"
+              nameKey="gateway"
+              animationBegin={0}
+              animationDuration={800}
+            >
+              {data.map((entry, index) => (
+                <Rc.Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Rc.Pie>
+            <Rc.Tooltip content={<CustomTooltip />} />
+            <Rc.Legend content={<CustomLegend />} />
+          </Rc.PieChart>
+        </Rc.ResponsiveContainer>
+      ) : (
+        <div style={{ height }} className="w-full rounded-lg bg-gray-100 animate-pulse" />
+      )}
 
       <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

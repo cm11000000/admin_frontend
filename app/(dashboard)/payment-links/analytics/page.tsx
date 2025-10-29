@@ -14,7 +14,7 @@ import { formatCurrency, resolveUserName } from '@/lib/utils';
 import { RefreshCw, Download, TrendingUp, DollarSign, PieChart as LucidePieChart, Building2, Calendar, BarChart3, LineChart as LineChartIcon, AlertCircle, TrendingDown, Link as LinkIcon, Eye, MousePointerClick } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, PieChart as RPieChart, Pie, Cell, Legend } from 'recharts';
+// No charts rendered yet; avoid bundling recharts until needed
 
 export default function PaymentLinkAnalyticsPage() {
   const { analytics, isLoading, fetchAnalytics } = usePaymentLinkStore();

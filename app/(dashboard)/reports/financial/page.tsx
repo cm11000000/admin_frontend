@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Download, TrendingUp, TrendingDown, DollarSign, Calendar } from 'lucide-react';
 import Link from 'next/link';
@@ -16,6 +16,7 @@ import ReportApiService from '@/services/api/ReportApiService';
 import { exportToCSV, exportToExcel, exportToPDF } from '@/lib/exportUtils';
 import toast from 'react-hot-toast';
 import type { DateRange, IFinancialReport } from '@/types/reports';
+import { VIRT_THRESHOLD } from '@/config/perf';
 
 const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899'];
 
@@ -91,6 +92,32 @@ export default function FinancialReportsPage() {
     const revenueData = financialReport.revenue || [];
     const grossRevenue = revenueData.reduce((sum, item) => sum + item.amount, 0);
     const totalTransactions = revenueData.reduce((sum, item) => sum + item.transactions, 0);
+
+    // Virtualization state for revenue table (desktop only)
+    const tableRef = useRef<HTMLDivElement | null>(null);
+    const [virtScrollTop, setVirtScrollTop] = useState(0);
+    const [virtViewportHeight, setVirtViewportHeight] = useState(0);
+    const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
+    const virtualizationEnabled = revenueData.length > VIRT_THRESHOLD;
+
+    useEffect(() => {
+      if (!virtualizationEnabled) return;
+      const measure = () => {
+        const el = tableRef.current;
+        if (!el) return;
+        setVirtViewportHeight(el.clientHeight || 0);
+        const firstRow = el.querySelector('tbody tr') as HTMLElement | null;
+        const h = firstRow?.offsetHeight || 48;
+        setVirtRowHeight(h);
+      };
+      measure();
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }, [virtualizationEnabled, revenueData.length]);
+    const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+      if (!virtualizationEnabled) return;
+      setVirtScrollTop(e.currentTarget.scrollTop || 0);
+    };
 
     return (
       <div className="space-y-4 md:space-y-6">
@@ -213,7 +240,12 @@ export default function FinancialReportsPage() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
+            <div
+              className="hidden md:block overflow-x-auto"
+              ref={tableRef}
+              onScroll={onScroll}
+              style={virtualizationEnabled ? { maxHeight: '70vh', overflowY: 'auto' } : undefined}
+            >
               <table className="w-full text-sm">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                   <tr>
@@ -235,32 +267,54 @@ export default function FinancialReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {revenueData.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3 text-gray-700 font-medium">
-                        {item.category}
-                      </td>
-                      <td className="p-3 text-right text-gray-700">
-                        {item.transactions.toLocaleString()}
-                      </td>
-                      <td className="p-3 text-right text-gray-700 font-semibold">
-                        {formatCurrency(item.amount)}
-                      </td>
-                      <td className="p-3 text-right text-gray-700">
-                        {item.percentage.toFixed(2)}%
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className={`flex items-center justify-end gap-1 ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {item.change >= 0 ? (
-                            <TrendingUp className="h-4 w-4" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4" />
-                          )}
-                          <span className="font-semibold">{Math.abs(item.change).toFixed(1)}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
+                    (() => {
+                      const total = revenueData.length;
+                      const rh = virtRowHeight || 48;
+                      const overscan = 10;
+                      const startIndex = Math.max(0, Math.floor(virtScrollTop / rh) - overscan);
+                      const visibleCount = Math.ceil(virtViewportHeight / rh) + overscan * 2;
+                      const endIndex = Math.min(total, startIndex + visibleCount);
+                      const slice = revenueData.slice(startIndex, endIndex);
+                      const topPad = startIndex * rh;
+                      const bottomPad = Math.max(0, (total - endIndex) * rh);
+                      return (
+                        <>
+                          {topPad > 0 && (<tr style={{ height: topPad }}><td colSpan={5}></td></tr>)}
+                          {slice.map((item, i) => (
+                            <tr key={`${startIndex + i}-${item.category}`} className="hover:bg-gray-50 transition-colors">
+                              <td className="p-3 text-gray-700 font-medium">{item.category}</td>
+                              <td className="p-3 text-right text-gray-700">{item.transactions.toLocaleString()}</td>
+                              <td className="p-3 text-right text-gray-700 font-semibold">{formatCurrency(item.amount)}</td>
+                              <td className="p-3 text-right text-gray-700">{item.percentage.toFixed(2)}%</td>
+                              <td className="p-3 text-right">
+                                <div className={`flex items-center justify-end gap-1 ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {item.change >= 0 ? (<TrendingUp className="h-4 w-4" />) : (<TrendingDown className="h-4 w-4" />)}
+                                  <span className="font-semibold">{Math.abs(item.change).toFixed(1)}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {bottomPad > 0 && (<tr style={{ height: bottomPad }}><td colSpan={5}></td></tr>)}
+                        </>
+                      );
+                    })()
+                  ) : (
+                    revenueData.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-3 text-gray-700 font-medium">{item.category}</td>
+                        <td className="p-3 text-right text-gray-700">{item.transactions.toLocaleString()}</td>
+                        <td className="p-3 text-right text-gray-700 font-semibold">{formatCurrency(item.amount)}</td>
+                        <td className="p-3 text-right text-gray-700">{item.percentage.toFixed(2)}%</td>
+                        <td className="p-3 text-right">
+                          <div className={`flex items-center justify-end gap-1 ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {item.change >= 0 ? (<TrendingUp className="h-4 w-4" />) : (<TrendingDown className="h-4 w-4" />)}
+                            <span className="font-semibold">{Math.abs(item.change).toFixed(1)}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
