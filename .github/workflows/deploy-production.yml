@@ -36,10 +36,8 @@ jobs:
         env:
           NEXT_PUBLIC_STATIC_EXPORT: 'true'
           NODE_ENV: production
-          NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION: 'false'
-          # Encryption keys from .env.local (not using secrets for now)
-          NEXT_PUBLIC_AUTH_KEY: '2k4Tj2NNnr98/vgJkQNKlPDvDvp3WlOyEMw59EnWweQ='
-          NEXT_PUBLIC_AUTH_IV: '4w9FC+U1JNF3yyHEu6zNlWjnWEeZhMV8EKyCCNeT9rSE2W5kaxO35h/mnWfGut8X'
+          NEXT_PUBLIC_ENABLE_LOGIN_ENCRYPTION: 'true'
+          # Use in-code defaults for AUTH_KEY/AUTH_IV to match Angular parity
           # V2 Backend API URLs - Custom Domains with URL prefixes
           NEXT_PUBLIC_ADMIN_API_URL: 'https://adminapiv2.sabpaisa.in/admin-hackathon'
           NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in/report-hackathon'
@@ -130,16 +128,18 @@ jobs:
               "Quantity": 1,
               "Items": [
                 {
-                  "Id": "S3-admin-v2",
-                  "DomainName": "${{ env.PROD_S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com",
-                  "S3OriginConfig": {
-                    "OriginAccessIdentity": ""
+                  "Id": "S3-Website-admin-v2",
+                  "DomainName": "${{ env.PROD_S3_BUCKET }}.s3-website.${{ env.AWS_REGION }}.amazonaws.com",
+                  "CustomOriginConfig": {
+                    "HTTPPort": 80,
+                    "HTTPSPort": 443,
+                    "OriginProtocolPolicy": "http-only"
                   }
                 }
               ]
             },
             "DefaultCacheBehavior": {
-              "TargetOriginId": "S3-admin-v2",
+              "TargetOriginId": "S3-Website-admin-v2",
               "ViewerProtocolPolicy": "redirect-to-https",
               "AllowedMethods": {
                 "Quantity": 2,
@@ -165,18 +165,8 @@ jobs:
             "CustomErrorResponses": {
               "Quantity": 2,
               "Items": [
-                {
-                  "ErrorCode": 403,
-                  "ResponsePagePath": "/index.html",
-                  "ResponseCode": "200",
-                  "ErrorCachingMinTTL": 300
-                },
-                {
-                  "ErrorCode": 404,
-                  "ResponsePagePath": "/index.html",
-                  "ResponseCode": "200",
-                  "ErrorCachingMinTTL": 300
-                }
+                { "ErrorCode": 403, "ResponsePagePath": "/index.html", "ResponseCode": "200", "ErrorCachingMinTTL": 300 },
+                { "ErrorCode": 404, "ResponsePagePath": "/index.html", "ResponseCode": "200", "ErrorCachingMinTTL": 300 }
               ]
             }
           }

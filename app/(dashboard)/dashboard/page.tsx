@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Download, Search, DollarSign, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { dashboardApiService, TransactionSummary, DashboardApiRequest } from '@/services/api/DashboardApiService'
 import { DatePicker } from '@/components/ui/date-picker'
+import { resolveUserName } from '@/lib/utils'
 // XLSX is lazy-loaded in export handler to reduce initial bundle size
 
 interface SummaryStats {
@@ -119,21 +120,7 @@ export default function DashboardPage() {
     }
   }
 
-  const resolveUserName = (): string => {
-    try {
-      const loginId = localStorage.getItem('loginId')
-      if (loginId && loginId.trim()) return loginId.trim()
-      const userName = localStorage.getItem('userName')
-      if (userName && userName.trim()) return userName.trim()
-      const storedUser = localStorage.getItem('user')
-      if (storedUser) {
-        const u = JSON.parse(storedUser)
-        const resolved = u?.userName || u?.email || u?.clientUserId || ''
-        if (resolved && String(resolved).trim()) return String(resolved).trim()
-      }
-    } catch {}
-    return ''
-  }
+  // Use shared resolver to match Angular parity across app
 
   const loadGMVDataWithDates = async (from: string, to: string, dateOptionValue?: string) => {
     if (!from || !to) return
