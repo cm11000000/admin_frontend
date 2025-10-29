@@ -3,7 +3,6 @@ import "./globals.css";
 import { PWAWrapper } from '@/components/pwa/PWAWrapper';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import EffectsGuard from '@/components/perf/EffectsGuard';
-import AuthGuard from '@/components/AuthGuard';
 
 // Using system font stack to avoid network fetch during build
 
@@ -141,11 +140,9 @@ export default function RootLayout({
         <PWAWrapper />
 
         <QueryProvider>
-          <AuthGuard>
-            <div className="relative flex min-h-screen flex-col">
-              <div className="flex-1">{children}</div>
-            </div>
-          </AuthGuard>
+          <div className="relative flex min-h-screen flex-col">
+            <div className="flex-1">{children}</div>
+          </div>
         </QueryProvider>
       </body>
     </html>

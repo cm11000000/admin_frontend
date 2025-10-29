@@ -303,9 +303,15 @@ class AuthApiService {
       console.warn('[Auth] Failed to persist session auth state', sessionError)
     }
 
-    // Note: For static export, we only use localStorage (not cookies)
-    // Middleware doesn't work with cookies in client-only builds
-    // Auth is now handled by client-side AuthGuard component
+    // Also store in cookies for middleware access
+    // Persist cookies for 1 day to control frontend session window
+    const oneDay = 24 * 60 * 60
+    if (access) {
+      document.cookie = `access_token=${access}; path=/; max-age=${oneDay}; SameSite=Lax`
+    }
+    if (refresh) {
+      document.cookie = `refresh_token=${refresh}; path=/; max-age=${oneDay}; SameSite=Lax`
+    }
 
     // Store userName for Django backend API calls (matches Angular implementation)
     const userName = resp?.userName || resp?.email || resp?.userEmail || resp?.clientUserId
