@@ -148,18 +148,17 @@ class SimpleFetchClient {
         // Retry original request with new token
         return await originalRequest();
       } else {
-        // Refresh failed - clear auth and redirect
+        // Refresh failed — do NOT clear global auth here.
+        // Admin API may use different auth than COB; let caller decide.
         this.isRefreshing = false;
-        this.clearAuthAndRedirect();
-
-        const error: any = new Error('Authentication required. Please log in again.');
+        const error: any = new Error('Authentication failed for Admin API');
         error.response = { status: 401 };
-        error.__normalizedMessage = 'Authentication required. Please log in again.';
+        error.__normalizedMessage = 'Authentication failed for Admin API';
         throw error;
       }
     } catch (error: any) {
       this.isRefreshing = false;
-      this.clearAuthAndRedirect();
+      // Do not clear global auth here; propagate to caller
       throw error;
     }
   }
@@ -221,10 +220,9 @@ class SimpleFetchClient {
           return this.handle401Error(() => this.request<T>(url, options, true));
         }
 
-        // Handle 403 Forbidden (match Angular behavior)
+        // Handle 403 Forbidden — propagate to caller; do not clear auth globally
         if (response.status === 403 && !isRetry) {
-          console.error('[AdminApiClient] 403 Forbidden - Access denied, clearing auth');
-          this.clearAuthAndRedirect();
+          console.error('[AdminApiClient] 403 Forbidden - Access denied');
         }
 
         const error: any = new Error(responseData?.message || 'Request failed');

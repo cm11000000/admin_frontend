@@ -25,6 +25,8 @@ class APIClient {
   private timeout: number;
   private isRefreshing: boolean = false;
   private refreshSubscribers: Array<(token: string) => void> = [];
+  private injectAuth: boolean = true;
+  private autoLogoutOnAuthFail: boolean = true;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -54,6 +56,16 @@ class APIClient {
   }
 
   /**
+   * Configure auth behavior for this client
+   * - injectAuth: whether to auto-inject Bearer token from localStorage
+   * - autoLogoutOnAuthFail: whether to clear auth and redirect on 401/403/refresh failure
+   */
+  setAuthBehavior(options: { injectAuth?: boolean; autoLogoutOnAuthFail?: boolean }) {
+    if (typeof options.injectAuth === 'boolean') this.injectAuth = options.injectAuth;
+    if (typeof options.autoLogoutOnAuthFail === 'boolean') this.autoLogoutOnAuthFail = options.autoLogoutOnAuthFail;
+  }
+
+  /**
    * Get auth token from localStorage (matches Angular implementation)
    */
   private getAuthToken(): string | null {
@@ -70,9 +82,11 @@ class APIClient {
     const headers = { ...this.defaultHeaders, ...additionalHeaders };
 
     // Auto-inject Bearer token if available (matching Angular's AuthInterceptor)
-    const token = this.getAuthToken();
-    if (token && !headers.Authorization) {
-      (headers as any).Authorization = `Bearer ${token}`;
+    if (this.injectAuth) {
+      const token = this.getAuthToken();
+      if (token && !headers.Authorization) {
+        (headers as any).Authorization = `Bearer ${token}`;
+      }
     }
 
     return headers;
@@ -150,19 +164,18 @@ class APIClient {
         // Retry original request with new token
         return await originalRequest();
       } else {
-        // Refresh failed - redirect to login
+        // Refresh failed
         this.isRefreshing = false;
-        this.clearAuthAndRedirect();
-
-        return {
-          status: 401,
-          success: false,
-          error: "Authentication required. Please log in again.",
-        };
+        if (this.autoLogoutOnAuthFail) {
+          this.clearAuthAndRedirect();
+        }
+        return { status: 401, success: false, error: "Authentication required" };
       }
     } catch (error: any) {
       this.isRefreshing = false;
-      this.clearAuthAndRedirect();
+      if (this.autoLogoutOnAuthFail) {
+        this.clearAuthAndRedirect();
+      }
 
       return {
         status: 401,
@@ -238,8 +251,10 @@ class APIClient {
 
       // Handle 403 Forbidden (match Angular behavior)
       if (response.status === 403 && !isRetry) {
-        console.error("[API Client] 403 Forbidden - Access denied, clearing auth");
-        this.clearAuthAndRedirect();
+        console.error("[API Client] 403 Forbidden - Access denied");
+        if (this.autoLogoutOnAuthFail) {
+          this.clearAuthAndRedirect();
+        }
       }
 
       return {
@@ -324,6 +339,8 @@ export const adminAPI = new APIClient(__adminBase);
 
 const __reportBase = process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://d63eaznhkkse9.cloudfront.net';
 export const reportAPI = new APIClient(__reportBase);
+// Report API does not require Authorization header in parity with Angular; avoid auto-logout too
+reportAPI.setAuthBehavior({ injectAuth: false, autoLogoutOnAuthFail: false });
 
 export const cobAPI = new APIClient(
   process.env.NEXT_PUBLIC_COB_API_URL || "https://stgcobapi.sabpaisa.in"

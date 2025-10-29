@@ -55,7 +55,7 @@ class MenuApiService {
     try {
       // Use Admin API client for rights check
       const adminClient = (await import('./AdminApiClient')).createAdminClient()
-      const { data } = await adminClient.get<any[]>('/common-data/20/0')
+      const { data } = await adminClient.get<any[]>('/common-data/20/0/')
 
       // Resolve current username (uppercased to match server data casing)
       const resolved = resolveUserName()
