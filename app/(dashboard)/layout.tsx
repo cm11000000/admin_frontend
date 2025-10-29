@@ -1,16 +1,18 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import ClientOnly from '@/components/providers/ClientOnly'
 import { resolveUserName } from '@/lib/utils'
+import { Loader2 } from 'lucide-react'
 
 export default function DashboardRootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true'
   const refreshTimer = useRef<number | null>(null)
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
 
   // Safely decode JWT payload to read exp
   const decodeJwt = (token: string): any | null => {
@@ -92,9 +94,9 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
       }
     } catch {}
 
-    // Auth protection - Matching Angular's AuthGuard implementation
-    // Angular checks: sessionStorage.getItem('RatingUser') in isLoggedIn()
-    // Also uses localStorage for 'accessToken'
+    // Auth protection - Following StackOverflow pattern for preventing flicker
+    // https://stackoverflow.com/questions/66072892/nextjs-screen-flicker-on-authentication-check-using-localstorage
+    // Key principle: "wait for the authentication to happen before showing the page"
 
     const checkLogin = (): boolean => {
       // Check for accessToken in localStorage (matches Angular line 193-194)
@@ -123,6 +125,9 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
       return
     }
 
+    // Authentication passed - allow page to render
+    setIsAuthChecking(false)
+
     // Proactive refresh cycle based on token exp instead of hard logout
     scheduleProactiveRefresh()
 
@@ -136,8 +141,21 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
   }, [])
 
-  // Always render - COB-Frontend pattern (no loading state needed for static export)
-  // Auth check redirects in useEffect, layout renders immediately
+  // Show loader while checking auth - prevents white screen/flicker
+  // Based on StackOverflow solution: https://stackoverflow.com/q/66072892
+  // "wait for the authentication to happen before showing the page"
+  if (isAuthChecking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <p className="text-sm text-slate-600">Verifying authentication...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Auth passed - render protected content
   return (
     <DashboardLayout>
       {isStaticExport ? (
