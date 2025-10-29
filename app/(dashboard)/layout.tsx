@@ -13,10 +13,11 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true'
   const refreshTimer = useRef<number | null>(null)
 
-  // Initialize auth check state - start with false to avoid showing spinner on refresh
-  // The useEffect will handle redirect if not authenticated
-  const [isAuthChecking, setIsAuthChecking] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  // Best Practice: Use loading state to prevent content flashing
+  // Start with true to show loader, set to false after auth verification
+  // Reference: https://theodorusclarence.com/blog/nextjs-redirect-no-flashing
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // Safely decode JWT payload to read exp
   const decodeJwt = (token: string): any | null => {
@@ -85,18 +86,14 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   }
 
   useEffect(() => {
-    setIsMounted(true)
-    console.log('[Dashboard Layout] useEffect triggered', {
+    console.log('[Dashboard Layout] Auth check started', {
       pathname,
-      isAuthChecking,
-      isMounted,
+      isLoading,
+      isAuthenticated,
       timestamp: new Date().toISOString()
     })
 
-    // DEV BYPASS: Skip login and inject token + username for all dashboard routes
-    // Remove/disable this when enabling real login.
-    // No dev bypass. Enforce real login via /login page.
-    // Normalize and persist the current username using a single resolver
+    // Normalize username
     try {
       if (typeof window !== 'undefined') {
         const resolved = resolveUserName()
@@ -109,57 +106,43 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
       console.error('[Dashboard Layout] Error normalizing username:', e)
     }
 
-    // Auth protection - Following StackOverflow pattern for preventing flicker
-    // https://stackoverflow.com/questions/66072892/nextjs-screen-flicker-on-authentication-check-using-localstorage
-    // Key principle: "wait for the authentication to happen before showing the page"
-
+    // Check authentication - synchronous localStorage check
     const checkLogin = (): boolean => {
-      // Check for accessToken in localStorage (matches Angular line 193-194)
       const accessToken = localStorage.getItem('accessToken')
       const legacyAccessToken = localStorage.getItem('access_token')
       const bean = sessionStorage.getItem('bean')
       const loginedUser = sessionStorage.getItem('loginedUser')
 
-      console.log('[Dashboard Layout] Auth check:', {
+      console.log('[Dashboard Layout] Auth tokens:', {
         hasAccessToken: !!accessToken,
         hasLegacyAccessToken: !!legacyAccessToken,
         hasBean: !!bean,
-        hasLoginedUser: !!loginedUser,
-        accessTokenLength: accessToken?.length || 0,
-        legacyAccessTokenLength: legacyAccessToken?.length || 0
+        hasLoginedUser: !!loginedUser
       })
 
-      // User is logged in if they have either:
-      // 1. accessToken in localStorage (primary check, matching Angular)
-      // 2. User bean in sessionStorage (Angular stores this on login)
       return !!(accessToken || legacyAccessToken || bean || loginedUser)
     }
 
-    const isLoggedIn = checkLogin()
+    const authenticated = checkLogin()
+    console.log('[Dashboard Layout] Authentication result:', authenticated)
 
-    console.log('[Dashboard Layout] isLoggedIn:', isLoggedIn, 'isAuthChecking:', isAuthChecking, 'isMounted:', isMounted)
-
-    if (!isLoggedIn) {
-      // No valid auth found, redirect to login with returnUrl
-      console.warn('[Dashboard Layout] NOT AUTHENTICATED - Redirecting to login')
+    if (!authenticated) {
+      // Not authenticated - redirect to login
+      console.warn('[Dashboard Layout] NOT AUTHENTICATED - Redirecting')
       const returnUrl = encodeURIComponent(pathname)
       router.replace(`/login?returnUrl=${returnUrl}`)
       return
     }
 
-    // Authentication passed - allow page to render
-    // CRITICAL: Only update state if it's currently true (prevents infinite re-renders)
-    if (isAuthChecking) {
-      console.log('[Dashboard Layout] AUTHENTICATED - Setting isAuthChecking from TRUE to FALSE')
-      setIsAuthChecking(false)
-    } else {
-      console.log('[Dashboard Layout] AUTHENTICATED - isAuthChecking already FALSE, no state update needed')
-    }
+    // Authenticated - stop loading and show content
+    console.log('[Dashboard Layout] AUTHENTICATED - Showing dashboard')
+    setIsAuthenticated(true)
+    setIsLoading(false)
 
-    // Proactive refresh cycle based on token exp instead of hard logout
+    // Schedule token refresh
     scheduleProactiveRefresh()
 
-  }, [router, pathname, isAuthChecking, isMounted])
+  }, [router, pathname])
 
   useEffect(() => {
     return () => {
@@ -169,11 +152,22 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
   }, [])
 
-  // For static export: Always render immediately
-  // Auth check happens in useEffect and redirects if needed
-  // No loading state needed - COB-Frontend pattern
-  console.log('[Dashboard Layout] RENDERING: Dashboard content', { isMounted, isAuthChecking })
+  // Show loader while checking auth - prevents content flashing
+  // Best practice: https://theodorusclarence.com/blog/nextjs-redirect-no-flashing
+  if (isLoading || !isAuthenticated) {
+    console.log('[Dashboard Layout] RENDERING: Loading spinner', { isLoading, isAuthenticated })
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <p className="text-sm text-slate-600">Verifying authentication...</p>
+        </div>
+      </div>
+    )
+  }
 
+  // Auth passed - render dashboard
+  console.log('[Dashboard Layout] RENDERING: Dashboard content')
   return (
     <DashboardLayout>
       {isStaticExport ? (
