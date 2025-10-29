@@ -15,6 +15,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [isChecking, setIsChecking] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     // Public routes that don't require authentication
@@ -23,6 +24,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (isPublicRoute) {
       setIsChecking(false)
+      setIsAuthenticated(true)
       return
     }
 
@@ -31,17 +33,26 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (!token) {
       // No token found - redirect to login
+      console.log('[AuthGuard] No token found, redirecting to login')
       const returnUrl = pathname !== '/' ? pathname : ''
       const loginUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
       router.replace(loginUrl)
+      setIsChecking(false)
     } else {
       // Token exists - allow access
+      console.log('[AuthGuard] Token found, allowing access')
+      setIsAuthenticated(true)
       setIsChecking(false)
     }
   }, [pathname, router])
 
   // Show nothing while checking auth (prevents flash of protected content)
   if (isChecking) {
+    return null
+  }
+
+  // Only render children if authenticated or on public route
+  if (!isAuthenticated) {
     return null
   }
 
