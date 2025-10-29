@@ -224,10 +224,12 @@ export function formatDateTime(date: string | Date): string {
 export function resolveUserName(): string {
   if (typeof window === 'undefined') return '';
   try {
-    const loginId = localStorage.getItem('loginId');
-    if (loginId && loginId.trim()) return loginId.trim();
+    const ratingUser = sessionStorage.getItem('RatingUser');
+    if (ratingUser && ratingUser.trim()) return ratingUser.trim();
     const userName = localStorage.getItem('userName');
     if (userName && userName.trim()) return userName.trim();
+    const loginId = localStorage.getItem('loginId');
+    if (loginId && loginId.trim()) return loginId.trim();
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
