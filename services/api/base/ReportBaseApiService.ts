@@ -13,20 +13,4 @@ export abstract class ReportBaseApiService extends BaseApiService {
     const config = getApiConfig();
     super(config.reportBaseURL);
   }
-
-  // Do not inject Authorization for report endpoints (parity with Angular)
-  protected getRequestHeaders(additionalHeaders?: Record<string, string>): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...additionalHeaders,
-    };
-    return headers;
-  }
-
-  // Skip global logout on report 401s; let UI decide
-  protected async handleUnauthorized(): Promise<void> {
-    console.warn('[ReportBaseApiService] 401 encountered; skipping refresh/global logout');
-    return;
-  }
 }

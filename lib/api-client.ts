@@ -339,8 +339,8 @@ export const adminAPI = new APIClient(__adminBase);
 
 const __reportBase = process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://d63eaznhkkse9.cloudfront.net';
 export const reportAPI = new APIClient(__reportBase);
-// Report API does not require Authorization header in parity with Angular; avoid auto-logout too
-reportAPI.setAuthBehavior({ injectAuth: false, autoLogoutOnAuthFail: false });
+// Send Bearer to report API, but never auto-logout on failures
+reportAPI.setAuthBehavior({ injectAuth: true, autoLogoutOnAuthFail: false });
 
 export const cobAPI = new APIClient(
   process.env.NEXT_PUBLIC_COB_API_URL || "https://stgcobapi.sabpaisa.in"
