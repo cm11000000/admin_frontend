@@ -104,25 +104,37 @@ class AuthApiService {
 
     const loginBeanString = JSON.stringify(loginBean)
 
-    let query: string
+    const plainQuery = loginBeanString
+    // Debug: show which key source is being used (env vs defaults) without exposing values
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true') {
+      try {
+        const usingEnvKey = !!process.env.NEXT_PUBLIC_AUTH_KEY
+        const usingEnvIv = !!process.env.NEXT_PUBLIC_AUTH_IV
+        const keyLen = (typeof atob === 'function') ? atob(AUTH_KEY).length : AUTH_KEY.length
+        const ivLen = (typeof atob === 'function') ? atob(AUTH_IV).length : AUTH_IV.length
+        console.info(`[Auth][DEBUG] Encryption key source: ${usingEnvKey ? 'env' : 'default'} (keyLen=${keyLen}), IV source: ${usingEnvIv ? 'env' : 'default'} (len=${ivLen})`)
+      } catch {}
+    }
+    let body: any
+    let triedPlainFallback = false
     if (ENABLE_LOGIN_ENCRYPTION) {
       // Use AES-GCM encryption with HMAC-SHA384 (matches backend)
       try {
-        query = await encryptGCM(loginBeanString, AUTH_KEY, AUTH_IV)
-        console.log('[Auth] Successfully encrypted login data using AES-256-GCM with HMAC-SHA384')
+        const enc = await encryptGCM(plainQuery, AUTH_KEY, AUTH_IV)
+        console.log('[Auth] Encrypted login payload (AES-256-GCM + HMAC-SHA384)')
+        body = { query: enc }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         console.error('[Auth] Encryption failed:', errorMessage)
         console.warn('[Auth] Falling back to plain JSON. THIS IS INSECURE!')
-        query = loginBeanString
+        body = { query: plainQuery }
+        triedPlainFallback = true
       }
     } else {
       // Use plain JSON (backend accepts via fallback)
-      query = loginBeanString
+      body = { query: plainQuery }
       console.warn('[Auth] Encryption is disabled. Using plain JSON login. THIS IS INSECURE!')
     }
-
-    const body = { query }
 
     // Optional debug (safe): log shape without sensitive data when enabled
     if (process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true') {
@@ -142,8 +154,18 @@ class AuthApiService {
         { headers: { Authorization: this.apiKey } }
       )
       return data
-    } catch (error) {
-      console.error('[Auth] Login request failed:', error)
+    } catch (error: any) {
+      // If encryption was enabled and we haven't tried plain JSON yet, retry once with plain
+      if (ENABLE_LOGIN_ENCRYPTION && !triedPlainFallback) {
+        console.warn('[Auth] Encrypted login failed, retrying with plain JSON payload once')
+        const { data } = await this.client.post<LoginResponse>(
+          '/auth-service/auth/login',
+          { query: plainQuery },
+          { headers: { Authorization: this.apiKey } }
+        )
+        return data
+      }
+      console.error('[Auth] Login request failed:', error?.__normalizedMessage || error?.message || error)
       throw error
     }
   }
