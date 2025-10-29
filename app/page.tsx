@@ -39,6 +39,7 @@ export default function Home() {
                     src="/sabpaisa-logo.png"
                     alt="SabPaisa"
                     decoding="async"
+                    fetchpriority="high"
                     width="320"
                     height="80"
                     className="h-12 md:h-16 lg:h-20 w-auto relative z-10"
@@ -65,7 +66,8 @@ export default function Home() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 md:gap-5 justify-center items-center pt-6 md:pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 md:gap-5 justify-center items-center pt-6 md:pt-8"
+                 style={{ contentVisibility: 'auto', containIntrinsicSize: '600px' }}>
               <Link href="/login">
                 <button
                   className="min-h-[52px] w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-[#5CBBF6] to-[#4BA0D8] text-white rounded-2xl font-semibold text-base md:text-lg shadow-lg hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
@@ -86,7 +88,8 @@ export default function Home() {
             </div>
 
             {/* Feature cards */}
-            <div className="grid gap-4 md:gap-6 pt-8 md:pt-12 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:gap-6 pt-8 md:pt-12 sm:grid-cols-2 lg:grid-cols-3"
+                 style={{ contentVisibility: 'auto', containIntrinsicSize: '1200px' }}>
               <div className="group relative rounded-xl md:rounded-2xl bg-white/90 backdrop-blur-xl border border-gray-200 p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#5CBBF6]/5 to-transparent rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative">
@@ -170,7 +173,8 @@ export default function Home() {
             </div>
 
             {/* Status indicator */}
-            <div className="pt-6 md:pt-8 flex justify-center">
+            <div className="pt-6 md:pt-8 flex justify-center"
+                 style={{ contentVisibility: 'auto', containIntrinsicSize: '80px' }}>
               <div className="inline-flex items-center gap-2 md:gap-3 rounded-full border-2 border-green-500 bg-white shadow-lg px-4 md:px-6 py-2.5 md:py-3">
                 <div className="h-2.5 w-2.5 md:h-3 md:w-3 animate-pulse rounded-full bg-green-500 shadow-lg shadow-green-500/50"></div>
                 <span className="text-sm md:text-base font-semibold text-gray-900">System Online & Ready</span>
@@ -178,7 +182,8 @@ export default function Home() {
             </div>
 
             {/* Tech stack badge */}
-            <div className="pt-4 md:pt-6 flex justify-center">
+            <div className="pt-4 md:pt-6 flex justify-center"
+                 style={{ contentVisibility: 'auto', containIntrinsicSize: '120px' }}>
               <div className="inline-flex flex-wrap justify-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600 font-medium">
                 <span className="px-3 py-1.5 bg-white/80 backdrop-blur-xl rounded-full border border-gray-200">Next.js 14</span>
                 <span className="px-3 py-1.5 bg-white/80 backdrop-blur-xl rounded-full border border-gray-200">React 18</span>

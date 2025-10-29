@@ -250,6 +250,14 @@ class AuthApiService {
       localStorage.setItem('refresh_token', refresh)
       localStorage.setItem('refreshToken', refresh)  // Angular uses this key
     }
+    // Parity with Angular: persist loginId explicitly if provided
+    if (resp?.loginId) {
+      try { localStorage.setItem('loginId', String(resp.loginId)) } catch {}
+    }
+    // Parity: persist userName as well if provided
+    if (resp?.userName) {
+      try { localStorage.setItem('userName', String(resp.userName)) } catch {}
+    }
     localStorage.setItem('user', JSON.stringify(resp))
 
     // Also store in cookies for middleware access

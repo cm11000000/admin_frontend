@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -220,6 +220,7 @@ export default function LoginPage() {
                   src="/sabpaisa-logo.png"
                   alt="SabPaisa"
                   decoding="async"
+                  fetchpriority="high"
                   width="256"
                   height="64"
                   className="relative h-10 w-auto"
@@ -538,3 +539,7 @@ export default function LoginPage() {
     </div>
   )
 }
+  // Prefetch dashboard for snappier post-login navigation
+  useEffect(() => {
+    try { router.prefetch('/dashboard') } catch {}
+  }, [router])
