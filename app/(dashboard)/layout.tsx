@@ -81,6 +81,12 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   }
 
   useEffect(() => {
+    console.log('[Dashboard Layout] useEffect triggered', {
+      pathname,
+      isAuthChecking,
+      timestamp: new Date().toISOString()
+    })
+
     // DEV BYPASS: Skip login and inject token + username for all dashboard routes
     // Remove/disable this when enabling real login.
     // No dev bypass. Enforce real login via /login page.
@@ -90,9 +96,12 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
         const resolved = resolveUserName()
         if (resolved && localStorage.getItem('userName') !== resolved) {
           localStorage.setItem('userName', resolved)
+          console.log('[Dashboard Layout] Username normalized:', resolved)
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error('[Dashboard Layout] Error normalizing username:', e)
+    }
 
     // Auth protection - Following StackOverflow pattern for preventing flicker
     // https://stackoverflow.com/questions/66072892/nextjs-screen-flicker-on-authentication-check-using-localstorage
@@ -101,13 +110,18 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     const checkLogin = (): boolean => {
       // Check for accessToken in localStorage (matches Angular line 193-194)
       const accessToken = localStorage.getItem('accessToken')
-
-      // Also check legacy token keys for backward compatibility
       const legacyAccessToken = localStorage.getItem('access_token')
-
-      // Check sessionStorage for user bean (matches Angular sessionStorage usage)
       const bean = sessionStorage.getItem('bean')
       const loginedUser = sessionStorage.getItem('loginedUser')
+
+      console.log('[Dashboard Layout] Auth check:', {
+        hasAccessToken: !!accessToken,
+        hasLegacyAccessToken: !!legacyAccessToken,
+        hasBean: !!bean,
+        hasLoginedUser: !!loginedUser,
+        accessTokenLength: accessToken?.length || 0,
+        legacyAccessTokenLength: legacyAccessToken?.length || 0
+      })
 
       // User is logged in if they have either:
       // 1. accessToken in localStorage (primary check, matching Angular)
@@ -117,24 +131,24 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
 
     const isLoggedIn = checkLogin()
 
+    console.log('[Dashboard Layout] isLoggedIn:', isLoggedIn)
+
     if (!isLoggedIn) {
       // No valid auth found, redirect to login with returnUrl
-      // Matches Angular: this.router.navigate(['/login'], { queryParams: { returnUrl: url } })
+      console.warn('[Dashboard Layout] NOT AUTHENTICATED - Redirecting to login')
       const returnUrl = encodeURIComponent(pathname)
       router.replace(`/login?returnUrl=${returnUrl}`)
       return
     }
 
-    // Authentication passed - allow page to render immediately
-    // Only show loading on initial mount, not on every pathname change
-    if (isAuthChecking) {
-      setIsAuthChecking(false)
-    }
+    // Authentication passed - allow page to render
+    console.log('[Dashboard Layout] AUTHENTICATED - Setting isAuthChecking to false')
+    setIsAuthChecking(false)
 
     // Proactive refresh cycle based on token exp instead of hard logout
     scheduleProactiveRefresh()
 
-  }, [router, pathname, isAuthChecking])
+  }, [router, pathname])
 
   useEffect(() => {
     return () => {
@@ -148,6 +162,7 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   // Based on StackOverflow solution: https://stackoverflow.com/q/66072892
   // "wait for the authentication to happen before showing the page"
   if (isAuthChecking) {
+    console.log('[Dashboard Layout] RENDERING: Loading spinner (isAuthChecking=true)')
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
         <div className="flex flex-col items-center gap-4">
@@ -159,6 +174,7 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
   }
 
   // Auth passed - render protected content
+  console.log('[Dashboard Layout] RENDERING: Dashboard content (isAuthChecking=false)')
   return (
     <DashboardLayout>
       {isStaticExport ? (
