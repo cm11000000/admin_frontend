@@ -3,7 +3,7 @@
  * Handles all dashboard-related API operations matching Angular implementation
  */
 
-import { BaseApiService } from './base/BaseApiService'
+import { ReportBaseApiService } from './base/ReportBaseApiService'
 import { getApiConfig } from '@/config/apiConfig'
 
 // Match Angular's TransactionSummary interface
@@ -105,7 +105,7 @@ export interface TimeRangeOption {
   value: '1h' | '24h' | '7d' | '30d' | '90d'
 }
 
-class DashboardApiService extends BaseApiService {
+class DashboardApiService extends ReportBaseApiService {
   protected readonly endpoint = ''
   public readonly serviceName = 'DashboardApiService'
 

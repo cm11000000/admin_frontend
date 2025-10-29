@@ -384,13 +384,9 @@ export abstract class BaseApiService implements IService {
         }
       }
 
-      // If refresh fails or no refresh token, clear storage and redirect
-      console.log('[BaseApiService] Clearing auth and redirecting to login');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userName');
-      window.location.href = '/login';
+      // If refresh fails or no refresh token, do not clear global auth here.
+      // Propagate 401 to callers; UI decides how to handle.
+      console.warn('[BaseApiService] Refresh unavailable or failed; skipping global logout');
     }
   }
 
