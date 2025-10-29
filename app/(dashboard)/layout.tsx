@@ -137,7 +137,7 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
 
     const isLoggedIn = checkLogin()
 
-    console.log('[Dashboard Layout] isLoggedIn:', isLoggedIn)
+    console.log('[Dashboard Layout] isLoggedIn:', isLoggedIn, 'isAuthChecking:', isAuthChecking, 'isMounted:', isMounted)
 
     if (!isLoggedIn) {
       // No valid auth found, redirect to login with returnUrl
@@ -148,12 +148,18 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
 
     // Authentication passed - allow page to render
-    console.log('[Dashboard Layout] AUTHENTICATED - Component can render')
+    // CRITICAL: Only update state if it's currently true (prevents infinite re-renders)
+    if (isAuthChecking) {
+      console.log('[Dashboard Layout] AUTHENTICATED - Setting isAuthChecking from TRUE to FALSE')
+      setIsAuthChecking(false)
+    } else {
+      console.log('[Dashboard Layout] AUTHENTICATED - isAuthChecking already FALSE, no state update needed')
+    }
 
     // Proactive refresh cycle based on token exp instead of hard logout
     scheduleProactiveRefresh()
 
-  }, [router, pathname])
+  }, [router, pathname, isAuthChecking, isMounted])
 
   useEffect(() => {
     return () => {
