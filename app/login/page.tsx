@@ -166,6 +166,11 @@ export default function LoginPage() {
 
   const displayError = localError || error
 
+  // Prefetch dashboard for snappier post-login navigation
+  useEffect(() => {
+    try { router.prefetch('/dashboard') } catch {}
+  }, [router])
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden flex">
       {/* Animated Background - Matching Dashboard */}
@@ -539,7 +544,3 @@ export default function LoginPage() {
     </div>
   )
 }
-  // Prefetch dashboard for snappier post-login navigation
-  useEffect(() => {
-    try { router.prefetch('/dashboard') } catch {}
-  }, [router])
