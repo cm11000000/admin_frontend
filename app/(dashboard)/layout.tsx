@@ -125,13 +125,16 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
       return
     }
 
-    // Authentication passed - allow page to render
-    setIsAuthChecking(false)
+    // Authentication passed - allow page to render immediately
+    // Only show loading on initial mount, not on every pathname change
+    if (isAuthChecking) {
+      setIsAuthChecking(false)
+    }
 
     // Proactive refresh cycle based on token exp instead of hard logout
     scheduleProactiveRefresh()
 
-  }, [router, pathname])
+  }, [router, pathname, isAuthChecking])
 
   useEffect(() => {
     return () => {
