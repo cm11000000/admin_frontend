@@ -337,6 +337,8 @@ class APIClient {
 // API Client instances - Always use environment variables regardless of NODE_ENV
 const __adminBase = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://d18fssv9lb395v.cloudfront.net';
 export const adminAPI = new APIClient(__adminBase);
+// Admin API should not nuke session on intermittent 401/403; let UI handle errors
+adminAPI.setAuthBehavior({ injectAuth: true, autoLogoutOnAuthFail: false });
 
 const __reportBase = process.env.NEXT_PUBLIC_REPORT_API_URL || 'https://d63eaznhkkse9.cloudfront.net';
 export const reportAPI = new APIClient(__reportBase);
