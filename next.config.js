@@ -11,8 +11,9 @@ const nextConfig = {
   // SWC minify is default in Next 15; remove explicit key to avoid warning
 
   // Strip console.* in production bundles (keeps error/warn)
+  // TEMPORARILY DISABLED for debugging auth flow
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+    removeConsole: false, // Temporarily disabled to debug auth issues
   },
 
   // Enable compression
