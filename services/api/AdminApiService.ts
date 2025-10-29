@@ -155,7 +155,7 @@ class AdminApiService {
     });
 
     this.cobApi = axios.create({
-      baseURL: 'https://stgcobapi.sabpaisa.in',
+      baseURL: 'https://cobawsapi.sabpaisa.in',
       headers: {
         'Content-Type': 'application/json',
       },

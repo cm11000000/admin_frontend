@@ -46,7 +46,8 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
     refreshTimer.current = window.setTimeout(async () => {
       try {
-        const res = await fetch('https://stgcobapi.sabpaisa.in/auth-service/auth/refresh-token', {
+        const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobawsapi.sabpaisa.in').replace(/\/$/, '')
+        const res = await fetch(`${cobBase}/auth-service/auth/refresh-token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh })

@@ -356,7 +356,8 @@ export abstract class BaseApiService implements IService {
           // Match Angular's exact endpoint and payload structure
           const ctrl = new AbortController();
           const tid = setTimeout(() => ctrl.abort(), this.config.timeout);
-          const response = await fetch('https://stgcobapi.sabpaisa.in/auth-service/auth/refresh-token', {
+          const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || process.env.NEXT_PUBLIC_COB_API_URL || 'https://stgcobapi.sabpaisa.in').replace(/\/$/, '');
+          const response = await fetch(`${cobBase}/auth-service/auth/refresh-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh: refreshToken }),

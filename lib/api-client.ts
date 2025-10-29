@@ -105,7 +105,8 @@ class APIClient {
     }
 
     try {
-      const response = await fetch("https://stgcobapi.sabpaisa.in/auth-service/auth/refresh-token", {
+      const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobawsapi.sabpaisa.in').replace(/\/$/, '');
+      const response = await fetch(`${cobBase}/auth-service/auth/refresh-token`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -343,7 +344,7 @@ export const reportAPI = new APIClient(__reportBase);
 reportAPI.setAuthBehavior({ injectAuth: true, autoLogoutOnAuthFail: false });
 
 export const cobAPI = new APIClient(
-  process.env.NEXT_PUBLIC_COB_API_URL || "https://stgcobapi.sabpaisa.in"
+  process.env.NEXT_PUBLIC_COB_API_URL || "https://cobawsapi.sabpaisa.in"
 );
 
 // Transaction History DB service (Angular's txnHistoryDbsUrl)
@@ -353,7 +354,7 @@ export const txnHistoryAPI = new APIClient(__txnHistoryBase);
 // Dev-only base URL log to verify no production hosts are used
 if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
   // eslint-disable-next-line no-console
-  console.log('[API BASES]', { admin: __adminBase, report: __reportBase, txnHistory: __txnHistoryBase, cob: process.env.NEXT_PUBLIC_COB_API_URL || 'https://stgcobapi.sabpaisa.in' })
+  console.log('[API BASES]', { admin: __adminBase, report: __reportBase, txnHistory: __txnHistoryBase, cob: process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobawsapi.sabpaisa.in' })
 }
 
 export default APIClient;

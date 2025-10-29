@@ -7,7 +7,7 @@ const https = require('https');
 const crypto = require('crypto');
 
 // Configuration - STAGING KEYS (from Angular COB-Frontend .env)
-const BASE_URL = 'https://stgcobapi.sabpaisa.in';
+const BASE_URL = process.env.COB_BASE_URL || 'https://cobawsapi.sabpaisa.in';
 const AUTH_KEY_BASE64 = '2k4Tj2NNnr98/vgJkQNKlPDvDvp3WlOyEMw59EnWweQ=';
 const AUTH_IV_BASE64 = '4w9FC+U1JNF3yyHEu6zNlWjnWEeZhMV8EKyCCNeT9rSE2W5kaxO35h/mnWfGut8X';
 const API_KEY = '2044c5ea-d46f-4e9e-8b7a-2aa73ce44e69';

@@ -27,7 +27,7 @@ export interface ApiEndpoint {
  * Get API configuration - Updated to use CloudFront HTTPS URLs
  * Admin API - CloudFront: https://d18fssv9lb395v.cloudfront.net
  * Report API - CloudFront: https://d63eaznhkkse9.cloudfront.net
- * COB API - External: https://stgcobapi.sabpaisa.in
+ * COB API - External: https://cobawsapi.sabpaisa.in
  */
 export function getApiConfig(): ApiConfig {
   const isProd = process.env.NODE_ENV === 'production';
@@ -43,7 +43,7 @@ export function getApiConfig(): ApiConfig {
       : 'https://d63eaznhkkse9.cloudfront.net',
 
     // COB API (Auth) - External service
-    cobBaseURL: process.env.NEXT_PUBLIC_COB_API_URL || 'https://stgcobapi.sabpaisa.in/',
+    cobBaseURL: process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobawsapi.sabpaisa.in/',
 
     // Global request timeout (ms) for all Admin/Report API calls
     // Increased to 5 minutes to support heavy reports/exports

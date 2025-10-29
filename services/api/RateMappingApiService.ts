@@ -23,7 +23,7 @@ class RateMappingApiService {
    * Matches: getClientListNew()
    */
   static async getClientList(appId: number = 10): Promise<any[]> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL_NEW || 'https://stgcobapi.sabpaisa.in/'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL_NEW || 'https://cobawsapi.sabpaisa.in/'
     const response = await fetch(`${baseUrl}fetchAllRegisteredClients?appliactionId=${appId}`, {
       method: 'POST',
       headers: {

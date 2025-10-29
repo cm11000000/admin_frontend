@@ -301,7 +301,7 @@ class SimpleFetchClient {
 }
 
 export const createCobClient = (): SimpleFetchClient => {
-  const base = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobapi.sabpaisa.in').replace(/\/$/, '');
+  const base = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || process.env.NEXT_PUBLIC_COB_API_URL || 'https://cobawsapi.sabpaisa.in').replace(/\/$/, '');
   return new SimpleFetchClient({
     baseURL: base,
     headers: {

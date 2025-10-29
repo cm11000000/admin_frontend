@@ -1006,7 +1006,7 @@ class ReportApiService {
    * Get product list for dropdown
    */
   static async getProductList(): Promise<any[]> {
-    const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || 'https://stgcobapi.sabpaisa.in').replace(/\/$/, '');
+    const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || 'https://cobawsapi.sabpaisa.in').replace(/\/$/, '');
     return ApiService.get(`${cobBase}/client-subscription-service/fetchAppAndPlan`);
   }
 
@@ -1019,7 +1019,7 @@ class ReportApiService {
     startDate: string;
     endDate: string;
   }): Promise<any[]> {
-    const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || 'https://stgcobapi.sabpaisa.in').replace(/\/$/, '');
+    const cobBase = (process.env.NEXT_PUBLIC_COB_AWS_API_URL || 'https://cobawsapi.sabpaisa.in').replace(/\/$/, '');
     return ApiService.post(`${cobBase}/client-subscription-service/fetchSubscribedClient`, data);
   }
 
