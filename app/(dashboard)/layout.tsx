@@ -119,7 +119,7 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
       // No valid auth found, redirect to login with returnUrl
       // Matches Angular: this.router.navigate(['/login'], { queryParams: { returnUrl: url } })
       const returnUrl = encodeURIComponent(pathname)
-      router.push(`/login?returnUrl=${returnUrl}`)
+      router.replace(`/login?returnUrl=${returnUrl}`)
       return
     }
 
@@ -136,6 +136,8 @@ export default function DashboardRootLayout({ children }: { children: React.Reac
     }
   }, [])
 
+  // Always render - COB-Frontend pattern (no loading state needed for static export)
+  // Auth check redirects in useEffect, layout renders immediately
   return (
     <DashboardLayout>
       {isStaticExport ? (
