@@ -10,20 +10,25 @@ import { getAccessToken, isTokenExpired } from '@/lib/auth'
  *
  * This replaces middleware.ts for static exports since middleware
  * doesn't have access to cookies/localStorage in client-only builds
+ *
+ * IMPORTANT: For static export, we start with isMounted=false to prevent
+ * the loading spinner from being included in the static HTML
  */
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [isLoading, setIsLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/login/forgot']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
   useEffect(() => {
-    // For public routes, render immediately
+    // Mark as mounted (now we're on client-side)
+    setIsMounted(true)
+
+    // For public routes, just allow rendering
     if (isPublicRoute) {
-      setIsLoading(false)
       return
     }
 
@@ -31,7 +36,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const token = getAccessToken()
 
     if (!token) {
-      // No token found - redirect to login (don't set loading to false, let redirect happen)
+      // No token found - redirect to login
       console.log('[AuthGuard] No token found, redirecting to login')
       const returnUrl = pathname !== '/' ? pathname : ''
       const loginUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
@@ -51,17 +56,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Token exists and is valid - allow access
     console.log('[AuthGuard] Token found and valid, allowing access')
-    setIsLoading(false)
   }, [pathname, router, isPublicRoute])
 
-  // Show minimal loading indicator while checking auth (prevents flash)
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-      </div>
-    )
-  }
-
+  // For static export: always render children immediately
+  // Auth check happens in useEffect and redirects if needed
+  // This prevents white screen in static HTML
   return <>{children}</>
 }
