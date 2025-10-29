@@ -1,7 +1,6 @@
 "use client";
 
-import React from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import React, { useEffect, useState } from 'react';
 
 type RevenueItem = {
   category: string;
@@ -20,10 +19,19 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 export default function RevenueDistributionPie({ data, height = 300 }: Props) {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
+
+  if (!Rc) return <div style={{ height }} className="w-full rounded-lg bg-gray-100 animate-pulse" />;
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <PieChart>
-        <Pie
+    <Rc.ResponsiveContainer width="100%" height={height}>
+      <Rc.PieChart>
+        <Rc.Pie
           data={data}
           cx="50%"
           cy="50%"
@@ -34,12 +42,11 @@ export default function RevenueDistributionPie({ data, height = 300 }: Props) {
           dataKey="amount"
         >
           {data.map((_, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            <Rc.Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
-        </Pie>
-        <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
-      </PieChart>
-    </ResponsiveContainer>
+        </Rc.Pie>
+        <Rc.Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
+      </Rc.PieChart>
+    </Rc.ResponsiveContainer>
   );
 }
-

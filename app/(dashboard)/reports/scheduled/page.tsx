@@ -21,14 +21,12 @@ import type { IScheduledReport, IReportExecution } from '@/types/reports';
 export default function ScheduledReportsPage() {
   if (typeof window === 'undefined') return null;
   const queryClient = useQueryClient();
-  const {
-    scheduledReports,
-    reportExecutions,
-    setScheduledReports,
-    setReportExecutions,
-    updateScheduledReport,
-    deleteScheduledReport,
-  } = useReportStore();
+  const scheduledReports = useReportStore((s) => s.scheduledReports);
+  const reportExecutions = useReportStore((s) => s.reportExecutions);
+  const setScheduledReports = useReportStore((s) => s.setScheduledReports);
+  const setReportExecutions = useReportStore((s) => s.setReportExecutions);
+  const updateScheduledReport = useReportStore((s) => s.updateScheduledReport);
+  const deleteScheduledReport = useReportStore((s) => s.deleteScheduledReport);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);

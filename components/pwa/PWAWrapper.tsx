@@ -13,18 +13,26 @@ const OfflineIndicator = dynamic(
 
 export function PWAWrapper() {
   const [isMounted, setIsMounted] = useState(false)
+  const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
+    // Enable immediately if offline at mount
+    try {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        setEnabled(true)
+      }
+    } catch {}
+
+    // Enable when going offline later
+    const goOffline = () => setEnabled(true)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('offline', goOffline)
+    }
   }, [])
 
-  if (!isMounted) {
-    return null
-  }
+  if (!isMounted || !enabled) return null
 
-  return (
-    <>
-      <OfflineIndicator />
-    </>
-  )
+  return <OfflineIndicator />
 }

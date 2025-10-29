@@ -22,7 +22,9 @@ import type { IReconciliationReport, DateRange, IBankTransaction } from '@/types
 
 export default function ReconciliationReportsPage() {
   if (typeof window === 'undefined') return null;
-  const { reconciliationReport, setReconciliationReport, setReconciliationLoading } = useReportStore();
+  const reconciliationReport = useReportStore((s) => s.reconciliationReport as any);
+  const setReconciliationReport = useReportStore((s) => s.setReconciliationReport as any);
+  const setReconciliationLoading = useReportStore((s) => s.setReconciliationLoading as any);
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadId, setUploadId] = useState<string | null>(null);

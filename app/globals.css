@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,9 +83,12 @@
     }
     /* Respect reduced motion: disable heavy decorative animations */
     .animate-blob,
+    .animate-blob-slow,
     .animate-gradient,
     .animate-float,
-    .animate-glow {
+    .animate-glow,
+    .animate-ping,
+    .animate-shimmer {
       animation: none !important;
     }
   }

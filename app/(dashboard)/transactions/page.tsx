@@ -6,6 +6,7 @@
  * Uses same filter parameters, pagination, and export logic as Angular
  */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { VIRT_THRESHOLD } from '@/config/perf';
 import {
   transactionService,
   AngularTransactionFilter
@@ -61,6 +62,12 @@ export default function TransactionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageSizeOptions, setPageSizeOptions] = useState<number[]>([10, 25, 100, 500, 1000]);
+
+  // Virtualization state for large tables (desktop view)
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const [virtScrollTop, setVirtScrollTop] = useState(0);
+  const [virtViewportHeight, setVirtViewportHeight] = useState(0);
+  const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
 
   // Column visibility state
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -355,6 +362,31 @@ export default function TransactionsPage() {
   }, [transactions]);
 
   const rowsToRender = transactions.length > 500 ? transactions.slice(0, visibleCount) : transactions;
+
+  // Enable virtualization only for very large result sets to avoid UI shifts
+  const virtualizationEnabled = rowsToRender.length > VIRT_THRESHOLD;
+
+  // Measure row height and viewport when virtualization is enabled
+  useEffect(() => {
+    if (!virtualizationEnabled) return;
+    const measure = () => {
+      const el = tableScrollRef.current;
+      if (!el) return;
+      setVirtViewportHeight(el.clientHeight || 0);
+      // Try to measure the first row height; fallback to a sensible default
+      const firstRow = el.querySelector('tbody tr') as HTMLElement | null;
+      const h = firstRow?.offsetHeight || 56;
+      setVirtRowHeight(h);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [virtualizationEnabled, rowsToRender.length]);
+
+  const onTableScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (!virtualizationEnabled) return;
+    setVirtScrollTop(e.currentTarget.scrollTop || 0);
+  }, [virtualizationEnabled]);
 
   const handleClearFilters = () => {
     setFilters({
@@ -858,7 +890,12 @@ export default function TransactionsPage() {
 
           {/* Desktop Table View - ONLY visible ≥ 768px - UNCHANGED */}
           <div className="hidden md:block bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl md:rounded-2xl shadow-xl overflow-hidden">
-            <div className="overflow-x-auto -mx-px">
+            <div
+              className="overflow-x-auto -mx-px"
+              ref={tableScrollRef}
+              onScroll={onTableScroll}
+              style={virtualizationEnabled ? { maxHeight: '70vh', overflowY: 'auto' } : undefined}
+            >
               <table className="min-w-full border-collapse">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                   <tr>
@@ -911,11 +948,95 @@ export default function TransactionsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {rowsToRender.map((txn, index) => (
-                    <tr key={txn.txn_id || index} className="hover:bg-gray-50 transition-colors">
-                      {/* All 45 data cells */}
-                      <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{txn.srNo || ((currentPage - 1) * pageSize + index + 1)}</td>
-                      <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-500 font-mono font-medium whitespace-nowrap">{txn.txn_id || '-'}</td>
+                  {virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
+                    (() => {
+                      const total = rowsToRender.length;
+                      const rh = virtRowHeight || 56;
+                      const overscan = 10;
+                      const startIndex = Math.max(0, Math.floor(virtScrollTop / rh) - overscan);
+                      const visibleCount = Math.ceil(virtViewportHeight / rh) + overscan * 2;
+                      const endIndex = Math.min(total, startIndex + visibleCount);
+                      const slice = rowsToRender.slice(startIndex, endIndex);
+                      const topPad = startIndex * rh;
+                      const bottomPad = Math.max(0, (total - endIndex) * rh);
+                      return (
+                        <>
+                          {topPad > 0 && (
+                            <tr style={{ height: topPad }}>
+                              <td colSpan={100}></td>
+                            </tr>
+                          )}
+                          {slice.map((txn, i) => {
+                            const index = startIndex + i;
+                            return (
+                              <tr key={txn.txn_id || index} className="hover:bg-gray-50 transition-colors">
+                                {/* All 45 data cells */}
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{txn.srNo || ((currentPage - 1) * pageSize + index + 1)}</td>
+                                <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-500 font-mono font-medium whitespace-nowrap">{txn.txn_id || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-mono">{txn.client_txn_id || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.pg_txn_id || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.challan_no || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.pg_pay_mode || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-900 font-medium">{formatCurrency(txn.payee_amount || 0)}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{formatCurrency(txn.act_amount || 0)}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{formatCurrency(txn.paid_amount || 0)}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{formatCurrency(txn.pg_return_amount || 0)}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.amount_type || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{txn.p_convcharges || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{txn.p_ep_charges || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{txn.p_gst || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.ep_conv_rate || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.ep_conv_rate_type || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.sp_conv_rate || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.sp_conv_rate_type || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.gst_rate || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.gst_rate_type || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{formatDate(txn.trans_date)}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${getStatusBadge(txn.status)}`}>
+                                    {txn.status || '-'}
+                                  </span>
+                                </td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.payee_first_name || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.payee_lst_name || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.payee_mob || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.payee_email || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-500 font-medium">{txn.client_code || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.payment_mode || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700 max-w-xs truncate">{txn.payee_address || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf1 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf2 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf3 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf4 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf5 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf6 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf9 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf10 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.udf20 || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.gr_number || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.fee_forward || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700 max-w-xs truncate">{txn.bank_message || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.ifsc_code || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.payer_acount_number || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.bank_txn_id || '-'}</td>
+                                <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{formatCurrency(txn.donation_amount || 0)}</td>
+                              </tr>
+                            );
+                          })}
+                          {bottomPad > 0 && (
+                            <tr style={{ height: bottomPad }}>
+                              <td colSpan={100}></td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })()
+                  ) : (
+                    rowsToRender.map((txn, index) => (
+                      <tr key={txn.txn_id || index} className="hover:bg-gray-50 transition-colors">
+                        {/* All 45 data cells */}
+                        <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">{txn.srNo || ((currentPage - 1) * pageSize + index + 1)}</td>
+                        <td className="sticky left-0 z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.05)] px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-orange-500 font-mono font-medium whitespace-nowrap">{txn.txn_id || '-'}</td>
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-900 font-mono">{txn.client_txn_id || '-'}</td>
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.pg_txn_id || '-'}</td>
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.challan_no || '-'}</td>
@@ -964,7 +1085,8 @@ export default function TransactionsPage() {
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-gray-700">{txn.bank_txn_id || '-'}</td>
                       <td className="px-3 md:px-6 py-2.5 md:py-4 text-xs md:text-sm text-right text-gray-700">{formatCurrency(txn.donation_amount || 0)}</td>
                     </tr>
-                  ))}
+                  )))
+                  }
                 </tbody>
               </table>
             </div>

@@ -131,6 +131,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         :global(.animation-delay-4000) {
           animation-delay: 4s;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          :global(.animate-blob),
+          :global(.animate-blob-slow) {
+            animation: none !important;
+          }
+        }
       `}</style>
     </div>
   )

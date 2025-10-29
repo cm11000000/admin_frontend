@@ -14,15 +14,22 @@ import { formatCurrency, resolveUserName } from '@/lib/utils';
 import { RefreshCw, Download, TrendingUp, TrendingDown, DollarSign, PieChart as LucidePieChart, Activity, Calendar, BarChart3, LineChart as LineChartIcon, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, PieChart as RPieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
+// Recharts is lazy-loaded to keep initial bundle light
 
 export default function ReportsAnalyticsPage() {
-  const {
-    analyticsFilters,
-    setAnalyticsReport,
-    setAnalyticsLoading,
-    setDateRange,
-  } = useReportStore();
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const analyticsFilters = useReportStore((s) => s.analyticsFilters);
+  const setAnalyticsReport = useReportStore((s) => s.setAnalyticsReport);
+  const setAnalyticsLoading = useReportStore((s) => s.setAnalyticsLoading);
+  const setDateRange = useReportStore((s) => s.setDateRange);
 
   // Filters
   const [selectedRange, setSelectedRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
@@ -289,49 +296,53 @@ export default function ReportsAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[400px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={report.time_series.daily}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="label"
-                        tick={{ fontSize: 11, fill: '#6b7280' }}
-                        angle={-20}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#fff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '8px',
-                          fontSize: '12px'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line
-                        yAxisId="left"
-                        type="monotone"
-                        dataKey="transactions"
-                        name="Transactions"
-                        stroke="#f97316"
-                        strokeWidth={3}
-                        dot={{ fill: '#f97316', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        yAxisId="right"
-                        type="monotone"
-                        dataKey="amount"
-                        name="Amount"
-                        stroke="#10b981"
-                        strokeWidth={3}
-                        dot={{ fill: '#10b981', r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {Rc ? (
+                    <Rc.ResponsiveContainer width="100%" height="100%">
+                      <Rc.LineChart data={report.time_series.daily}>
+                        <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <Rc.XAxis
+                          dataKey="label"
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
+                          angle={-20}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <Rc.YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                        <Rc.Tooltip
+                          contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                        />
+                        <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Rc.Line
+                          yAxisId="left"
+                          type="monotone"
+                          dataKey="transactions"
+                          name="Transactions"
+                          stroke="#f97316"
+                          strokeWidth={3}
+                          dot={{ fill: '#f97316', r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                        <Rc.Line
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="amount"
+                          name="Amount"
+                          stroke="#10b981"
+                          strokeWidth={3}
+                          dot={{ fill: '#10b981', r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </Rc.LineChart>
+                    </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -348,24 +359,25 @@ export default function ReportsAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[320px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={report.time_series.daily}>
+                  {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.AreaChart data={report.time_series.daily}>
                       <defs>
                         <linearGradient id="colorSuccessRate" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
                           <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
+                      <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <Rc.XAxis
                         dataKey="label"
                         tick={{ fontSize: 11, fill: '#6b7280' }}
                         angle={-20}
                         textAnchor="end"
                         height={60}
                       />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
+                      <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                      <Rc.Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -373,8 +385,8 @@ export default function ReportsAnalyticsPage() {
                           fontSize: '12px'
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Area
+                      <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      <Rc.Area
                         type="monotone"
                         dataKey="success_rate"
                         name="Success Rate (%)"
@@ -383,8 +395,11 @@ export default function ReportsAnalyticsPage() {
                         fillOpacity={1}
                         fill="url(#colorSuccessRate)"
                       />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                    </Rc.AreaChart>
+                  </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -404,9 +419,10 @@ export default function ReportsAnalyticsPage() {
                   </CardHeader>
                   <CardContent className="p-4 md:p-6 pt-0">
                     <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RPieChart>
-                          <Pie
+                      {Rc ? (
+                      <Rc.ResponsiveContainer width="100%" height="100%">
+                        <Rc.PieChart>
+                          <Rc.Pie
                             data={report.payment_analysis.by_method.map((item: any) => ({
                               name: item.payment_method,
                               value: item.amount,
@@ -421,10 +437,10 @@ export default function ReportsAnalyticsPage() {
                             labelLine={true}
                           >
                             {report.payment_analysis.by_method.map((_: any, index: number) => (
-                              <Cell key={`cell-${index}`} fill={['#f97316', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'][index % 5]} />
+                              <Rc.Cell key={`cell-${index}`} fill={['#f97316', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'][index % 5]} />
                             ))}
-                          </Pie>
-                          <Tooltip
+                          </Rc.Pie>
+                          <Rc.Tooltip
                             contentStyle={{
                               backgroundColor: '#fff',
                               border: '1px solid #e5e7eb',
@@ -432,9 +448,12 @@ export default function ReportsAnalyticsPage() {
                               fontSize: '12px'
                             }}
                           />
-                          <Legend wrapperStyle={{ fontSize: '12px' }} />
-                        </RPieChart>
-                      </ResponsiveContainer>
+                          <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                        </Rc.PieChart>
+                      </Rc.ResponsiveContainer>
+                      ) : (
+                        <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                      )}
                     </div>
                   </CardContent>
                 </Card>

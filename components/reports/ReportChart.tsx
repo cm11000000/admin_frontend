@@ -1,24 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  AreaChart,
-  Area,
-  ComposedChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+import { useMemo, useEffect, useState } from 'react';
 import type { ChartType } from '@/types/reports';
 
 interface ReportChartProps {
@@ -87,6 +69,12 @@ export default function ReportChart({
   showGrid = true,
   className = '',
 }: ReportChartProps) {
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
   const chartColors = useMemo(() => colors, [colors]);
 
   const commonProps = {
@@ -98,22 +86,22 @@ export default function ReportChart({
     switch (type) {
       case 'line':
         return (
-          <LineChart {...commonProps}>
+          <Rc.LineChart {...commonProps}>
             {showGrid && (
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <Rc.CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
             )}
-            <XAxis
+            <Rc.XAxis
               dataKey={xAxisKey}
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <YAxis
+            <Rc.YAxis
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <Tooltip content={<CustomTooltip />} />
-            {showLegend && <Legend wrapperStyle={{ fontSize: '12px' }} />}
-            <Line
+            <Rc.Tooltip content={<CustomTooltip />} />
+            {showLegend && <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />}
+            <Rc.Line
               type="monotone"
               dataKey={dataKey}
               stroke={chartColors[0]}
@@ -122,7 +110,7 @@ export default function ReportChart({
               activeDot={{ r: 6 }}
             />
             {secondaryDataKey && (
-              <Line
+              <Rc.Line
                 type="monotone"
                 dataKey={secondaryDataKey}
                 stroke={chartColors[1]}
@@ -131,51 +119,51 @@ export default function ReportChart({
                 activeDot={{ r: 6 }}
               />
             )}
-          </LineChart>
+          </Rc.LineChart>
         );
 
       case 'bar':
         return (
-          <BarChart {...commonProps}>
+          <Rc.BarChart {...commonProps}>
             {showGrid && (
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <Rc.CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
             )}
-            <XAxis
+            <Rc.XAxis
               dataKey={xAxisKey}
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <YAxis
+            <Rc.YAxis
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <Tooltip content={<CustomTooltip />} />
-            {showLegend && <Legend wrapperStyle={{ fontSize: '12px' }} />}
-            <Bar dataKey={dataKey} fill={chartColors[0]} radius={[4, 4, 0, 0]} />
+            <Rc.Tooltip content={<CustomTooltip />} />
+            {showLegend && <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />}
+            <Rc.Bar dataKey={dataKey} fill={chartColors[0]} radius={[4, 4, 0, 0]} />
             {secondaryDataKey && (
-              <Bar dataKey={secondaryDataKey} fill={chartColors[1]} radius={[4, 4, 0, 0]} />
+              <Rc.Bar dataKey={secondaryDataKey} fill={chartColors[1]} radius={[4, 4, 0, 0]} />
             )}
-          </BarChart>
+          </Rc.BarChart>
         );
 
       case 'area':
         return (
-          <AreaChart {...commonProps}>
+          <Rc.AreaChart {...commonProps}>
             {showGrid && (
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <Rc.CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
             )}
-            <XAxis
+            <Rc.XAxis
               dataKey={xAxisKey}
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <YAxis
+            <Rc.YAxis
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <Tooltip content={<CustomTooltip />} />
-            {showLegend && <Legend wrapperStyle={{ fontSize: '12px' }} />}
-            <Area
+            <Rc.Tooltip content={<CustomTooltip />} />
+            {showLegend && <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />}
+            <Rc.Area
               type="monotone"
               dataKey={dataKey}
               stroke={chartColors[0]}
@@ -184,7 +172,7 @@ export default function ReportChart({
               strokeWidth={2}
             />
             {secondaryDataKey && (
-              <Area
+              <Rc.Area
                 type="monotone"
                 dataKey={secondaryDataKey}
                 stroke={chartColors[1]}
@@ -193,13 +181,13 @@ export default function ReportChart({
                 strokeWidth={2}
               />
             )}
-          </AreaChart>
+          </Rc.AreaChart>
         );
 
       case 'pie':
         return (
-          <PieChart {...commonProps}>
-            <Pie
+          <Rc.PieChart {...commonProps}>
+            <Rc.Pie
               data={data}
               dataKey={dataKey}
               nameKey={xAxisKey}
@@ -210,34 +198,34 @@ export default function ReportChart({
               labelLine={{ stroke: 'currentColor' }}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color || chartColors[index % chartColors.length]} />
+                <Rc.Cell key={`cell-${index}`} fill={entry.color || chartColors[index % chartColors.length]} />
               ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            {showLegend && <Legend wrapperStyle={{ fontSize: '12px' }} />}
-          </PieChart>
+            </Rc.Pie>
+            <Rc.Tooltip content={<CustomTooltip />} />
+            {showLegend && <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />}
+          </Rc.PieChart>
         );
 
       case 'composed':
         return (
-          <ComposedChart {...commonProps}>
+          <Rc.ComposedChart {...commonProps}>
             {showGrid && (
-              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+              <Rc.CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
             )}
-            <XAxis
+            <Rc.XAxis
               dataKey={xAxisKey}
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <YAxis
+            <Rc.YAxis
               className="text-xs text-gray-600 dark:text-gray-400"
               tick={{ fill: 'currentColor' }}
             />
-            <Tooltip content={<CustomTooltip />} />
-            {showLegend && <Legend wrapperStyle={{ fontSize: '12px' }} />}
-            <Bar dataKey={dataKey} fill={chartColors[0]} radius={[4, 4, 0, 0]} />
+            <Rc.Tooltip content={<CustomTooltip />} />
+            {showLegend && <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />}
+            <Rc.Bar dataKey={dataKey} fill={chartColors[0]} radius={[4, 4, 0, 0]} />
             {secondaryDataKey && (
-              <Line
+              <Rc.Line
                 type="monotone"
                 dataKey={secondaryDataKey}
                 stroke={chartColors[1]}
@@ -245,7 +233,7 @@ export default function ReportChart({
                 dot={{ fill: chartColors[1], r: 4 }}
               />
             )}
-          </ComposedChart>
+          </Rc.ComposedChart>
         );
 
       default:
@@ -260,9 +248,13 @@ export default function ReportChart({
           {title}
         </h3>
       )}
-      <ResponsiveContainer width="100%" height={height}>
-        {renderChart() || <div />}
-      </ResponsiveContainer>
+      {Rc ? (
+        <Rc.ResponsiveContainer width="100%" height={height}>
+          {renderChart() || <div />}
+        </Rc.ResponsiveContainer>
+      ) : (
+        <div style={{ height }} className="w-full rounded-lg bg-gray-100 animate-pulse" />
+      )}
     </div>
   );
 }

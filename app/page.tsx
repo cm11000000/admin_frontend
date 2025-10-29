@@ -39,6 +39,8 @@ export default function Home() {
                     src="/sabpaisa-logo.png"
                     alt="SabPaisa"
                     decoding="async"
+                    width="320"
+                    height="80"
                     className="h-12 md:h-16 lg:h-20 w-auto relative z-10"
                   />
                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { VIRT_THRESHOLD } from '@/config/perf';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,32 @@ export default function MerchantsPage() {
 
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedMerchants, setSelectedMerchants] = useState<string[]>([]);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const [virtScrollTop, setVirtScrollTop] = useState(0);
+  const [virtViewportHeight, setVirtViewportHeight] = useState(0);
+  const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
+
+  const virtualizationEnabled = viewMode === 'table' && Array.isArray(merchants) && merchants.length > VIRT_THRESHOLD;
+
+  useEffect(() => {
+    if (!virtualizationEnabled) return;
+    const measure = () => {
+      const el = tableScrollRef.current;
+      if (!el) return;
+      setVirtViewportHeight(el.clientHeight || 0);
+      const firstRow = el.querySelector('tbody tr') as HTMLElement | null;
+      const h = firstRow?.offsetHeight || 56;
+      setVirtRowHeight(h);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [virtualizationEnabled, merchants]);
+
+  const onTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!virtualizationEnabled) return;
+    setVirtScrollTop(e.currentTarget.scrollTop || 0);
+  };
 
   useEffect(() => {
     fetchMerchants();
@@ -217,7 +244,12 @@ export default function MerchantsPage() {
         </div>
       ) : (
         <Card>
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            ref={tableScrollRef}
+            onScroll={onTableScroll}
+            style={virtualizationEnabled ? { maxHeight: '70vh', overflowY: 'auto' } : undefined}
+          >
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -242,52 +274,82 @@ export default function MerchantsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {Array.isArray(merchants) && merchants.map((merchant) => (
-                  <tr
-                    key={merchant.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => router.push(`/clients/merchants/${merchant.id}`)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-800">
-                          {merchant.businessName}
+                {virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
+                  (() => {
+                    const total = merchants.length;
+                    const rh = virtRowHeight || 56;
+                    const overscan = 10;
+                    const startIndex = Math.max(0, Math.floor(virtScrollTop / rh) - overscan);
+                    const visibleCount = Math.ceil(virtViewportHeight / rh) + overscan * 2;
+                    const endIndex = Math.min(total, startIndex + visibleCount);
+                    const slice = merchants.slice(startIndex, endIndex);
+                    const topPad = startIndex * rh;
+                    const bottomPad = Math.max(0, (total - endIndex) * rh);
+                    return (
+                      <>
+                        {topPad > 0 && (
+                          <tr style={{ height: topPad }}><td colSpan={6}></td></tr>
+                        )}
+                        {slice.map((merchant) => (
+                          <tr
+                            key={merchant.id}
+                            className="hover:bg-gray-50 cursor-pointer"
+                            onClick={() => router.push(`/clients/merchants/${merchant.id}`)}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-800">{merchant.businessName}</div>
+                                <div className="text-sm text-gray-500">{merchant.merchantCode}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge className={`${statusColors[merchant.status]} text-gray-900`}>
+                                {merchant.status.replace('_', ' ')}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{merchant.category}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{merchant.totalTransactions?.toLocaleString() || 0}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(merchant.totalVolume || 0)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/clients/merchants/${merchant.id}`); }}>View</Button>
+                            </td>
+                          </tr>
+                        ))}
+                        {bottomPad > 0 && (
+                          <tr style={{ height: bottomPad }}><td colSpan={6}></td></tr>
+                        )}
+                      </>
+                    );
+                  })()
+                ) : (
+                  Array.isArray(merchants) && merchants.map((merchant) => (
+                    <tr
+                      key={merchant.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => router.push(`/clients/merchants/${merchant.id}`)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-800">{merchant.businessName}</div>
+                          <div className="text-sm text-gray-500">{merchant.merchantCode}</div>
                         </div>
-                        <div className="text-sm text-gray-500">{merchant.merchantCode}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={`${statusColors[merchant.status]} text-gray-900`}>
-                        {merchant.status.replace('_', ' ')}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {merchant.category}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {merchant.totalTransactions?.toLocaleString() || 0}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR',
-                        minimumFractionDigits: 0,
-                      }).format(merchant.totalVolume || 0)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/clients/merchants/${merchant.id}`);
-                        }}
-                      >
-                        View
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge className={`${statusColors[merchant.status]} text-gray-900`}>{merchant.status.replace('_', ' ')}</Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{merchant.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{merchant.totalTransactions?.toLocaleString() || 0}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(merchant.totalVolume || 0)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/clients/merchants/${merchant.id}`); }}>View</Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -15,14 +15,12 @@ const ReportChart = dynamic(() => import('@/components/reports/ReportChart'), { 
 
 export default function RefundReportPage() {
   if (typeof window === 'undefined') return null;
-  const {
-    refundFilters,
-    selectedChartType,
-    setRefundReport,
-    setRefundLoading,
-    setChartType,
-    setDateRange,
-  } = useReportStore();
+  const refundFilters = useReportStore((s) => s.refundFilters);
+  const selectedChartType = useReportStore((s) => s.selectedChartType);
+  const setRefundReport = useReportStore((s) => s.setRefundReport);
+  const setRefundLoading = useReportStore((s) => s.setRefundLoading);
+  const setChartType = useReportStore((s) => s.setChartType);
+  const setDateRange = useReportStore((s) => s.setDateRange);
 
   const { data: report, isLoading, error } = useQuery({
     queryKey: ['refund-report', refundFilters],

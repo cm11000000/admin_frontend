@@ -220,6 +220,8 @@ export default function LoginPage() {
                   src="/sabpaisa-logo.png"
                   alt="SabPaisa"
                   decoding="async"
+                  width="256"
+                  height="64"
                   className="relative h-10 w-auto"
                 />
               </div>

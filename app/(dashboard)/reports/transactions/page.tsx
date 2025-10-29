@@ -20,14 +20,12 @@ const ReportChart = dynamic(() => import('@/components/reports/ReportChart'), { 
 
 export default function TransactionReportPage() {
   if (typeof window === 'undefined') return null;
-  const {
-    transactionFilters,
-    selectedChartType,
-    setTransactionReport,
-    setTransactionLoading,
-    setChartType,
-    setDateRange,
-  } = useReportStore();
+  const transactionFilters = useReportStore((s) => s.transactionFilters);
+  const selectedChartType = useReportStore((s) => s.selectedChartType);
+  const setTransactionReport = useReportStore((s) => s.setTransactionReport);
+  const setTransactionLoading = useReportStore((s) => s.setTransactionLoading);
+  const setChartType = useReportStore((s) => s.setChartType);
+  const setDateRange = useReportStore((s) => s.setDateRange);
 
   // Fetch transaction report
   const { data: report, isLoading, error } = useQuery({

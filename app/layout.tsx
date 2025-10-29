@@ -3,9 +3,7 @@ import "./globals.css";
 import { PWAWrapper } from '@/components/pwa/PWAWrapper';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 
-// Disable Google font fetching in restricted build environments
-const inter = { variable: '' } as const;
-const jetbrainsMono = { variable: '' } as const;
+// Using system font stack to avoid network fetch during build
 
 // Enhanced metadata for SEO and mobile optimization
 export const metadata: Metadata = {
@@ -95,11 +93,7 @@ export default function RootLayout({
 }) {
   
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* PWA Meta Tags */}
         <meta name="application-name" content="SabPaisa Admin" />

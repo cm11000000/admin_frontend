@@ -16,10 +16,16 @@ import { formatCurrency, resolveUserName } from '@/lib/utils';
 import { RefreshCw, Download, TrendingUp, DollarSign, PieChart as LucidePieChart, Building2, Calendar, BarChart3, LineChart as LineChartIcon, AlertCircle, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, PieChart as RPieChart, Pie, Cell, Legend } from 'recharts';
+// Recharts lazy-loaded at runtime for better initial performance
 
 export default function RefundAnalyticsPage() {
   const { analytics, isLoadingAnalytics, fetchAnalytics } = useRefundStore();
+  const [Rc, setRc] = useState<any>(null);
+  useEffect(() => {
+    let mounted = true;
+    import('recharts').then((mod) => mounted && setRc(mod));
+    return () => { mounted = false };
+  }, []);
 
   // Filters
   const [selectedRange, setSelectedRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
@@ -347,10 +353,11 @@ export default function RefundAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={analytics.trends || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
+                  {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.LineChart data={analytics.trends || []}>
+                      <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <Rc.XAxis
                         dataKey="date"
                         tick={{ fontSize: 11, fill: '#6b7280' }}
                         angle={-20}
@@ -358,8 +365,8 @@ export default function RefundAnalyticsPage() {
                         height={60}
                         tickFormatter={(value) => new Date(value).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                       />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
+                      <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                      <Rc.Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -368,8 +375,8 @@ export default function RefundAnalyticsPage() {
                         }}
                         labelFormatter={(value) => new Date(value).toLocaleDateString('en-IN')}
                       />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line
+                      <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      <Rc.Line
                         type="monotone"
                         dataKey="count"
                         name="Refund Count"
@@ -378,7 +385,7 @@ export default function RefundAnalyticsPage() {
                         dot={{ fill: '#f97316', r: 4 }}
                         activeDot={{ r: 6 }}
                       />
-                      <Line
+                      <Rc.Line
                         type="monotone"
                         dataKey="amount"
                         name="Refund Amount"
@@ -387,8 +394,11 @@ export default function RefundAnalyticsPage() {
                         dot={{ fill: '#10b981', r: 4 }}
                         activeDot={{ r: 6 }}
                       />
-                    </LineChart>
-                  </ResponsiveContainer>
+                    </Rc.LineChart>
+                  </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -403,9 +413,10 @@ export default function RefundAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RPieChart>
-                      <Pie
+                  {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.PieChart>
+                      <Rc.Pie
                         data={analytics.statusDistribution ? Object.entries(analytics.statusDistribution).map(([status, count]) => ({
                           name: status.charAt(0).toUpperCase() + status.slice(1),
                           value: count,
@@ -419,14 +430,14 @@ export default function RefundAnalyticsPage() {
                         label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
                         labelLine={true}
                       >
-                        <Cell fill="#FCD34D" />
-                        <Cell fill="#60A5FA" />
-                        <Cell fill="#EF4444" />
-                        <Cell fill="#A78BFA" />
-                        <Cell fill="#10B981" />
-                        <Cell fill="#DC2626" />
-                      </Pie>
-                      <Tooltip
+                        <Rc.Cell fill="#FCD34D" />
+                        <Rc.Cell fill="#60A5FA" />
+                        <Rc.Cell fill="#EF4444" />
+                        <Rc.Cell fill="#A78BFA" />
+                        <Rc.Cell fill="#10B981" />
+                        <Rc.Cell fill="#DC2626" />
+                      </Rc.Pie>
+                      <Rc.Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -434,9 +445,12 @@ export default function RefundAnalyticsPage() {
                           fontSize: '12px'
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                    </RPieChart>
-                  </ResponsiveContainer>
+                      <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                    </Rc.PieChart>
+                  </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -454,10 +468,11 @@ export default function RefundAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics.topReasons || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
+                  {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.BarChart data={analytics.topReasons || []}>
+                      <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <Rc.XAxis
                         dataKey="reason"
                         interval={0}
                         tick={{ fontSize: 10, fill: '#6b7280' }}
@@ -466,8 +481,8 @@ export default function RefundAnalyticsPage() {
                         height={70}
                         tickFormatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
                       />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
+                      <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                      <Rc.Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -475,7 +490,7 @@ export default function RefundAnalyticsPage() {
                           fontSize: '12px'
                         }}
                       />
-                      <Bar
+                      <Rc.Bar
                         dataKey="count"
                         name="Count"
                         fill="url(#colorOrange)"
@@ -488,8 +503,11 @@ export default function RefundAnalyticsPage() {
                           <stop offset="100%" stopColor="#fb923c" stopOpacity={0.7}/>
                         </linearGradient>
                       </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
+                    </Rc.BarChart>
+                  </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -504,10 +522,11 @@ export default function RefundAnalyticsPage() {
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <div className="h-[280px] sm:h-[320px] md:h-[360px] w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics.gatewayStats || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
+                  {Rc ? (
+                  <Rc.ResponsiveContainer width="100%" height="100%">
+                    <Rc.BarChart data={analytics.gatewayStats || []}>
+                      <Rc.CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <Rc.XAxis
                         dataKey="gateway"
                         interval={0}
                         tick={{ fontSize: 10, fill: '#6b7280' }}
@@ -515,8 +534,8 @@ export default function RefundAnalyticsPage() {
                         textAnchor="end"
                         height={70}
                       />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <Tooltip
+                      <Rc.YAxis tick={{ fontSize: 11, fill: '#6b7280' }} />
+                      <Rc.Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -524,23 +543,26 @@ export default function RefundAnalyticsPage() {
                           fontSize: '12px'
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
+                      <Rc.Legend wrapperStyle={{ fontSize: '12px' }} />
+                      <Rc.Bar
                         dataKey="count"
                         name="Refund Count"
                         fill="#f97316"
                         radius={[8, 8, 0, 0]}
                         barSize={window.innerWidth < 640 ? 20 : 25}
                       />
-                      <Bar
+                      <Rc.Bar
                         dataKey="amount"
                         name="Refund Amount"
                         fill="#10b981"
                         radius={[8, 8, 0, 0]}
                         barSize={window.innerWidth < 640 ? 20 : 25}
                       />
-                    </BarChart>
-                  </ResponsiveContainer>
+                    </Rc.BarChart>
+                  </Rc.ResponsiveContainer>
+                  ) : (
+                    <div className="h-full w-full rounded-lg bg-gray-100 animate-pulse" />
+                  )}
                 </div>
               </CardContent>
             </Card>
