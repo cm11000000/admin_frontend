@@ -36,6 +36,15 @@ jobs:
         env:
           NEXT_PUBLIC_STATIC_EXPORT: 'true'
           NODE_ENV: production
+          # V2 Backend API URLs - Custom Domains
+          NEXT_PUBLIC_ADMIN_API_URL: 'https://adminapiv2.sabpaisa.in'
+          NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in'
+          NEXT_PUBLIC_REPORT_BASE_URL: 'https://reportapiv2.sabpaisa.in'
+          NEXT_PUBLIC_TXN_HISTORY_DBS_URL: 'https://reportapiv2.sabpaisa.in'
+          # COB APIs (unchanged)
+          NEXT_PUBLIC_COB_API_URL: 'https://stgcobapi.sabpaisa.in'
+          NEXT_PUBLIC_COB_AWS_API_URL: 'https://stgcobapi.sabpaisa.in'
+          NEXT_PUBLIC_COBKYC_URL: 'https://stgcobkyc.sabpaisa.in'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
