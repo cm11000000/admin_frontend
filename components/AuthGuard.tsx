@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { getAccessToken } from '@/lib/auth'
+import { getAccessToken, isTokenExpired } from '@/lib/auth'
 
 /**
  * Client-side authentication guard for static export
@@ -17,7 +17,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  useEffect(() => {
+  const checkAuth = useCallback(() => {
     // Public routes that don't require authentication
     const publicRoutes = ['/login', '/login/forgot']
     const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
@@ -34,17 +34,35 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!token) {
       // No token found - redirect to login
       console.log('[AuthGuard] No token found, redirecting to login')
+      setIsAuthenticated(false)
+      setIsChecking(false)
       const returnUrl = pathname !== '/' ? pathname : ''
       const loginUrl = returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'
       router.replace(loginUrl)
-      setIsChecking(false)
-    } else {
-      // Token exists - allow access
-      console.log('[AuthGuard] Token found, allowing access')
-      setIsAuthenticated(true)
-      setIsChecking(false)
+      return
     }
+
+    // Check if token is expired
+    if (isTokenExpired(token)) {
+      console.log('[AuthGuard] Token expired, redirecting to login')
+      setIsAuthenticated(false)
+      setIsChecking(false)
+      // Clear expired token
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('accessToken')
+      router.replace('/login?returnUrl=' + encodeURIComponent(pathname))
+      return
+    }
+
+    // Token exists and is valid - allow access
+    console.log('[AuthGuard] Token found and valid, allowing access')
+    setIsAuthenticated(true)
+    setIsChecking(false)
   }, [pathname, router])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   // Show nothing while checking auth (prevents flash of protected content)
   if (isChecking) {
