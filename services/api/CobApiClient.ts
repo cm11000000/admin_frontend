@@ -94,10 +94,19 @@ class SimpleFetchClient {
       if (response.ok) {
         const data = await response.json();
         const newAccessToken = data.access || data.accessToken;
+        const newRefreshToken = data.refresh || data.refreshToken;
 
         if (newAccessToken) {
-          // Store new token in localStorage (matching Angular behavior)
-          localStorage.setItem('accessToken', newAccessToken);
+          try {
+            localStorage.setItem('accessToken', newAccessToken);
+            localStorage.setItem('access_token', newAccessToken);
+          } catch {}
+          if (newRefreshToken) {
+            try {
+              localStorage.setItem('refreshToken', newRefreshToken);
+              localStorage.setItem('refresh_token', newRefreshToken);
+            } catch {}
+          }
           console.log('[CobApiClient] Token refreshed successfully');
           return newAccessToken;
         } else {

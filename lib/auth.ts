@@ -17,7 +17,10 @@ export interface User {
  */
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('access_token')
+  return (
+    localStorage.getItem('access_token') ||
+    localStorage.getItem('accessToken')
+  )
 }
 
 /**
@@ -25,7 +28,10 @@ export function getAccessToken(): string | null {
  */
 export function getRefreshToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('refresh_token')
+  return (
+    localStorage.getItem('refresh_token') ||
+    localStorage.getItem('refreshToken')
+  )
 }
 
 /**

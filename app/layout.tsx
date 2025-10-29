@@ -92,7 +92,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  
+  const enableSW = process.env.NEXT_PUBLIC_ENABLE_SW !== 'false'
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -109,25 +109,27 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
 
-        {/* Service Worker Registration */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) {
-                      console.log('[PWA] ServiceWorker registration successful:', registration.scope);
-                    },
-                    function(err) {
-                      console.log('[PWA] ServiceWorker registration failed:', err);
-                    }
-                  );
-                });
-              }
-            `,
-          }}
-        />
+        {/* Service Worker Registration (can be disabled with NEXT_PUBLIC_ENABLE_SW=false) */}
+        {enableSW && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js').then(
+                      function(registration) {
+                        console.log('[PWA] ServiceWorker registration successful:', registration.scope);
+                      },
+                      function(err) {
+                        console.log('[PWA] ServiceWorker registration failed:', err);
+                      }
+                    );
+                  });
+                }
+              `,
+            }}
+          />
+        )}
       </head>
       <body
         className={`font-sans antialiased text-foreground bg-background min-h-screen overflow-x-hidden`}

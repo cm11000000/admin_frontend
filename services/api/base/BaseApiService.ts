@@ -368,10 +368,20 @@ export abstract class BaseApiService implements IService {
           if (response.ok) {
             const data: any = await response.json();
             const newAccessToken = data.access || data.accessToken;
+            const newRefreshToken = data.refresh || data.refreshToken;
 
             if (newAccessToken) {
-              // Store new token in localStorage (matching Angular behavior)
-              localStorage.setItem('accessToken', newAccessToken);
+              // Store new token in both keys for parity with guard/clients
+              try {
+                localStorage.setItem('accessToken', newAccessToken);
+                localStorage.setItem('access_token', newAccessToken);
+              } catch {}
+              if (newRefreshToken) {
+                try {
+                  localStorage.setItem('refreshToken', newRefreshToken);
+                  localStorage.setItem('refresh_token', newRefreshToken);
+                } catch {}
+              }
               console.log('[BaseApiService] Token refreshed successfully');
               return; // Token refreshed successfully
             } else {
