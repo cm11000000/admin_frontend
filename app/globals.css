@@ -77,21 +77,34 @@
     scroll-behavior: smooth;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-    /* Respect reduced motion: disable heavy decorative animations */
-    .animate-blob,
-    .animate-blob-slow,
-    .animate-gradient,
-    .animate-float,
-    .animate-glow,
-    .animate-ping,
-    .animate-shimmer {
-      animation: none !important;
-    }
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
+  /* Respect reduced motion: disable heavy decorative animations */
+  .animate-blob,
+  .animate-blob-slow,
+  .animate-gradient,
+  .animate-float,
+  .animate-glow,
+  .animate-ping,
+  .animate-shimmer {
+    animation: none !important;
+  }
+}
+
+/* EffectsGuard opt-out: disable heavy decorative animations */
+[data-effects="off"] .animate-blob,
+[data-effects="off"] .animate-blob-slow,
+[data-effects="off"] .animate-gradient,
+[data-effects="off"] .animate-float,
+[data-effects="off"] .animate-glow,
+[data-effects="off"] .animate-ping,
+[data-effects="off"] .animate-shimmer,
+[data-effects="off"] .animate-fade-in,
+[data-effects="off"] .animate-bounce-in {
+  animation: none !important;
+}
 }
 
 /* Prevent horizontal overflow at page level */

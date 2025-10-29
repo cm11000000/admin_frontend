@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { PWAWrapper } from '@/components/pwa/PWAWrapper';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import EffectsGuard from '@/components/perf/EffectsGuard';
 
 // Using system font stack to avoid network fetch during build
 
@@ -133,6 +134,8 @@ export default function RootLayout({
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif' }}
         suppressHydrationWarning
       >
+        {/* Disable heavy decorative effects on low-power devices or when opted out */}
+        <EffectsGuard />
         {/* PWA Components - Rendered client-side only to avoid hydration errors */}
         <PWAWrapper />
 
