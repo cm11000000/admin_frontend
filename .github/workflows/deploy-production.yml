@@ -36,11 +36,11 @@ jobs:
         env:
           NEXT_PUBLIC_STATIC_EXPORT: 'true'
           NODE_ENV: production
-          # V2 Backend API URLs - Custom Domains
-          NEXT_PUBLIC_ADMIN_API_URL: 'https://adminapiv2.sabpaisa.in'
-          NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in'
-          NEXT_PUBLIC_REPORT_BASE_URL: 'https://reportapiv2.sabpaisa.in'
-          NEXT_PUBLIC_TXN_HISTORY_DBS_URL: 'https://reportapiv2.sabpaisa.in'
+          # V2 Backend API URLs - Custom Domains with URL prefixes
+          NEXT_PUBLIC_ADMIN_API_URL: 'https://adminapiv2.sabpaisa.in/admin-hackathon'
+          NEXT_PUBLIC_REPORT_API_URL: 'https://reportapiv2.sabpaisa.in/report-hackathon'
+          NEXT_PUBLIC_REPORT_BASE_URL: 'https://reportapiv2.sabpaisa.in/report-hackathon'
+          NEXT_PUBLIC_TXN_HISTORY_DBS_URL: 'https://reportapiv2.sabpaisa.in/report-hackathon'
           # COB APIs (Production) - Using cobawsapi for CORS support
           NEXT_PUBLIC_COB_API_URL: 'https://cobawsapi.sabpaisa.in'
           NEXT_PUBLIC_COB_AWS_API_URL: 'https://cobawsapi.sabpaisa.in'
