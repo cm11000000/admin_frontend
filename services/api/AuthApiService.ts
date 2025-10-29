@@ -195,6 +195,11 @@ class AuthApiService {
     localStorage.removeItem('user')
     localStorage.removeItem('userName')
     localStorage.removeItem('remember_me')
+    try {
+      sessionStorage.removeItem('bean')
+      sessionStorage.removeItem('loginedUser')
+      sessionStorage.removeItem('RatingUser')
+    } catch {}
     console.log('[Auth] User logged out successfully')
   }
 
@@ -281,6 +286,17 @@ class AuthApiService {
       try { localStorage.setItem('userName', String(resp.userName)) } catch {}
     }
     localStorage.setItem('user', JSON.stringify(resp))
+    try {
+      sessionStorage.setItem('bean', JSON.stringify(resp))
+      sessionStorage.setItem('loginedUser', 'SabPaisa Admin')
+      const ratingUser =
+        resp?.userName || resp?.email || resp?.userEmail || resp?.clientUserId
+      if (ratingUser) {
+        sessionStorage.setItem('RatingUser', String(ratingUser))
+      }
+    } catch (sessionError) {
+      console.warn('[Auth] Failed to persist session auth state', sessionError)
+    }
 
     // Also store in cookies for middleware access
     // Persist cookies for 1 day to control frontend session window
