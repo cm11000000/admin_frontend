@@ -219,8 +219,9 @@ class AuthApiService {
     }
 
     try {
+      // Parity with adminportalfrontend (Angular): use account/getotp endpoint
       const { data } = await this.client.post<ForgotPasswordResponse>(
-        '/auth-service/auth/forgot-password',
+        '/auth-service/account/getotp',
         body,
         { headers: { Authorization: this.apiKey } }
       )
@@ -236,8 +237,9 @@ class AuthApiService {
    */
   async verifyOtp(payload: VerifyOtpPayload): Promise<VerifyOtpResponse> {
     try {
+      // Parity with adminportalfrontend (Angular): use account/verify-otp endpoint
       const { data } = await this.client.post<VerifyOtpResponse>(
-        '/auth-service/auth/verify-otp',
+        '/auth-service/account/verify-otp',
         payload,
         { headers: { Authorization: this.apiKey } }
       )
@@ -253,8 +255,9 @@ class AuthApiService {
    */
   async resetPassword(payload: ResetPasswordPayload): Promise<ResetPasswordResponse> {
     try {
-      const { data } = await this.client.post<ResetPasswordResponse>(
-        '/auth-service/auth/reset-password',
+      // Parity with adminportalfrontend (Angular): use account/forgot-password (PUT)
+      const { data } = await this.client.put<ResetPasswordResponse>(
+        '/auth-service/account/forgot-password',
         payload,
         { headers: { Authorization: this.apiKey } }
       )

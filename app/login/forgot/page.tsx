@@ -194,64 +194,77 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-white relative overflow-hidden">
-      {/* Premium Mesh Gradient Background - Same as login page */}
-      <div className="absolute inset-0">
-        {/* Base gradient */}
+    <div className="min-h-screen bg-white relative overflow-hidden flex">
+      {/* Left Side - Professional Branding Panel (mirrors login) */}
+      <div className="hidden lg:flex lg:flex-1 relative overflow-hidden z-10">
+        {/* Refined gradient background with orange theme matching dashboard */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600" />
+
+        {/* Vibrant animated orbs */}
+        <div className="absolute top-32 right-24 w-[32rem] h-[32rem] bg-gradient-to-br from-[#FF9933]/20 to-[#FF6600]/15 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-20 -left-20 w-[28rem] h-[28rem] bg-gradient-to-br from-white/8 to-[#FFB366]/10 rounded-full blur-3xl" />
+
+        {/* Refined grid pattern */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-[0.015]"
           style={{
-            background: `
-              linear-gradient(to right bottom,
-                rgba(92, 187, 246, 0.03) 0%,
-                rgba(255, 255, 255, 0) 30%,
-                rgba(255, 153, 51, 0.03) 100%
-              )
-            `
+            backgroundImage: `linear-gradient(to right, white 1px, transparent 1px),
+                             linear-gradient(to bottom, white 1px, transparent 1px)`,
+            backgroundSize: '64px 64px'
           }}
         />
 
-        {/* Animated mesh gradients */}
-        <motion.div
-          className="absolute top-0 right-0 w-[800px] h-[800px]"
-          style={{
-            background: 'radial-gradient(ellipse at center, rgba(92, 187, 246, 0.08) 0%, transparent 50%)',
-            filter: 'blur(100px)',
-          }}
-          animate={{ x: [0, 100, 0], y: [0, -100, 0] }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
+        {/* Left-side content to match login */}
+        <div className="relative z-10 px-16 py-12 flex flex-col justify-between h-full">
+          <div className="space-y-16">
+            {/* Logo card (same as login) */}
+            <div className="inline-block">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 p-4 border border-slate-700/50 shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#FF9933]/5 via-transparent to-[#5CBBF6]/5"></div>
+                <img
+                  src="/sabpaisa-logo.png"
+                  alt="SabPaisa"
+                  decoding="async"
+                  fetchpriority="high"
+                  width="256"
+                  height="64"
+                  className="relative h-10 w-auto"
+                />
+              </div>
+            </div>
 
-        <motion.div
-          className="absolute bottom-0 left-0 w-[800px] h-[800px]"
-          style={{
-            background: 'radial-gradient(ellipse at center, rgba(255, 153, 51, 0.08) 0%, transparent 50%)',
-            filter: 'blur(100px)',
-          }}
-          animate={{ x: [0, -100, 0], y: [0, 100, 0] }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
+            {/* Headline */}
+            <div className="space-y-8 max-w-xl">
+              <h1 className="text-6xl font-bold text-white leading-[1.1] tracking-tight">
+                Account
+                <span className="block mt-2 bg-gradient-to-r from-[#FFB366] via-[#FF9933] to-[#FF8C1A] bg-clip-text text-transparent">
+                  Recovery
+                </span>
+              </h1>
+              <p className="text-xl text-white/85 leading-relaxed font-light max-w-lg">
+                Reset your password securely. You’ll receive a one‑time code to verify your identity.
+              </p>
+            </div>
+          </div>
 
-        {/* Subtle dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, black 1px, transparent 1px)`,
-            backgroundSize: '40px 40px'
-          }}
-        />
+          {/* Feature cards (mirrors login) */}
+          <div className="grid grid-cols-2 gap-6 max-w-2xl">
+            <div className="group bg-white/[0.08] backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/[0.12] transition-all duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#FF9933] to-[#FF6600] rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-[#FF9933]/20"></div>
+              <div className="text-base font-semibold text-white mb-1.5">Secure by design</div>
+              <div className="text-sm text-white/70 font-light leading-relaxed">OTP verification protects your account</div>
+            </div>
+            <div className="group bg-white/[0.08] backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:bg-white/[0.12] transition-all duration-300">
+              <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4"></div>
+              <div className="text-base font-semibold text-white mb-1.5">Fast recovery</div>
+              <div className="text-sm text-white/70 font-light leading-relaxed">Reset and get back to work quickly</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* Right Side - Form area (mirrors login spacing/feel) */}
+      <div className="flex-1 flex items-center justify-center p-8 lg:p-12 bg-white/80 backdrop-blur-sm relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -358,7 +371,7 @@ export default function ForgotPasswordPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-200"
+            className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-200"
           >
             <AnimatePresence mode="wait">
               {/* Step 1: Email */}
@@ -382,10 +395,10 @@ export default function ForgotPasswordPage() {
                     <div className="relative group">
                       <input
                         id="email"
-                        type="text"
+                        type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-4 bg-gray-50/50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:border-[#5CBBF6] focus:bg-white text-gray-900 placeholder-transparent transition-all duration-200 text-base"
+                        className="peer w-full px-4 py-4 bg-gray-50/50 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:border-orange-500 focus:bg-white text-gray-900 placeholder-transparent transition-all duration-200 text-base"
                         placeholder="name@company.com"
                         required
                         autoComplete="email"
@@ -393,11 +406,11 @@ export default function ForgotPasswordPage() {
                       />
                       <label
                         htmlFor="email"
-                        className="absolute left-4 top-4 text-gray-600 transition-all duration-200 peer-placeholder-shown:text-gray-400 peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs peer-focus:bg-white peer-focus:px-2 peer-focus:text-[#5CBBF6] peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2"
+                        className="pointer-events-none absolute left-4 top-4 text-gray-600 transition-all duration-200 peer-placeholder-shown:text-gray-400 peer-focus:-top-2 peer-focus:left-3 peer-focus:text-xs peer-focus:bg-white peer-focus:px-2 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:px-2"
                       >
                         Email Address
                       </label>
-                      <Mail className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-[#5CBBF6] transition-colors duration-200" />
+                      <Mail className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 peer-focus:text-orange-500 transition-colors duration-200" />
                       <AnimatePresence>
                         {email && isValidEmail(email) && (
                           <motion.div
@@ -441,9 +454,9 @@ export default function ForgotPasswordPage() {
                   <motion.button
                     type="submit"
                     disabled={isLoading || !email}
-                    className="relative w-full py-4 px-6 bg-gradient-to-r from-[#5CBBF6] to-[#4BA0D8] text-white font-semibold rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#5CBBF6]/20 disabled:opacity-60 flex items-center justify-center transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                    className="relative w-full py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/20 disabled:opacity-60 flex items-center justify-center transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                     style={{
-                      boxShadow: '0 10px 25px -5px rgba(92, 187, 246, 0.4), 0 4px 14px rgba(0, 0, 0, 0.1)',
+                      boxShadow: '0 10px 25px -5px rgba(255, 153, 51, 0.4), 0 4px 14px rgba(0, 0, 0, 0.1)',
                       minHeight: '52px'
                     }}
                   >
@@ -747,7 +760,7 @@ export default function ForgotPasswordPage() {
           >
             <a
               href="/login"
-              className="inline-flex items-center text-sm text-gray-600 hover:text-[#5CBBF6] transition-colors"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-orange-500 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Login
