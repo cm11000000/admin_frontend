@@ -7,14 +7,14 @@ import ReportApiService from '@/services/api/ReportApiService';
 import RateMappingApiService from '@/services/api/RateMappingApiService';
 import { resolveUserName } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import TabContentWrapper from '@/components/rate-mapping/TabContentWrapper';
 
 interface ClientOption {
   code: string;
@@ -161,105 +161,118 @@ const ManageClientTab: React.FC<{
     }
   };
 
+  const clientOptions = clients.map((client) => ({
+    value: client.code,
+    label: `${client.code} — ${client.name}`
+  }));
+
   return (
-    <Card className="p-4 md:p-6 space-y-4">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center">
-        <div>
-          <Label className="text-xs font-semibold text-gray-700">Client Code</Label>
-          <Combobox
-            options={clients.map((client) => ({ value: client.code, label: `${client.code} — ${client.name}` }))}
-            value={selectedClient}
-            onChange={setSelectedClient}
-            placeholder="Select client"
-            searchPlaceholder="Search client..."
-            emptyMessage="No clients"
-            className="mt-2"
-          />
-        </div>
-        <p className="text-xs text-gray-600">Edit client contact/email/URLs exactly as Angular Manage Client.</p>
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center gap-2 text-gray-600 text-sm">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading client…
-        </div>
-      )}
-
-      {!isLoading && clientState && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label className="text-xs text-gray-700">Client Name</Label>
-            <Input value={clientState.clientName} onChange={(e) => setClientState((p) => p && ({ ...p, clientName: e.target.value }))} />
-            <Label className="text-xs text-gray-700">Contact</Label>
-            <Input value={clientState.clientContact} onChange={(e) => setClientState((p) => p && ({ ...p, clientContact: e.target.value }))} />
-            <Label className="text-xs text-gray-700">Email</Label>
-            <Input value={clientState.clientEmail} onChange={(e) => setClientState((p) => p && ({ ...p, clientEmail: e.target.value }))} />
-            <Label className="text-xs text-gray-700">Username</Label>
-            <Input value={clientState.clientUsername} onChange={(e) => setClientState((p) => p && ({ ...p, clientUsername: e.target.value }))} />
-            <Label className="text-xs text-gray-700">Password</Label>
-            <Input value={clientState.clientPass} onChange={(e) => setClientState((p) => p && ({ ...p, clientPass: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-gray-700">Success URL</Label>
-            <Textarea value={clientState.successReturnURL} onChange={(e) => setClientState((p) => p && ({ ...p, successReturnURL: e.target.value }))} />
-            <Label className="text-xs text-gray-700">Failure URL</Label>
-            <Textarea value={clientState.failureReturnURL} onChange={(e) => setClientState((p) => p && ({ ...p, failureReturnURL: e.target.value }))} />
-            <Label className="text-xs text-gray-700">Push API URL</Label>
-            <Textarea value={clientState.pushApiUrl} onChange={(e) => setClientState((p) => p && ({ ...p, pushApiUrl: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs text-gray-700">Auth Key</Label>
-                <Input value={clientState.authKey} onChange={(e) => setClientState((p) => p && ({ ...p, authKey: e.target.value }))} />
+    <TabContentWrapper
+      description="Edit client contact/email/URLs exactly as Angular Manage Client."
+      clients={clientOptions}
+      selectedClient={selectedClient}
+      onClientChange={setSelectedClient}
+      isLoading={isLoading}
+      loadingText="Loading client details..."
+    >
+      {clientState && (
+        <>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-700">Client Name</Label>
+              <Input value={clientState.clientName} onChange={(e) => setClientState((p) => p && ({ ...p, clientName: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <Label className="text-xs text-gray-700">Contact</Label>
+              <Input value={clientState.clientContact} onChange={(e) => setClientState((p) => p && ({ ...p, clientContact: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <Label className="text-xs text-gray-700">Email</Label>
+              <Input value={clientState.clientEmail} onChange={(e) => setClientState((p) => p && ({ ...p, clientEmail: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <Label className="text-xs text-gray-700">Username</Label>
+              <Input value={clientState.clientUsername} onChange={(e) => setClientState((p) => p && ({ ...p, clientUsername: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <Label className="text-xs text-gray-700">Password</Label>
+              <Input value={clientState.clientPass} onChange={(e) => setClientState((p) => p && ({ ...p, clientPass: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-700">Success URL</Label>
+              <Textarea value={clientState.successReturnURL} onChange={(e) => setClientState((p) => p && ({ ...p, successReturnURL: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <Label className="text-xs text-gray-700">Failure URL</Label>
+              <Textarea value={clientState.failureReturnURL} onChange={(e) => setClientState((p) => p && ({ ...p, failureReturnURL: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <Label className="text-xs text-gray-700">Push API URL</Label>
+              <Textarea value={clientState.pushApiUrl} onChange={(e) => setClientState((p) => p && ({ ...p, pushApiUrl: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs text-gray-700">Auth Key</Label>
+                  <Input value={clientState.authKey} onChange={(e) => setClientState((p) => p && ({ ...p, authKey: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-700">Client IV</Label>
+                  <Input value={clientState.clientIV} onChange={(e) => setClientState((p) => p && ({ ...p, clientIV: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+                </div>
               </div>
-              <div>
-                <Label className="text-xs text-gray-700">Client IV</Label>
-                <Input value={clientState.clientIV} onChange={(e) => setClientState((p) => p && ({ ...p, clientIV: e.target.value }))} />
+              <Label className="text-xs text-gray-700">Auth Type</Label>
+              <Input value={clientState.authType} onChange={(e) => setClientState((p) => p && ({ ...p, authType: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+              <div className="grid gap-3 md:grid-cols-2 mt-2">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">UI Bypass</Label>
+                  <Switch
+                    checked={clientState.uiByPass}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, uiByPass: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Round Off</Label>
+                  <Switch
+                    checked={clientState.roundOff}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, roundOff: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Active</Label>
+                  <Switch
+                    checked={clientState.active}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, active: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Auth Flag</Label>
+                  <Switch
+                    checked={clientState.authFlag}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, authFlag: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Push API</Label>
+                  <Switch
+                    checked={clientState.pushApiFlag}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, pushApiFlag: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Enquiry</Label>
+                  <Switch
+                    checked={clientState.enquiryFlag}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, enquiryFlag: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Refund Applicable</Label>
+                  <Switch
+                    checked={clientState.refundApplicable}
+                    onCheckedChange={(checked) => setClientState((p) => p && ({ ...p, refundApplicable: checked }))}
+                  />
+                </div>
               </div>
             </div>
-            <Label className="text-xs text-gray-700">Auth Type</Label>
-            <Input value={clientState.authType} onChange={(e) => setClientState((p) => p && ({ ...p, authType: e.target.value }))} />
-            <div className="flex gap-3 mt-2">
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.uiByPass} onChange={(e) => setClientState((p) => p && ({ ...p, uiByPass: e.target.checked }))} />
-                UI Bypass
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.roundOff} onChange={(e) => setClientState((p) => p && ({ ...p, roundOff: e.target.checked }))} />
-                Round Off
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.active} onChange={(e) => setClientState((p) => p && ({ ...p, active: e.target.checked }))} />
-                Active
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.authFlag} onChange={(e) => setClientState((p) => p && ({ ...p, authFlag: e.target.checked }))} />
-                Auth Flag
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.pushApiFlag} onChange={(e) => setClientState((p) => p && ({ ...p, pushApiFlag: e.target.checked }))} />
-                Push API
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.enquiryFlag} onChange={(e) => setClientState((p) => p && ({ ...p, enquiryFlag: e.target.checked }))} />
-                Enquiry
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={clientState.refundApplicable} onChange={(e) => setClientState((p) => p && ({ ...p, refundApplicable: e.target.checked }))} />
-                Refund Applicable
-              </label>
-            </div>
           </div>
-        </div>
-      )}
 
-      <div className="flex flex-wrap gap-3">
-        <Button variant="outline" onClick={() => setSelectedClient('')}>Reset</Button>
-        <Button onClick={handleSave} disabled={!clientState || isSaving || !selectedClient}>
-          {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Update Client
-        </Button>
-      </div>
-      {clientError && <p className="text-xs text-red-600">Client details unavailable: {clientError}</p>}
-    </Card>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" onClick={() => setSelectedClient('')} className="min-h-[52px] touch-manipulation">Reset</Button>
+            <Button onClick={handleSave} disabled={!clientState || isSaving || !selectedClient} className="min-h-[52px] touch-manipulation">
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Update Client
+            </Button>
+          </div>
+          {clientError && <p className="text-xs text-red-600">Client details unavailable: {clientError}</p>}
+        </>
+      )}
+    </TabContentWrapper>
   );
 };
 
@@ -281,6 +294,7 @@ const ManagePaymentModeTab: React.FC<{
   const [available, setAvailable] = useState<PaymentModeRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [clientId, setClientId] = useState<string>('');
+  const [clientIdError, setClientIdError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -288,13 +302,17 @@ const ManagePaymentModeTab: React.FC<{
         setAssigned([]);
         setAvailable([]);
         setClientId('');
+        setClientIdError(null);
         return;
       }
       setIsLoading(true);
       try {
         const idResp = await RateMappingApiService.getClientId(selectedClient);
         const first = Array.isArray(idResp) && idResp.length > 0 ? idResp[0] : null;
-        setClientId(String(first?.clientId ?? first?.clientid ?? ''));
+        const cid = String(first?.clientId ?? first?.clientid ?? '');
+        if (!cid) throw new Error('Client ID not found for selected client');
+        setClientId(cid);
+        setClientIdError(null);
         const [assignedResp, addableResp] = await Promise.all([
           RateMappingApiService.getAssignedPaymentMode(selectedClient),
           RateMappingApiService.getPaymodeForAddNewRate(selectedClient),
@@ -306,6 +324,7 @@ const ManagePaymentModeTab: React.FC<{
         toast.error(error?.message || 'Failed to load payment modes');
         setAssigned([]);
         setAvailable([]);
+        setClientIdError(error?.message || 'Missing client ID');
       } finally {
         setIsLoading(false);
       }
@@ -315,7 +334,7 @@ const ManagePaymentModeTab: React.FC<{
 
   const togglePaymode = async (row: PaymentModeRow) => {
     try {
-      const paymodeId = String(row.clientCode ?? row.paymodeId ?? row.Id ?? '');
+      const paymodeId = String(row.clientCode ?? row.paymodeId ?? row.Id ?? row.clientId ?? '');
       if (!clientId || !paymodeId) throw new Error('Missing payment mode identifier');
       const id = `${clientId}/${paymodeId}`;
       const nextFlag = !(row.payModeFlag ?? row.clientId === 1);
@@ -334,7 +353,7 @@ const ManagePaymentModeTab: React.FC<{
 
   const addPaymode = async (row: PaymentModeRow) => {
     try {
-      const paymodeId = String(row.paymodeId ?? row.clientId ?? '');
+      const paymodeId = String(row.paymodeId ?? row.clientId ?? row.clientCode ?? '');
       if (!paymodeId || !clientId) throw new Error('Missing paymode id');
       await RateMappingApiService.addNewPaymentMode(selectedClient, paymodeId, userName);
       toast.success('Payment mode added');
@@ -351,70 +370,61 @@ const ManagePaymentModeTab: React.FC<{
     }
   };
 
+  const clientOptions = clients.map((client) => ({
+    value: client.code,
+    label: `${client.code} — ${client.name}`
+  }));
+
   return (
-    <Card className="p-4 md:p-6 space-y-4">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center">
-        <div>
-          <Label className="text-xs font-semibold text-gray-700">Client Code</Label>
-          <Combobox
-            options={clients.map((client) => ({ value: client.code, label: `${client.code} — ${client.name}` }))}
-            value={selectedClient}
-            onChange={setSelectedClient}
-            placeholder="Select client"
-            searchPlaceholder="Search client..."
-            emptyMessage="No clients"
-            className="mt-2"
-          />
+    <TabContentWrapper
+      description="Toggle assigned payment modes or add new ones."
+      clients={clientOptions}
+      selectedClient={selectedClient}
+      onClientChange={setSelectedClient}
+      isLoading={isLoading}
+      loadingText="Loading payment modes..."
+    >
+      {clientIdError && (
+        <p className="text-xs text-red-600">Client identifier unavailable: {clientIdError}</p>
+      )}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 p-3">
+          <h3 className="text-sm font-bold text-gray-900 mb-2">Assigned</h3>
+          <div className="space-y-2 max-h-72 overflow-y-auto">
+            {assigned.length === 0 && <p className="text-xs text-gray-600">No assigned payment modes.</p>}
+            {assigned.map((row) => (
+              <div key={`${row.clientId}-${row.clientCode}-${row.paymodeId}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-2">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{row.clientName || row.paymodeName || row.clientCode}</p>
+                  <p className="text-xs text-gray-600">ID: {row.clientId ?? row.paymodeId ?? '—'}</p>
+                  <p className="text-xs text-gray-500">Enabled: {row.payModeFlag || row.clientId === 1 ? 'Yes' : 'No'}</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => togglePaymode(row)}>
+                  {row.payModeFlag || row.clientId === 1 ? 'Disable' : 'Enable'}
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="text-xs text-gray-600">Toggle assigned payment modes or add new ones.</p>
+        <div className="rounded-xl border border-gray-200 p-3">
+          <h3 className="text-sm font-bold text-gray-900 mb-2">Not Assigned</h3>
+          <div className="space-y-2 max-h-72 overflow-y-auto">
+            {available.length === 0 && <p className="text-xs text-gray-600">Nothing to add.</p>}
+            {available.map((row) => (
+              <div key={`${row.paymodeId || row.clientId}-${row.paymodeName || row.clientName}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-2">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{row.paymodeName || row.clientName}</p>
+                  <p className="text-xs text-gray-600">ID: {row.paymodeId ?? row.clientId ?? '—'}</p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => addPaymode(row)}>
+                  Add
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-
-      {isLoading && (
-        <div className="flex items-center gap-2 text-gray-600 text-sm">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading payment modes…
-        </div>
-      )}
-
-      {!isLoading && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-gray-200 p-3">
-            <h3 className="text-sm font-bold text-gray-900 mb-2">Assigned</h3>
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {assigned.length === 0 && <p className="text-xs text-gray-600">No assigned payment modes.</p>}
-              {assigned.map((row) => (
-                <div key={`${row.clientId}-${row.clientCode}-${row.paymodeId}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-2">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{row.clientName || row.paymodeName || row.clientCode}</p>
-                    <p className="text-xs text-gray-600">ID: {row.clientId ?? row.paymodeId ?? '—'}</p>
-                    <p className="text-xs text-gray-500">Enabled: {row.payModeFlag || row.clientId === 1 ? 'Yes' : 'No'}</p>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => togglePaymode(row)}>
-                    {row.payModeFlag || row.clientId === 1 ? 'Disable' : 'Enable'}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-xl border border-gray-200 p-3">
-            <h3 className="text-sm font-bold text-gray-900 mb-2">Not Assigned</h3>
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {available.length === 0 && <p className="text-xs text-gray-600">Nothing to add.</p>}
-              {available.map((row) => (
-                <div key={`${row.paymodeId || row.clientId}-${row.paymodeName || row.clientName}`} className="flex items-center justify-between rounded-lg border border-gray-100 p-2">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{row.paymodeName || row.clientName}</p>
-                    <p className="text-xs text-gray-600">ID: {row.paymodeId ?? row.clientId ?? '—'}</p>
-                  </div>
-                  <Button variant="secondary" size="sm" onClick={() => addPaymode(row)}>
-                    Add
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </Card>
+    </TabContentWrapper>
   );
 };
 
@@ -441,6 +451,7 @@ interface MappingRow {
   param8?: string;
   param9?: string;
   hasSlabs?: boolean | string | number;
+  epName?: string;
 }
 
 const ManageMappingTab: React.FC<{
@@ -452,6 +463,32 @@ const ManageMappingTab: React.FC<{
   const [isSaving, setIsSaving] = useState(false);
   const [editRow, setEditRow] = useState<MappingRow | null>(null);
 
+  const normalizeMapping = (row: any): MappingRow => ({
+    mappingid: Number(row.mappingid ?? row.Id ?? row.id ?? 0),
+    clientId: row.clientId ?? row.clientid,
+    endpointname: row.endpointname ?? row.epName,
+    epusername: row.epusername ?? row.epUsername,
+    eppassword: row.eppassword ?? row.epPass,
+    epmrchntid: row.epmrchntid ?? row.epMrchntId,
+    epUrl: row.epUrl ?? row.epurl ?? '',
+    active: row.active,
+    feeForward: row.feeForward,
+    priority: row.priority ?? row.Priority,
+    paymodeId: row.paymodeId ?? row.payModeId,
+    endpointId: row.endpointId ?? row.endpointid,
+    param1: row.param1,
+    param2: row.param2,
+    param3: row.param3,
+    param4: row.param4,
+    param5: row.param5,
+    param6: row.param6,
+    param7: row.param7,
+    param8: row.param8,
+    param9: row.param9,
+    hasSlabs: row.hasSlabs,
+    epName: row.epName ?? row.endpointname
+  });
+
   useEffect(() => {
     const load = async () => {
       if (!selectedClient) {
@@ -461,7 +498,8 @@ const ManageMappingTab: React.FC<{
       setIsLoading(true);
       try {
         const resp = await RateMappingApiService.getMappingDetail(selectedClient);
-        setMappings(Array.isArray(resp) ? resp : []);
+        const list = Array.isArray(resp) ? resp : [];
+        setMappings(list.map(normalizeMapping));
       } catch (error: any) {
         console.error('Failed to load mappings', error);
         toast.error(error?.message || 'Failed to load mappings');
@@ -519,58 +557,48 @@ const ManageMappingTab: React.FC<{
     }
   };
 
+  const clientOptions = clients.map((client) => ({
+    value: client.code,
+    label: `${client.code} — ${client.name}`
+  }));
+
   return (
-    <Card className="p-4 md:p-6 space-y-4">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center">
-        <div>
-          <Label className="text-xs font-semibold text-gray-700">Client Code</Label>
-          <Combobox
-            options={clients.map((client) => ({ value: client.code, label: `${client.code} — ${client.name}` }))}
-            value={selectedClient}
-            onChange={setSelectedClient}
-            placeholder="Select client"
-            searchPlaceholder="Search client..."
-            emptyMessage="No clients"
-            className="mt-2"
-          />
-        </div>
-        <p className="text-xs text-gray-600">Update endpoint credentials / merchant IDs (Angular Manage Mapping).</p>
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center gap-2 text-gray-600 text-sm">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading mappings…
-        </div>
-      )}
-
-      {!isLoading && mappings.length > 0 && (
+    <TabContentWrapper
+      description="Update endpoint credentials / merchant IDs (Angular Manage Mapping)."
+      clients={clientOptions}
+      selectedClient={selectedClient}
+      onClientChange={setSelectedClient}
+      isLoading={isLoading}
+      loadingText="Loading mappings..."
+    >
+      {mappings.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Mapping ID</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Endpoint</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Username</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Password</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Merchant ID</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Priority</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Fee Fwd</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Active</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-700">Actions</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Mapping ID</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Endpoint</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Username</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Password</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Merchant ID</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Priority</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Fee Fwd</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Active</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {mappings.map((row) => (
                 <tr key={row.mappingid || row.endpointname}>
-                  <td className="px-3 py-2">{row.mappingid ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">{row.endpointname ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">{row.epusername ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">{row.eppassword ? '•••••' : '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">{row.epmrchntid ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">{row.priority ?? '—'}</td>
-                  <td className="px-3 py-2 text-gray-700">{normalizeBool(row.feeForward) ? 'Yes' : 'No'}</td>
-                  <td className="px-3 py-2 text-gray-700">{normalizeBool(row.active) ? 'Yes' : 'No'}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 md:px-4 py-2 md:py-3">{row.mappingid ?? '—'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.endpointname ?? '—'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.epusername ?? '—'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.eppassword ? '•••••' : '—'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.epmrchntid ?? '—'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.priority ?? '—'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{normalizeBool(row.feeForward) ? 'Yes' : 'No'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{normalizeBool(row.active) ? 'Yes' : 'No'}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3">
                     <Button variant="outline" size="sm" onClick={() => setEditRow(row)}>
                       Edit
                     </Button>
@@ -591,25 +619,25 @@ const ManageMappingTab: React.FC<{
           <div className="grid gap-3 md:grid-cols-3">
             <div>
               <Label className="text-xs text-gray-700">EP Username</Label>
-              <Input value={editRow.epusername || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epusername: e.target.value }))} />
+              <Input value={editRow.epusername || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epusername: e.target.value }))} className="min-h-[44px] touch-manipulation" />
             </div>
             <div>
               <Label className="text-xs text-gray-700">EP Password</Label>
-              <Input value={editRow.eppassword || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, eppassword: e.target.value }))} />
+              <Input value={editRow.eppassword || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, eppassword: e.target.value }))} className="min-h-[44px] touch-manipulation" />
             </div>
             <div>
               <Label className="text-xs text-gray-700">Merchant ID</Label>
-              <Input value={editRow.epmrchntid || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epmrchntid: e.target.value }))} />
+              <Input value={editRow.epmrchntid || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epmrchntid: e.target.value }))} className="min-h-[44px] touch-manipulation" />
             </div>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div>
               <Label className="text-xs text-gray-700">Priority</Label>
-              <Input type="number" value={editRow.priority ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, priority: Number(e.target.value) }))} />
+              <Input type="number" value={editRow.priority ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, priority: Number(e.target.value) }))} className="min-h-[44px] touch-manipulation" />
             </div>
             <div>
               <Label className="text-xs text-gray-700">EP URL</Label>
-              <Input value={editRow.epUrl || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epUrl: e.target.value }))} />
+              <Input value={editRow.epUrl || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epUrl: e.target.value }))} className="min-h-[44px] touch-manipulation" />
             </div>
             <div className="flex items-center gap-3 mt-4">
               <label className="flex items-center gap-2 text-xs text-gray-700">
@@ -622,13 +650,13 @@ const ManageMappingTab: React.FC<{
               </label>
             </div>
           </div>
-          <Button onClick={saveMapping} disabled={isSaving}>
+          <Button onClick={saveMapping} disabled={isSaving} className="min-h-[52px] touch-manipulation">
             {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Save mapping
           </Button>
         </div>
       )}
-    </Card>
+    </TabContentWrapper>
   );
 };
 
@@ -671,50 +699,46 @@ const ManageFlagsTab: React.FC<{
     }
   };
 
-  return (
-    <Card className="p-4 md:p-6 space-y-4">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center">
-        <div>
-          <Label className="text-xs font-semibold text-gray-700">Client Code</Label>
-          <Combobox
-            options={clients.map((client) => ({ value: client.code, label: `${client.code} — ${client.name}` }))}
-            value={selectedClient}
-            onChange={setSelectedClient}
-            placeholder="Select client"
-            searchPlaceholder="Search client..."
-            emptyMessage="No clients"
-            className="mt-2"
-          />
-        </div>
-        <p className="text-xs text-gray-600">Client Config flags (UI bypass, roundoff, fee fwd, etc.).</p>
-      </div>
+  const clientOptions = clients.map((client) => ({
+    value: client.code,
+    label: `${client.code} — ${client.name}`
+  }));
 
+  return (
+    <TabContentWrapper
+      description="Client Config flags (UI bypass, roundoff, fee fwd, etc.)."
+      clients={clientOptions}
+      selectedClient={selectedClient}
+      onClientChange={setSelectedClient}
+      isLoading={false}
+    >
       <div className="grid gap-3 md:grid-cols-3">
         <div>
           <Label className="text-xs text-gray-700">Flag Type</Label>
-          <select
-            className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-            value={state.flagType}
-            onChange={(e) => setState((p) => ({ ...p, flagType: e.target.value }))}
-          >
-            <option value="active">Client Status</option>
-            <option value="uibypass">UI By Pass</option>
-            <option value="roundoff">Round Off</option>
-            <option value="feefwd">Fee Fwd</option>
-            <option value="duprestriction">Duplicate Restriction</option>
-            <option value="authtype">Auth Type</option>
-            <option value="riskcategory">Risk Category</option>
-            <option value="apiversion">API Version</option>
-            <option value="mesaagebypass">Email / SMS</option>
-            <option value="forcesuccessflag">Force Success</option>
-            <option value="whitelisted">Whitelist Flag</option>
-          </select>
+          <Select value={state.flagType} onValueChange={(v) => setState((p) => ({ ...p, flagType: v }))}>
+            <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
+              <SelectValue placeholder="Select flag type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Client Status</SelectItem>
+              <SelectItem value="uibypass">UI By Pass</SelectItem>
+              <SelectItem value="roundoff">Round Off</SelectItem>
+              <SelectItem value="feefwd">Fee Fwd</SelectItem>
+              <SelectItem value="duprestriction">Duplicate Restriction</SelectItem>
+              <SelectItem value="authtype">Auth Type</SelectItem>
+              <SelectItem value="riskcategory">Risk Category</SelectItem>
+              <SelectItem value="apiversion">API Version</SelectItem>
+              <SelectItem value="mesaagebypass">Email / SMS</SelectItem>
+              <SelectItem value="forcesuccessflag">Force Success</SelectItem>
+              <SelectItem value="whitelisted">Whitelist Flag</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label className="text-xs text-gray-700">Value</Label>
           {state.flagType === 'riskcategory' ? (
             <Select value={state.value} onValueChange={(v) => setState((p) => ({ ...p, value: v }))}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
                 <SelectValue placeholder="Select risk category" />
               </SelectTrigger>
               <SelectContent>
@@ -734,7 +758,7 @@ const ManageFlagsTab: React.FC<{
             />
           ) : (
             <Select value={state.value} onValueChange={(v) => setState((p) => ({ ...p, value: v }))}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
                 <SelectValue placeholder="Select value" />
               </SelectTrigger>
               <SelectContent>
@@ -750,7 +774,7 @@ const ManageFlagsTab: React.FC<{
         {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         Update Flag
       </Button>
-    </Card>
+    </TabContentWrapper>
   );
 };
 
@@ -815,49 +839,37 @@ const ManageFeeForwardedTab: React.FC<{
     }
   };
 
+  const clientOptions = clients.map((client) => ({
+    value: client.code,
+    label: `${client.code} — ${client.name}`
+  }));
+
   return (
-    <Card className="p-4 md:p-6 space-y-4">
-      <div className="grid gap-3 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)] md:items-center">
-        <div>
-          <Label className="text-xs font-semibold text-gray-700">Client Code</Label>
-          <Combobox
-            options={clients.map((client) => ({ value: client.code, label: `${client.code} — ${client.name}` }))}
-            value={selectedClient}
-            onChange={setSelectedClient}
-            placeholder="Select client"
-            searchPlaceholder="Search client..."
-            emptyMessage="No clients"
-            className="mt-2"
-          />
-        </div>
-        <p className="text-xs text-gray-600">Toggle fee forwarded at paymode level.</p>
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center gap-2 text-gray-600 text-sm">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-        </div>
-      )}
-
-      {!isLoading && (
-        <div className="space-y-2">
-          {rows.length === 0 && <p className="text-xs text-gray-600">No records found.</p>}
-          {rows.map((row) => (
-            <div key={`${row.Id}-${row.clientId}`} className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{row.clientName || row.clientCode}</p>
-                <p className="text-xs text-gray-600">Paymode ID: {row.Id}</p>
-                <p className="text-xs text-gray-500">Fee Forwarded: {(row.clientName || '').toString().toLowerCase() === 'yes' ? 'Yes' : 'No'}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => toggle(row)} disabled={isSaving}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
-                Toggle
-              </Button>
+    <TabContentWrapper
+      description="Toggle fee forwarded at paymode level."
+      clients={clientOptions}
+      selectedClient={selectedClient}
+      onClientChange={setSelectedClient}
+      isLoading={isLoading}
+      loadingText="Loading fee forwarded data..."
+    >
+      <div className="space-y-2">
+        {rows.length === 0 && <p className="text-xs text-gray-600">No records found.</p>}
+        {rows.map((row) => (
+          <div key={`${row.Id}-${row.clientId}`} className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{row.clientName || row.clientCode}</p>
+              <p className="text-xs text-gray-600">Paymode ID: {row.Id}</p>
+              <p className="text-xs text-gray-500">Fee Forwarded: {(row.feeForward || row.clientName || '').toString().toLowerCase() === 'yes' ? 'Yes' : 'No'}</p>
             </div>
-          ))}
-        </div>
-      )}
-    </Card>
+            <Button variant="outline" size="sm" onClick={() => toggle(row)} disabled={isSaving}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
+              Toggle
+            </Button>
+          </div>
+        ))}
+      </div>
+    </TabContentWrapper>
   );
 };
 
