@@ -30,12 +30,21 @@ export default function FeesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
+        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+          Fee Configuration
+        </h1>
+        <p className="mt-2 text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
+          Manage fee structures, tiers, and rate mappings
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Fee Configuration</h1>
-            <p className="text-sm text-gray-400">Manage fee structures, tiers, and rate mappings</p>
+            <h2 className="text-lg font-extrabold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Active Fee Structures</h2>
+            <p className="text-xs text-gray-600 font-light mt-1" style={{ letterSpacing: '-0.01em' }}>Configure payment method fees</p>
           </div>
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-2 px-3 py-2 bg-white/60 border border-gray-300 rounded-lg text-sm text-gray-300 hover:text-gray-900 transition-all">
@@ -53,7 +62,7 @@ export default function FeesPage() {
           {fees.map((fee) => (
             <div
               key={fee.id}
-              className="bg-white/50 backdrop-blur-xl rounded-xl border border-gray-200/50 p-6 hover:bg-white/70 transition-all"
+              className="rounded-2xl border border-gray-200 bg-white shadow-xl p-6 hover:shadow-2xl transition-all"
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4 flex-1">

@@ -227,8 +227,10 @@ const CloneRateMappingPage: React.FC = () => {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Page Header */}
-      <div className="rounded-xl md:rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
-        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>Fast Forward Rate Mapping</h1>
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
+        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+          Fast Forward Rate Mapping
+        </h1>
         <p className="mt-2 text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
           Clone production rate configurations from an existing client to a new client. Matches Angular's Fast Forward
           screen and uses the same <code>/clone/{'{'}source{'}'}/{'{'}target{'}'}/{'{'}user{'}'}</code> API.
@@ -236,7 +238,7 @@ const CloneRateMappingPage: React.FC = () => {
       </div>
 
       {/* Client Selection Section */}
-      <div className="rounded-xl md:rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
         <div className="mb-4 md:mb-6">
           <h2 className="text-lg md:text-xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Client Selection</h2>
           <p className="mt-1 text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
@@ -288,16 +290,14 @@ const CloneRateMappingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 md:mt-6 rounded-xl border border-gray-200 bg-gray-50 px-3 md:px-4 py-3 text-sm text-gray-600">
-          <div className="flex items-start gap-2 md:gap-3">
-            <AlertCircle className="mt-0.5 h-4 w-4 md:h-5 md:w-5 text-amber-500 flex-shrink-0" />
-            <div>
-              <p className="font-extrabold text-xs md:text-sm" style={{ letterSpacing: '-0.01em' }}>Clone rules</p>
-              <p className="text-xs font-light" style={{ letterSpacing: '-0.01em' }}>
-                Target client must not have existing rates. The clone endpoint returns ID=2/3 when the target already has
-                mappings and ID=4 when the client is missing from the downstream SabPaisa2 database.
-              </p>
-            </div>
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 md:p-4 text-sm text-amber-700">
+          <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-extrabold text-xs md:text-sm" style={{ letterSpacing: '-0.01em' }}>Clone rules</p>
+            <p className="text-xs font-light" style={{ letterSpacing: '-0.01em' }}>
+              Target client must not have existing rates. The clone endpoint returns ID=2/3 when the target already has
+              mappings and ID=4 when the client is missing from the downstream SabPaisa2 database.
+            </p>
           </div>
         </div>
 
@@ -321,7 +321,7 @@ const CloneRateMappingPage: React.FC = () => {
       </div>
 
       {/* Fee Preview Section */}
-      <div className="rounded-xl md:rounded-2xl border border-gray-200 bg-white shadow-xl">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-xl">
         <div className="border-b border-gray-200 px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -334,30 +334,26 @@ const CloneRateMappingPage: React.FC = () => {
             {isLoadingPreview && <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin text-gray-600 flex-shrink-0" />}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          {/* Mobile scroll hint */}
-          <div className="md:hidden px-4 py-2 text-xs text-gray-600 bg-gray-50 border-b border-gray-200 font-light" style={{ letterSpacing: '-0.01em' }}>
-            Swipe left to see more columns →
-          </div>
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                   Payment Mode
                 </th>
-                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                   Endpoint
                 </th>
-                <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-700">
                   Slab (₹)
                 </th>
-                <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-700">
                   Conv Charges
                 </th>
-                <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-700">
                   EP Charges
                 </th>
-                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                   GST
                 </th>
               </tr>
@@ -382,26 +378,26 @@ const CloneRateMappingPage: React.FC = () => {
               {!isLoadingPreview &&
                 previewFees.map((fee) => (
                   <tr key={`${fee.id}-${fee.payModeName}-${fee.slabFloor}`} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm text-gray-700 font-medium">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-700 font-medium">
                       {fee.payModeName || '-'}
                     </td>
-                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm text-gray-600">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600">
                       {fee.endpointName || '-'}
                     </td>
-                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-right text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm text-gray-600 whitespace-nowrap">
                       <span className="text-emerald-600 font-medium">₹{fee.slabFloor.toLocaleString()}</span>
                       <span className="text-gray-600 mx-1">–</span>
                       <span className="text-emerald-600 font-medium">₹{fee.slabCeiling.toLocaleString()}</span>
                     </td>
-                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-right text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm text-gray-600 whitespace-nowrap">
                       <span className="font-medium text-gray-700">{fee.convCharges.toFixed(2)}</span>
                       <span className="text-gray-600 text-xs ml-1">({fee.convChargesType || '-'})</span>
                     </td>
-                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-right text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm text-gray-600 whitespace-nowrap">
                       <span className="font-medium text-gray-700">{fee.endpointCharges.toFixed(2)}</span>
                       <span className="text-gray-600 text-xs ml-1">({fee.endpointChargesType || '-'})</span>
                     </td>
-                    <td className="px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600 whitespace-nowrap">
                       <span className="font-medium text-gray-700">{fee.gst.toFixed(2)}</span>
                       <span className="text-gray-600 text-xs ml-1">({fee.gstType || '-'})</span>
                     </td>

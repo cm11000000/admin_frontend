@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Search, Loader2, Pencil, FileText, PlusCircle, Trash2, RefreshCw, Info } from 'lucide-react';
+import { Search, Loader2, Pencil, FileText, PlusCircle, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import RateMappingApiService from '@/services/api/RateMappingApiService';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { VIRT_THRESHOLD } from '@/config/perf';
+import TabContentWrapper from '@/components/rate-mapping/TabContentWrapper';
 
 interface ClientOption {
   code: string;
@@ -183,7 +184,6 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   // Fee Forwarded state
   const [isFFLoading, setIsFFLoading] = useState(false);
   const DEFAULT_GST_PERCENT = Number(process.env.NEXT_PUBLIC_DEFAULT_GST_PERCENT || 18);
-  const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [bulkForm, setBulkForm] = useState({
     slabFloor: 0,
     slabCeiling: 0,
@@ -572,14 +572,12 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
         AddedBy: userName,
       });
       toast.success('Slab added successfully');
-      setBanner({ type: 'success', message: 'Slab added successfully.' });
       setIsAddOpen(false);
       const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
       setFeeRecords(refreshed.map(normalizeFee));
     } catch (error: any) {
       const msg = error?.message || 'Failed to add slab';
       toast.error(msg);
-      setBanner({ type: 'error', message: msg });
     }
   };
 
@@ -598,14 +596,12 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     try {
       await RateMappingApiService.deleteSlab(deleteFee.feeId, userName, deleteRemarks.trim());
       toast.success('Slab deleted successfully');
-      setBanner({ type: 'success', message: 'Slab deleted successfully.' });
       setIsDeleteOpen(false);
       const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
       setFeeRecords(refreshed.map(normalizeFee));
     } catch (error: any) {
       const msg = error?.message || 'Failed to delete slab';
       toast.error(msg);
-      setBanner({ type: 'error', message: msg });
     }
   };
 
@@ -630,13 +626,11 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
         p_updatedBy: userName,
       });
       toast.success('Fee forwarded updated');
-      setBanner({ type: 'success', message: 'Fee forwarded updated.' });
       const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
       setFeeRecords(refreshed.map(normalizeFee));
     } catch (error: any) {
       const msg = error?.message || 'Failed to update fee forwarded';
       toast.error(msg);
-      setBanner({ type: 'error', message: msg });
     } finally {
       setIsFFLoading(false);
     }
@@ -650,84 +644,44 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Filters Section */}
-      <div className="relative z-20 rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-lg">
-        {banner && (
-          <div
-            className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-              banner.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
+    <TabContentWrapper
+      description="Update slabs, charges, and GST flags exactly as the Angular Manage Fee tab. All changes are logged to the production approval trail."
+      clients={clientOptions}
+      selectedClient={selectedClient}
+      onClientChange={setSelectedClient}
+      isLoading={isLoading}
+      loadingText="Loading fee configurations..."
+    >
+      {/* Search and Agreement Section */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="relative flex-1 z-10">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
+          <Input
+            value={tableSearch}
+            onChange={(event) => setTableSearch(event.target.value)}
+            placeholder="Quick search (payment mode, endpoint, bank)"
+            className="pl-9 min-h-[44px] touch-manipulation"
+            disabled={feeRecords.length === 0}
+          />
+        </div>
+        {agreementUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="min-h-[40px] touch-manipulation"
           >
-            <Info className={banner.type === 'success' ? 'text-emerald-600 h-4 w-4' : 'text-red-600 h-4 w-4'} />
-            <span>{banner.message}</span>
-          </div>
+            <a href={agreementUrl} target="_blank" rel="noopener noreferrer">
+              <FileText className="mr-2 h-4 w-4" /> View agreement
+            </a>
+          </Button>
         )}
-        <div className="mb-4">
-          <h2 className="text-lg md:text-xl font-extrabold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Client Selection</h2>
-          <p className="text-xs md:text-sm text-gray-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
-            Choose a client to manage their fee configurations
+        {!agreementUrl && !isAgreementLoading && selectedClient && (
+          <p className="text-xs text-gray-600">
+            No agreement uploaded for this client.
           </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-          <div>
-            <Label className="text-xs font-extrabold text-gray-600" style={{ letterSpacing: '-0.01em' }}>
-              Client Code <span className="text-red-500">*</span>
-            </Label>
-            <Combobox
-              options={clientOptions}
-              value={selectedClient}
-              onChange={setSelectedClient}
-              placeholder={isLoading ? 'Loading clients…' : 'Select a client'}
-              searchPlaceholder="Search client code or name..."
-              emptyMessage="No clients found"
-              disabled={isLoading || clientOptions.length === 0}
-              className="mt-2 min-h-[44px] touch-manipulation"
-            />
-            <p className="mt-2 text-xs text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
-              {selectedClient
-                ? `Managing fees for ${selectedClient}`
-                : 'Choose a client to load rate configurations.'}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 md:p-4 text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
-              Update slabs, charges, and GST flags exactly as the Angular Manage Fee tab. All changes are logged to the
-              production approval trail (`v2/REST/CheckFee/Approved`).
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative flex-1 z-10">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
-                <Input
-                  value={tableSearch}
-                  onChange={(event) => setTableSearch(event.target.value)}
-                  placeholder="Quick search (payment mode, endpoint, bank)"
-                  className="pl-9 min-h-[44px] touch-manipulation"
-                  disabled={feeRecords.length === 0}
-                />
-              </div>
-              {agreementUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="min-h-[52px] touch-manipulation"
-                >
-                  <a href={agreementUrl} target="_blank" rel="noopener noreferrer">
-                    <FileText className="mr-2 h-4 w-4" /> View agreement
-                  </a>
-                </Button>
-              )}
-              {!agreementUrl && !isAgreementLoading && selectedClient && (
-                <p className="text-xs text-gray-600">
-                  No agreement uploaded for this client.
-                </p>
-              )}
-              {isAgreementLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-600" />}
-            </div>
-          </div>
-        </div>
+        )}
+        {isAgreementLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-600" />}
       </div>
 
       {/* Fee Configurations Table */}
@@ -740,7 +694,6 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                 {filteredFees.length} slab{filteredFees.length === 1 ? '' : 's'} loaded
               </p>
             </div>
-            {isLoading && <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin text-gray-600" />}
           </div>
           <p className="text-xs text-gray-600 mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
             Edit requires remarks and logs an audit trail. Scroll horizontally to view all columns.
@@ -772,7 +725,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                     <input
                       ref={selectAllRef}
                       type="checkbox"
@@ -782,31 +735,31 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                       aria-label="Select all fees"
                     />
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                     Payment Mode
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                     Endpoint
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-700">
                     Slab (₹)
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-700">
                     Conv Charges
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-700">
                     EP Charges
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                     GST Type
                   </th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
-                {!isLoading && filteredFees.length === 0 && (
+                {filteredFees.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
                       {selectedClient
@@ -816,15 +769,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                   </tr>
                 )}
 
-                {isLoading && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-600" />
-                    </td>
-                  </tr>
-                )}
-
-                {!isLoading && virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
+                {virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
                   (() => {
                     const total = filteredFees.length;
                     const rh = virtRowHeight || 56;
@@ -939,7 +884,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                 );
               })()
             ) : (
-              !isLoading && filteredFees.map((fee) => (
+              filteredFees.map((fee) => (
                 <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
                   <td className="px-3 md:px-4 py-2 md:py-3">
                     <input
@@ -1189,7 +1134,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                       onCheckedChange={(checked) =>
                         setFormData((prev) => ({ ...prev, convchargesApp: checked }))
                       }
-                      className="touch-manipulation"
+                      className="min-h-[40px] touch-manipulation"
                     />
                   </div>
                   <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 md:px-4 md:py-3">
@@ -1202,7 +1147,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                       onCheckedChange={(checked) =>
                         setFormData((prev) => ({ ...prev, epchargesApp: checked }))
                       }
-                      className="touch-manipulation"
+                      className="min-h-[40px] touch-manipulation"
                     />
                   </div>
                 </div>
@@ -1421,14 +1366,14 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             <Button
               variant="ghost"
               onClick={() => setIsBulkOpen(false)}
-              className="w-full sm:w-auto min-h-[48px] touch-manipulation"
+              className="w-full sm:w-auto min-h-[52px] touch-manipulation"
             >
               Cancel
             </Button>
             <Button
               onClick={handleBulkUpdate}
               disabled={!isAdmin || isBulkSaving}
-              className="w-full sm:w-auto min-h-[48px] touch-manipulation"
+              className="w-full sm:w-auto min-h-[52px] touch-manipulation"
             >
               {isBulkSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Update selected →
@@ -1464,7 +1409,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
               <div>
                 <Label className="text-xs md:text-sm">Conv type</Label>
                 <Select value={addForm.convchargesType} onValueChange={(v) => setAddForm((p) => ({ ...p, convchargesType: v as any }))}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Percentage</SelectItem>
                     <SelectItem value="fixed">Fixed</SelectItem>
@@ -1480,7 +1425,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
               <div>
                 <Label className="text-xs md:text-sm">EP type</Label>
                 <Select value={addForm.endPointchargesTypes} onValueChange={(v) => setAddForm((p) => ({ ...p, endPointchargesTypes: v as any }))}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Percentage</SelectItem>
                     <SelectItem value="fixed">Fixed</SelectItem>
@@ -1491,7 +1436,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             <div>
               <Label className="text-xs md:text-sm">GST Type</Label>
               <Select value={addForm.gstType} onValueChange={(v) => setAddForm((p) => ({ ...p, gstType: v as any }))}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="percentage">Percentage ({DEFAULT_GST_PERCENT}%)</SelectItem>
                   <SelectItem value="fixed">Fixed (₹0)</SelectItem>
@@ -1500,8 +1445,8 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-            <Button onClick={submitAddSlab} disabled={!isAdmin} className="w-full sm:w-auto">Add slab →</Button>
+            <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="w-full sm:w-auto min-h-[52px] touch-manipulation">Cancel</Button>
+            <Button onClick={submitAddSlab} disabled={!isAdmin} className="w-full sm:w-auto min-h-[52px] touch-manipulation">Add slab →</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1517,15 +1462,15 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
           <div className="space-y-3">
             <p className="text-sm text-gray-700">Provide remarks for audit trail.</p>
             <Label className="text-xs md:text-sm">Remarks</Label>
-            <Input value={deleteRemarks} onChange={(e) => setDeleteRemarks(e.target.value)} placeholder="Reason for deletion" />
+            <Input value={deleteRemarks} onChange={(e) => setDeleteRemarks(e.target.value)} placeholder="Reason for deletion" className="min-h-[44px] touch-manipulation" />
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
-            <Button variant="ghost" onClick={() => setIsDeleteOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-            <Button variant="destructive" onClick={submitDeleteSlab} disabled={!isAdmin} className="w-full sm:w-auto">Delete →</Button>
+            <Button variant="ghost" onClick={() => setIsDeleteOpen(false)} className="w-full sm:w-auto min-h-[52px] touch-manipulation">Cancel</Button>
+            <Button variant="destructive" onClick={submitDeleteSlab} disabled={!isAdmin} className="w-full sm:w-auto min-h-[52px] touch-manipulation">Delete →</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </TabContentWrapper>
   );
 };
 

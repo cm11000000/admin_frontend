@@ -356,7 +356,7 @@ export default function AddRateForNewPayModePage(): JSX.Element {
               emptyMessage="Client master unavailable."
               searchPlaceholder="Search client code or name..."
               disabled={isLoadingClients || clients.length === 0}
-              className="mt-2"
+              className="min-h-[44px] touch-manipulation"
             />
           </div>
 
@@ -382,7 +382,7 @@ export default function AddRateForNewPayModePage(): JSX.Element {
                 }
                 searchPlaceholder="Search payment mode..."
                 disabled={!selectedClient || isLoadingPaymodes || paymodes.length === 0}
-                className="mt-2"
+                className="min-h-[44px] touch-manipulation"
               />
             </div>
 
@@ -407,7 +407,7 @@ export default function AddRateForNewPayModePage(): JSX.Element {
                 }
                 searchPlaceholder="Search endpoint..."
                 disabled={!selectedPaymode || isLoadingEndpoints || endpoints.length === 0}
-                className="mt-2"
+                className="min-h-[44px] touch-manipulation"
               />
             </div>
           </div>
@@ -506,7 +506,7 @@ export default function AddRateForNewPayModePage(): JSX.Element {
           <Switch
             checked={form.gstApplied}
             onCheckedChange={(checked) => setForm((prev) => ({ ...prev, gstApplied: checked }))}
-            className="touch-manipulation"
+            className="min-h-[40px] touch-manipulation"
           />
         </div>
 

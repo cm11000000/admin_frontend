@@ -19,6 +19,7 @@ import RateMappingApiService from '@/services/api/RateMappingApiService';
 import ReportApiService from '@/services/api/ReportApiService';
 import { resolveUserName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Combobox } from '@/components/ui/combobox';
 
 type RawClient = Record<string, unknown>;
@@ -310,15 +311,17 @@ export default function ViewRateMappingPage(): JSX.Element {
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Section Header */}
-      <div className="pb-3 md:pb-4 border-b border-gray-200">
-        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>View Rate Mapping</h1>
-        <p className="text-gray-600 text-sm mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-6 shadow-xl">
+        <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+          View Rate Mapping
+        </h1>
+        <p className="mt-2 text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
           Review production fee slabs per client exactly as the Angular View Configuration module.
         </p>
       </div>
 
       {/* Filters Section */}
-      <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-4 md:p-6 shadow-2xl space-y-4 relative z-20">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 md:p-6 shadow-xl space-y-4 relative z-20">
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-extrabold text-gray-700 mb-1.5" style={{ letterSpacing: '-0.01em' }}>
@@ -350,8 +353,8 @@ export default function ViewRateMappingPage(): JSX.Element {
             </p>
           </div>
 
-          <div className="flex items-start gap-3 bg-gray-50 border border-gray-300 rounded-xl p-3 md:p-4">
-            <Info className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 rounded-xl border border-gray-300 bg-gray-50 p-3 md:p-4 text-sm">
+            <Info className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-gray-700 font-extrabold" style={{ letterSpacing: '-0.01em' }}>
                 Rate Mapping is read-only
@@ -364,14 +367,13 @@ export default function ViewRateMappingPage(): JSX.Element {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Filter table (payment mode, EP, GST...)"
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-600" />
+              <Input
                 value={tableSearchTerm}
-                onChange={(event) => setTableSearchTerm(event.target.value)}
+                onChange={(e) => setTableSearchTerm(e.target.value)}
+                placeholder="Filter table (payment mode, EP, GST...)"
+                className="pl-9 min-h-[44px] touch-manipulation"
                 disabled={!fees.length}
-                className="w-full pl-9 pr-3 py-2.5 md:py-2 bg-gray-50 border-2 border-gray-300 rounded-xl text-gray-900 text-sm placeholder-gray-500 focus:border-orange-400 focus:ring-2 focus:ring-orange-500/40 transition-all disabled:opacity-60 min-h-[44px] touch-manipulation"
               />
             </div>
             <Button
@@ -388,20 +390,20 @@ export default function ViewRateMappingPage(): JSX.Element {
         </div>
 
         {selectedClient && feeForwardNote && (
-          <div className="bg-orange-50 border border-orange-300 rounded-xl p-3 md:p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 md:p-4 text-sm text-amber-700">
+            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-orange-700 font-extrabold" style={{ letterSpacing: '-0.01em' }}>
+              <p className="text-sm text-amber-700 font-extrabold" style={{ letterSpacing: '-0.01em' }}>
                 Fee Forwarding Note for {selectedClient}
               </p>
-              <p className="text-xs text-orange-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>{feeForwardNote}</p>
+              <p className="text-xs text-amber-600 mt-1 font-light" style={{ letterSpacing: '-0.01em' }}>{feeForwardNote}</p>
             </div>
           </div>
         )}
       </div>
 
       {/* Rate Configurations Table Section */}
-      <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl">
         <div className="border-b border-gray-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-extrabold text-gray-900" style={{ letterSpacing: '-0.01em' }}>
@@ -450,15 +452,14 @@ export default function ViewRateMappingPage(): JSX.Element {
                 </p>
               </div>
 
-              <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
-                <table className="min-w-full border border-gray-200 rounded-xl overflow-hidden">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
                       {TABLE_COLUMNS.map(({ key, label, align }) => (
                         <th
                           key={key as string}
-                          className={`px-3 md:px-4 py-2.5 md:py-3 text-xs font-extrabold text-gray-700 uppercase tracking-wide ${align === 'right' ? 'text-right' : 'text-left'}`}
-                          style={{ letterSpacing: '-0.01em' }}
+                          className={`px-3 md:px-4 py-2 md:py-3 text-xs font-semibold uppercase tracking-wide text-gray-700 ${align === 'right' ? 'text-right' : 'text-left'}`}
                         >
                           {label}
                         </th>
@@ -491,7 +492,7 @@ export default function ViewRateMappingPage(): JSX.Element {
                             return (
                               <td
                                 key={`${String(key)}-${index}`}
-                                className={`px-3 md:px-4 py-2.5 md:py-3 text-sm ${colorClass} ${align === 'right' ? 'text-right font-medium' : 'text-left'}`}
+                                className={`px-3 md:px-4 py-2 md:py-3 text-sm ${colorClass} ${align === 'right' ? 'text-right font-medium' : 'text-left'}`}
                               >
                                 {formatCell(value, align)}
                               </td>
