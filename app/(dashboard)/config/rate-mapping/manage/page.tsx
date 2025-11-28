@@ -854,10 +854,12 @@ const ManageFlagsTab: React.FC<{
         </div>
       </div>
 
-      <Button onClick={submit} disabled={isSaving || !selectedClient}>
+      <div className="flex gap-3 pt-2">
+        <Button onClick={submit} disabled={isSaving || !selectedClient} className="min-h-[44px]">
         {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         Update Flag
-      </Button>
+        </Button>
+      </div>
     </TabContentWrapper>
   );
 };
