@@ -2,6 +2,7 @@
  * Refund API Service for sabpaisa_admin_v5
  * Comprehensive refund management with approval workflow
  */
+import { reportAPI } from '@/lib/api-client';
 import { BaseApiService } from './base/BaseApiService';
 
 export type RefundStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'completed' | 'failed';
@@ -378,14 +379,15 @@ export class RefundApiService extends BaseApiService {
     clientId?: string;
     range?: '7d' | '30d' | '90d' | 'custom';
   } = {}): Promise<RefundAnalytics> {
-    const params: Record<string, any> = {};
-    if (filter.dateFrom) params.date_from = filter.dateFrom;
-    if (filter.dateTo) params.date_to = filter.dateTo;
-    if (filter.clientId) params.client_id = filter.clientId;
-    if (filter.range) params.range = filter.range;
+    const body: Record<string, any> = {};
+    if (filter.dateFrom) body.fromDate = filter.dateFrom;
+    if (filter.dateTo) body.endDate = filter.dateTo;
+    if (filter.clientId) body.clientCode = filter.clientId;
+    if (filter.range) body.range = filter.range;
 
-    const queryString = this.buildQueryString(params);
-    return this.get<RefundAnalytics>(`/analytics/?${queryString}`);
+    const resp = await reportAPI.post('/analytics/refund_sla/', body);
+    if (!resp?.data) throw new Error('Failed to fetch refund analytics');
+    return resp.data as RefundAnalytics;
   }
 
   /**
