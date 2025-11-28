@@ -1058,27 +1058,27 @@ export default function ManageRateMappingPage(): JSX.Element {
           <TabsTrigger value="feefwd">Fee Forwarded</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="client">
+        <TabsContent value="client" forceMount>
           <ManageClientTab clients={clients} userName={userName} />
         </TabsContent>
 
-        <TabsContent value="paymode">
+        <TabsContent value="paymode" forceMount>
           <ManagePaymentModeTab clients={clients} userName={userName} />
         </TabsContent>
 
-        <TabsContent value="mapping">
+        <TabsContent value="mapping" forceMount>
           <ManageMappingTab clients={clients} />
         </TabsContent>
 
-        <TabsContent value="fee">
+        <TabsContent value="fee" forceMount>
           <ManageFeeTab clients={clients} userName={userName} isAdmin={isAdmin} />
         </TabsContent>
 
-        <TabsContent value="flags">
+        <TabsContent value="flags" forceMount>
           <ManageFlagsTab clients={clients} userName={userName} />
         </TabsContent>
 
-        <TabsContent value="feefwd">
+        <TabsContent value="feefwd" forceMount>
           <ManageFeeForwardedTab clients={clients} userName={userName} />
         </TabsContent>
       </Tabs>
