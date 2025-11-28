@@ -336,7 +336,7 @@ class RateMappingApiService {
     epusername: string
     eppassword: string
   }): Promise<any> {
-    const response = await fetch(`${STAGING_URL}v2/REST/UpdateMapping/`, {
+    const response = await fetch(`${STAGING_URL}api/v2/REST/UpdateMapping/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -353,7 +353,7 @@ class RateMappingApiService {
    * Matches: updateMappingByID(inputData, Ids)
    */
   static async updateMappingByID(ids: string, data: any): Promise<any> {
-    const response = await fetch(`${STAGING_URL}REST/client/updateMapping/${ids}/`, {
+    const response = await fetch(`${STAGING_URL}api/REST/client/updateMapping/${ids}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

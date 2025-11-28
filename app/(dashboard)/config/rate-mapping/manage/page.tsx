@@ -51,8 +51,18 @@ interface ManageClientState {
   clientName: string;
   clientContact: string;
   clientEmail: string;
+  clientUsername: string;
+  clientPass: string;
   successReturnURL: string;
   failureReturnURL: string;
+  pushApiUrl: string;
+  authKey: string;
+  clientIV: string;
+  authFlag: boolean;
+  authType: string;
+  pushApiFlag: boolean;
+  enquiryFlag: boolean;
+  refundApplicable: boolean;
   uiByPass: boolean;
   roundOff: boolean;
   active: boolean;
@@ -66,14 +76,17 @@ const ManageClientTab: React.FC<{
   const [clientState, setClientState] = useState<ManageClientState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!selectedClient) {
         setClientState(null);
+        setClientError(null);
         return;
       }
       setIsLoading(true);
+      setClientError(null);
       try {
         const idResp = await RateMappingApiService.getClientId(selectedClient);
         const first = Array.isArray(idResp) && idResp.length > 0 ? idResp[0] : null;
@@ -85,8 +98,18 @@ const ManageClientTab: React.FC<{
           clientName: normalizeField(details.clientName || details.client_name),
           clientContact: normalizeField(details.clientContact || details.client_contact),
           clientEmail: normalizeField(details.clientEmail || details.client_email),
+          clientUsername: normalizeField(details.clientUsername || details.client_username),
+          clientPass: normalizeField(details.clientPass || details.client_pass),
           successReturnURL: normalizeField(details.successReturnURL || details.success_return_url),
           failureReturnURL: normalizeField(details.failureReturnURL || details.failure_return_url),
+          pushApiUrl: normalizeField(details.pushApiUrl || details.push_api_url),
+          authKey: normalizeField(details.authKey || details.auth_key),
+          clientIV: normalizeField(details.clientIV || details.client_iv),
+          authFlag: normalizeBool(details.authFlag || details.auth_flag),
+          authType: normalizeField(details.authType || details.auth_type),
+          pushApiFlag: normalizeBool(details.pushApiFlag || details.push_api_flag),
+          enquiryFlag: normalizeBool(details.enquiryFlag || details.enquiry_flag),
+          refundApplicable: normalizeBool(details.refundApplicable || details.refund_applicable),
           uiByPass: normalizeBool(details.uiByPass || details.ui_bypass),
           roundOff: normalizeBool(details.roundOff || details.round_off),
           active: normalizeBool(details.active)
@@ -95,6 +118,7 @@ const ManageClientTab: React.FC<{
         console.error('Failed to load client details', error);
         toast.error(error?.message || 'Failed to load client details');
         setClientState(null);
+        setClientError(error?.message || 'Client details not available (API error).');
       } finally {
         setIsLoading(false);
       }
@@ -110,8 +134,18 @@ const ManageClientTab: React.FC<{
         clientName: clientState.clientName,
         clientContact: clientState.clientContact,
         clientEmail: clientState.clientEmail,
+        clientUsername: clientState.clientUsername,
+        clientPass: clientState.clientPass,
         successReturnURL: clientState.successReturnURL,
         failureReturnURL: clientState.failureReturnURL,
+        pushApiUrl: clientState.pushApiUrl,
+        authKey: clientState.authKey,
+        clientIV: clientState.clientIV,
+        authFlag: clientState.authFlag,
+        authType: clientState.authType,
+        pushApiFlag: clientState.pushApiFlag,
+        enquiryFlag: clientState.enquiryFlag,
+        refundApplicable: clientState.refundApplicable,
         uiByPass: clientState.uiByPass,
         roundOff: clientState.roundOff,
         active: clientState.active,
@@ -159,12 +193,30 @@ const ManageClientTab: React.FC<{
             <Input value={clientState.clientContact} onChange={(e) => setClientState((p) => p && ({ ...p, clientContact: e.target.value }))} />
             <Label className="text-xs text-gray-700">Email</Label>
             <Input value={clientState.clientEmail} onChange={(e) => setClientState((p) => p && ({ ...p, clientEmail: e.target.value }))} />
+            <Label className="text-xs text-gray-700">Username</Label>
+            <Input value={clientState.clientUsername} onChange={(e) => setClientState((p) => p && ({ ...p, clientUsername: e.target.value }))} />
+            <Label className="text-xs text-gray-700">Password</Label>
+            <Input value={clientState.clientPass} onChange={(e) => setClientState((p) => p && ({ ...p, clientPass: e.target.value }))} />
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-gray-700">Success URL</Label>
             <Textarea value={clientState.successReturnURL} onChange={(e) => setClientState((p) => p && ({ ...p, successReturnURL: e.target.value }))} />
             <Label className="text-xs text-gray-700">Failure URL</Label>
             <Textarea value={clientState.failureReturnURL} onChange={(e) => setClientState((p) => p && ({ ...p, failureReturnURL: e.target.value }))} />
+            <Label className="text-xs text-gray-700">Push API URL</Label>
+            <Textarea value={clientState.pushApiUrl} onChange={(e) => setClientState((p) => p && ({ ...p, pushApiUrl: e.target.value }))} />
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-gray-700">Auth Key</Label>
+                <Input value={clientState.authKey} onChange={(e) => setClientState((p) => p && ({ ...p, authKey: e.target.value }))} />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-700">Client IV</Label>
+                <Input value={clientState.clientIV} onChange={(e) => setClientState((p) => p && ({ ...p, clientIV: e.target.value }))} />
+              </div>
+            </div>
+            <Label className="text-xs text-gray-700">Auth Type</Label>
+            <Input value={clientState.authType} onChange={(e) => setClientState((p) => p && ({ ...p, authType: e.target.value }))} />
             <div className="flex gap-3 mt-2">
               <label className="flex items-center gap-2 text-xs text-gray-700">
                 <input type="checkbox" checked={clientState.uiByPass} onChange={(e) => setClientState((p) => p && ({ ...p, uiByPass: e.target.checked }))} />
@@ -178,6 +230,22 @@ const ManageClientTab: React.FC<{
                 <input type="checkbox" checked={clientState.active} onChange={(e) => setClientState((p) => p && ({ ...p, active: e.target.checked }))} />
                 Active
               </label>
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={clientState.authFlag} onChange={(e) => setClientState((p) => p && ({ ...p, authFlag: e.target.checked }))} />
+                Auth Flag
+              </label>
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={clientState.pushApiFlag} onChange={(e) => setClientState((p) => p && ({ ...p, pushApiFlag: e.target.checked }))} />
+                Push API
+              </label>
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={clientState.enquiryFlag} onChange={(e) => setClientState((p) => p && ({ ...p, enquiryFlag: e.target.checked }))} />
+                Enquiry
+              </label>
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={clientState.refundApplicable} onChange={(e) => setClientState((p) => p && ({ ...p, refundApplicable: e.target.checked }))} />
+                Refund Applicable
+              </label>
             </div>
           </div>
         </div>
@@ -189,6 +257,7 @@ const ManageClientTab: React.FC<{
           {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Update Client
         </Button>
       </div>
+      {clientError && <p className="text-xs text-red-600">Client details unavailable: {clientError}</p>}
     </Card>
   );
 };
@@ -210,16 +279,21 @@ const ManagePaymentModeTab: React.FC<{
   const [assigned, setAssigned] = useState<PaymentModeRow[]>([]);
   const [available, setAvailable] = useState<PaymentModeRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [clientId, setClientId] = useState<string>('');
 
   useEffect(() => {
     const load = async () => {
       if (!selectedClient) {
         setAssigned([]);
         setAvailable([]);
+        setClientId('');
         return;
       }
       setIsLoading(true);
       try {
+        const idResp = await RateMappingApiService.getClientId(selectedClient);
+        const first = Array.isArray(idResp) && idResp.length > 0 ? idResp[0] : null;
+        setClientId(String(first?.clientId ?? first?.clientid ?? ''));
         const [assignedResp, addableResp] = await Promise.all([
           RateMappingApiService.getAssignedPaymentMode(selectedClient),
           RateMappingApiService.getPaymodeForAddNewRate(selectedClient),
@@ -240,8 +314,9 @@ const ManagePaymentModeTab: React.FC<{
 
   const togglePaymode = async (row: PaymentModeRow) => {
     try {
-      const id = String(row.clientId ?? row.clientCode ?? '');
-      if (!id) throw new Error('Missing payment mode identifier');
+      const paymodeId = String(row.clientCode ?? row.paymodeId ?? row.Id ?? '');
+      if (!clientId || !paymodeId) throw new Error('Missing payment mode identifier');
+      const id = `${clientId}/${paymodeId}`;
       const nextFlag = !(row.payModeFlag ?? row.clientId === 1);
       await RateMappingApiService.updateClientPaymode(id, { payModeFlag: nextFlag });
       toast.success('Payment mode updated');
@@ -259,7 +334,7 @@ const ManagePaymentModeTab: React.FC<{
   const addPaymode = async (row: PaymentModeRow) => {
     try {
       const paymodeId = String(row.paymodeId ?? row.clientId ?? '');
-      if (!paymodeId) throw new Error('Missing paymode id');
+      if (!paymodeId || !clientId) throw new Error('Missing paymode id');
       await RateMappingApiService.addNewPaymentMode(selectedClient, paymodeId, userName);
       toast.success('Payment mode added');
       // Refresh lists
@@ -310,6 +385,7 @@ const ManagePaymentModeTab: React.FC<{
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{row.clientName || row.paymodeName || row.clientCode}</p>
                     <p className="text-xs text-gray-600">ID: {row.clientId ?? row.paymodeId ?? '—'}</p>
+                    <p className="text-xs text-gray-500">Enabled: {row.payModeFlag || row.clientId === 1 ? 'Yes' : 'No'}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => togglePaymode(row)}>
                     {row.payModeFlag || row.clientId === 1 ? 'Disable' : 'Enable'}
@@ -343,12 +419,27 @@ const ManagePaymentModeTab: React.FC<{
 
 interface MappingRow {
   mappingid?: number;
+  clientId?: string | number;
   endpointname?: string;
   epusername?: string;
   eppassword?: string;
   epmrchntid?: string;
   epUrl?: string;
   active?: string | number | boolean;
+  feeForward?: boolean | string | number;
+  priority?: number | string;
+  paymodeId?: number | string;
+  endpointId?: number | string;
+  param1?: string;
+  param2?: string;
+  param3?: string;
+  param4?: string;
+  param5?: string;
+  param6?: string;
+  param7?: string;
+  param8?: string;
+  param9?: string;
+  hasSlabs?: boolean | string | number;
 }
 
 const ManageMappingTab: React.FC<{
@@ -383,16 +474,39 @@ const ManageMappingTab: React.FC<{
 
   const saveMapping = async () => {
     if (!editRow?.mappingid) return;
+    const clientId = String(editRow.clientId || '');
+    if (!clientId) {
+      toast.error('Missing client id for mapping update');
+      return;
+    }
+    const ids = `${clientId}/${editRow.mappingid}`;
     setIsSaving(true);
     try {
-      await RateMappingApiService.updateMappingDetail({
-        mappingid: editRow.mappingid,
-        epmrchntid: editRow.epmrchntid || '',
-        epusername: editRow.epusername || '',
-        eppassword: editRow.eppassword || '',
-      });
+      const payload = {
+        mappingId: editRow.mappingid,
+        priority: Number(editRow.priority || 0),
+        epUsername: editRow.epusername || '',
+        epPass: editRow.eppassword || '',
+        epMrchntId: editRow.epmrchntid || '',
+        feeForward: normalizeBool(editRow.feeForward),
+        epUrl: editRow.epUrl || '',
+        clientId: clientId,
+        paymodeId: Number(editRow.paymodeId || 0),
+        endpointId: Number(editRow.endpointId || 0),
+        param1: editRow.param1 || '',
+        param2: editRow.param2 || '',
+        param3: editRow.param3 || '',
+        param4: editRow.param4 || '',
+        param5: editRow.param5 || '',
+        param6: editRow.param6 || '',
+        param7: editRow.param7 || '',
+        param8: editRow.param8 || '',
+        param9: editRow.param9 || '',
+        hasSlabs: normalizeBool(editRow.hasSlabs),
+        active: normalizeBool(editRow.active) ? '1' : '0'
+      };
+      await RateMappingApiService.updateMappingByID(ids, payload);
       toast.success('Mapping updated');
-      // Refresh
       const resp = await RateMappingApiService.getMappingDetail(selectedClient);
       setMappings(Array.isArray(resp) ? resp : []);
       setEditRow(null);
@@ -438,6 +552,9 @@ const ManageMappingTab: React.FC<{
                 <th className="px-3 py-2 text-left font-semibold text-gray-700">Username</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-700">Password</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-700">Merchant ID</th>
+                <th className="px-3 py-2 text-left font-semibold text-gray-700">Priority</th>
+                <th className="px-3 py-2 text-left font-semibold text-gray-700">Fee Fwd</th>
+                <th className="px-3 py-2 text-left font-semibold text-gray-700">Active</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-700">Actions</th>
               </tr>
             </thead>
@@ -449,6 +566,9 @@ const ManageMappingTab: React.FC<{
                   <td className="px-3 py-2 text-gray-700">{row.epusername ?? '—'}</td>
                   <td className="px-3 py-2 text-gray-700">{row.eppassword ? '•••••' : '—'}</td>
                   <td className="px-3 py-2 text-gray-700">{row.epmrchntid ?? '—'}</td>
+                  <td className="px-3 py-2 text-gray-700">{row.priority ?? '—'}</td>
+                  <td className="px-3 py-2 text-gray-700">{normalizeBool(row.feeForward) ? 'Yes' : 'No'}</td>
+                  <td className="px-3 py-2 text-gray-700">{normalizeBool(row.active) ? 'Yes' : 'No'}</td>
                   <td className="px-3 py-2">
                     <Button variant="outline" size="sm" onClick={() => setEditRow(row)}>
                       Edit
@@ -479,6 +599,26 @@ const ManageMappingTab: React.FC<{
             <div>
               <Label className="text-xs text-gray-700">Merchant ID</Label>
               <Input value={editRow.epmrchntid || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epmrchntid: e.target.value }))} />
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div>
+              <Label className="text-xs text-gray-700">Priority</Label>
+              <Input type="number" value={editRow.priority ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, priority: Number(e.target.value) }))} />
+            </div>
+            <div>
+              <Label className="text-xs text-gray-700">EP URL</Label>
+              <Input value={editRow.epUrl || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epUrl: e.target.value }))} />
+            </div>
+            <div className="flex items-center gap-3 mt-4">
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={normalizeBool(editRow.feeForward)} onChange={(e) => setEditRow((p) => p && ({ ...p, feeForward: e.target.checked }))} />
+                Fee Forward
+              </label>
+              <label className="flex items-center gap-2 text-xs text-gray-700">
+                <input type="checkbox" checked={normalizeBool(editRow.active)} onChange={(e) => setEditRow((p) => p && ({ ...p, active: e.target.checked }))} />
+                Active
+              </label>
             </div>
           </div>
           <Button onClick={saveMapping} disabled={isSaving}>
@@ -571,12 +711,37 @@ const ManageFlagsTab: React.FC<{
         </div>
         <div>
           <Label className="text-xs text-gray-700">Value</Label>
-          <Input
-            className="mt-1"
-            value={state.value}
-            onChange={(e) => setState((p) => ({ ...p, value: e.target.value }))}
-            placeholder="1 / 0 or custom text"
-          />
+          {state.flagType === 'riskcategory' ? (
+            <Select value={state.value} onValueChange={(v) => setState((p) => ({ ...p, value: v }))}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select risk category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Good</SelectItem>
+                <SelectItem value="2">Normal</SelectItem>
+                <SelectItem value="3">Low</SelectItem>
+                <SelectItem value="4">Medium</SelectItem>
+                <SelectItem value="5">High</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : state.flagType === 'authtype' ? (
+            <Input
+              className="mt-1"
+              value={state.value}
+              onChange={(e) => setState((p) => ({ ...p, value: e.target.value }))}
+              placeholder="Enter auth type"
+            />
+          ) : (
+            <Select value={state.value} onValueChange={(v) => setState((p) => ({ ...p, value: v }))}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select value" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Yes</SelectItem>
+                <SelectItem value="0">No</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
@@ -593,6 +758,7 @@ interface FeeFwdRow {
   clientId?: number;
   clientCode?: string;
   clientName?: string;
+  feeForward?: string;
 }
 
 const ManageFeeForwardedTab: React.FC<{
@@ -680,6 +846,7 @@ const ManageFeeForwardedTab: React.FC<{
               <div>
                 <p className="text-sm font-semibold text-gray-900">{row.clientName || row.clientCode}</p>
                 <p className="text-xs text-gray-600">Paymode ID: {row.Id}</p>
+                <p className="text-xs text-gray-500">Fee Forwarded: {(row.clientName || '').toString().toLowerCase() === 'yes' ? 'Yes' : 'No'}</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => toggle(row)} disabled={isSaving}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
