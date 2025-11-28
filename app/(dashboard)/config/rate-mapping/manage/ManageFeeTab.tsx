@@ -227,6 +227,8 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   const selectAllRef = useRef<HTMLInputElement | null>(null);
   const lastLoadedClientRef = useRef<string>('');
   const loadSeqRef = useRef(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   useEffect(() => {
     if (!virtualizationEnabled) return;
@@ -252,6 +254,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     if (!selectedClient) {
       setFeeRecords([]);
       setAgreementUrl(null);
+      setPage(1);
       return;
     }
 
@@ -306,6 +309,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   useEffect(() => {
     // Clear selections when client changes
     setSelectedFeeIds(new Set());
+    setPage(1);
   }, [selectedClient]);
 
   useEffect(() => {
@@ -315,6 +319,17 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
       selectAllRef.current.indeterminate = selected > 0 && selected < total;
     }
   }, [filteredFees, selectedFeeIds]);
+
+  useEffect(() => {
+    // Reset to first page when filter results change
+    setPage(1);
+  }, [filteredFees.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredFees.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = Math.min(filteredFees.length, pageStart + pageSize);
+  const paginatedFees = filteredFees.slice(pageStart, pageEnd);
 
   const openEditModal = async (fee: FeeRecord) => {
     setActiveFee(fee);
@@ -717,6 +732,24 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                 {selectedFeeIds.size} fee{selectedFeeIds.size === 1 ? '' : 's'} selected
               </p>
             )}
+            <div className="flex items-center gap-2 text-xs text-gray-600 ml-auto">
+              <span className="font-medium">Rows:</span>
+              <select
+                className="border border-gray-300 rounded px-2 py-1 text-xs"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+              <span className="ml-3">
+                Showing {filteredFees.length === 0 ? 0 : pageStart + 1}–{pageEnd} of {filteredFees.length}
+              </span>
+            </div>
           </div>
         </div>
         <div
@@ -775,13 +808,13 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
 
                 {virtualizationEnabled && virtRowHeight > 0 && virtViewportHeight > 0 ? (
                   (() => {
-                    const total = filteredFees.length;
+                    const total = paginatedFees.length;
                     const rh = virtRowHeight || 56;
                     const overscan = 10;
                     const startIndex = Math.max(0, Math.floor(virtScrollTop / rh) - overscan);
                     const visibleCount = Math.ceil(virtViewportHeight / rh) + overscan * 2;
                     const endIndex = Math.min(total, startIndex + visibleCount);
-                    const slice = filteredFees.slice(startIndex, endIndex);
+                    const slice = paginatedFees.slice(startIndex, endIndex);
                     const topPad = startIndex * rh;
                     const bottomPad = Math.max(0, (total - endIndex) * rh);
                     return (
@@ -887,13 +920,13 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                   </>
                 );
               })()
-            ) : (
-              filteredFees.map((fee) => (
-                <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
+                ) : (
+                  paginatedFees.map((fee) => (
+                    <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 md:px-4 py-2 md:py-3">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4"
                       checked={selectedFeeIds.has(fee.feeId)}
                       onChange={() => toggleFeeSelection(fee.feeId)}
                       aria-label={`Select fee ${fee.feeId}`}
@@ -985,6 +1018,34 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             </table>
           </div>
         </div>
+
+        {filteredFees.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between px-4 md:px-6 py-3 border-t border-gray-200">
+            <div className="text-xs text-gray-600">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="min-h-[36px]"
+              >
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="min-h-[36px]"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Fee Dialog */}
