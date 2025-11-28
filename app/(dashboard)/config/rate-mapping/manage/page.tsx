@@ -12,6 +12,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, RefreshCw } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import TabContentWrapper from '@/components/rate-mapping/TabContentWrapper';
 import { Combobox } from '@/components/ui/combobox';
@@ -462,6 +470,7 @@ const ManageMappingTab: React.FC<{
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editRow, setEditRow] = useState<MappingRow | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const normalizeMapping = (row: any): MappingRow => ({
     mappingid: Number(row.mappingid ?? row.Id ?? row.id ?? 0),
@@ -511,6 +520,22 @@ const ManageMappingTab: React.FC<{
     load();
   }, [selectedClient]);
 
+  useEffect(() => {
+    setEditRow(null);
+    setIsEditOpen(false);
+  }, [selectedClient]);
+
+  const openEditor = (row: MappingRow) => {
+    const normalized = normalizeMapping(row);
+    setEditRow({
+      ...normalized,
+      active: normalizeBool(normalized.active),
+      feeForward: normalizeBool(normalized.feeForward),
+      hasSlabs: normalizeBool(normalized.hasSlabs),
+    });
+    setIsEditOpen(true);
+  };
+
   const saveMapping = async () => {
     if (!editRow?.mappingid) return;
     const clientId = String(editRow.clientId || '');
@@ -547,8 +572,10 @@ const ManageMappingTab: React.FC<{
       await RateMappingApiService.updateMappingByID(ids, payload);
       toast.success('Mapping updated');
       const resp = await RateMappingApiService.getMappingDetail(selectedClient);
-      setMappings(Array.isArray(resp) ? resp : []);
+      const list = Array.isArray(resp) ? resp : [];
+      setMappings(list.map(normalizeMapping));
       setEditRow(null);
+      setIsEditOpen(false);
     } catch (error: any) {
       console.error('Failed to update mapping', error);
       toast.error(error?.message || 'Failed to update mapping');
@@ -596,66 +623,99 @@ const ManageMappingTab: React.FC<{
                   <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.eppassword ? '•••••' : '—'}</td>
                   <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.epmrchntid ?? '—'}</td>
                   <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{row.priority ?? '—'}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{normalizeBool(row.feeForward) ? 'Yes' : 'No'}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{normalizeBool(row.active) ? 'Yes' : 'No'}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <Button variant="outline" size="sm" onClick={() => setEditRow(row)}>
-                      Edit
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{normalizeBool(row.feeForward) ? 'Yes' : 'No'}</td>
+              <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700">{normalizeBool(row.active) ? 'Yes' : 'No'}</td>
+              <td className="px-3 md:px-4 py-2 md:py-3">
+                <Button variant="outline" size="sm" onClick={() => openEditor(row)}>
+                  Edit
+                </Button>
+              </td>
+            </tr>
+          ))}
             </tbody>
           </table>
         </div>
       )}
 
-      {editRow && (
-        <div className="rounded-xl border border-gray-200 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-900">Edit Mapping #{editRow.mappingid}</p>
-            <Button variant="ghost" size="sm" onClick={() => setEditRow(null)}>Cancel</Button>
-          </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            <div>
-              <Label className="text-xs text-gray-700">EP Username</Label>
-              <Input value={editRow.epusername || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epusername: e.target.value }))} className="min-h-[44px] touch-manipulation" />
+      <Dialog open={isEditOpen && !!editRow} onOpenChange={(open) => { setIsEditOpen(open); if (!open) setEditRow(null); }}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Edit Mapping #{editRow?.mappingid}</DialogTitle>
+            <DialogDescription>Matches Angular edit popup (endpoint credentials, params, flags).</DialogDescription>
+          </DialogHeader>
+          {editRow && (
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <Label className="text-xs text-gray-700">EP Username</Label>
+                  <Input value={editRow.epusername || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epusername: e.target.value }))} className="min-h-[44px]" />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-700">EP Password</Label>
+                  <Input value={editRow.eppassword || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, eppassword: e.target.value }))} className="min-h-[44px]" />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-700">Merchant ID</Label>
+                  <Input value={editRow.epmrchntid || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epmrchntid: e.target.value }))} className="min-h-[44px]" />
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <Label className="text-xs text-gray-700">Priority</Label>
+                  <Input type="number" value={editRow.priority ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, priority: Number(e.target.value) }))} className="min-h-[44px]" />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-700">EP URL</Label>
+                  <Input value={editRow.epUrl || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epUrl: e.target.value }))} className="min-h-[44px]" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-gray-700">Paymode ID</Label>
+                    <Input type="number" value={editRow.paymodeId ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, paymodeId: Number(e.target.value) }))} className="min-h-[44px]" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-700">Endpoint ID</Label>
+                    <Input type="number" value={editRow.endpointId ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, endpointId: Number(e.target.value) }))} className="min-h-[44px]" />
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Fee Forward</Label>
+                  <Switch checked={!!editRow.feeForward} onCheckedChange={(checked) => setEditRow((p) => p && ({ ...p, feeForward: checked }))} />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Has Slabs</Label>
+                  <Switch checked={!!editRow.hasSlabs} onCheckedChange={(checked) => setEditRow((p) => p && ({ ...p, hasSlabs: checked }))} />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                  <Label className="text-xs font-medium text-gray-700">Active</Label>
+                  <Switch checked={!!editRow.active} onCheckedChange={(checked) => setEditRow((p) => p && ({ ...p, active: checked }))} />
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {[1,2,3,4,5,6,7,8,9].map((idx) => (
+                  <div key={idx}>
+                    <Label className="text-xs text-gray-700">{`Param${idx}`}</Label>
+                    <Input
+                      value={(editRow as any)[`param${idx}`] || ''}
+                      onChange={(e) => setEditRow((p) => p && ({ ...p, [`param${idx}`]: e.target.value } as any))}
+                      className="min-h-[44px]"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div>
-              <Label className="text-xs text-gray-700">EP Password</Label>
-              <Input value={editRow.eppassword || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, eppassword: e.target.value }))} className="min-h-[44px] touch-manipulation" />
-            </div>
-            <div>
-              <Label className="text-xs text-gray-700">Merchant ID</Label>
-              <Input value={editRow.epmrchntid || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epmrchntid: e.target.value }))} className="min-h-[44px] touch-manipulation" />
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            <div>
-              <Label className="text-xs text-gray-700">Priority</Label>
-              <Input type="number" value={editRow.priority ?? ''} onChange={(e) => setEditRow((p) => p && ({ ...p, priority: Number(e.target.value) }))} className="min-h-[44px] touch-manipulation" />
-            </div>
-            <div>
-              <Label className="text-xs text-gray-700">EP URL</Label>
-              <Input value={editRow.epUrl || ''} onChange={(e) => setEditRow((p) => p && ({ ...p, epUrl: e.target.value }))} className="min-h-[44px] touch-manipulation" />
-            </div>
-            <div className="flex items-center gap-3 mt-4">
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={normalizeBool(editRow.feeForward)} onChange={(e) => setEditRow((p) => p && ({ ...p, feeForward: e.target.checked }))} />
-                Fee Forward
-              </label>
-              <label className="flex items-center gap-2 text-xs text-gray-700">
-                <input type="checkbox" checked={normalizeBool(editRow.active)} onChange={(e) => setEditRow((p) => p && ({ ...p, active: e.target.checked }))} />
-                Active
-              </label>
-            </div>
-          </div>
-          <Button onClick={saveMapping} disabled={isSaving} className="min-h-[52px] touch-manipulation">
-            {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Save mapping
-          </Button>
-        </div>
-      )}
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setIsEditOpen(false); setEditRow(null); }}>Cancel</Button>
+            <Button onClick={saveMapping} disabled={isSaving || !editRow}>
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Mapping
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TabContentWrapper>
   );
 };
