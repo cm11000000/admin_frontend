@@ -225,6 +225,8 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
   const virtualizationEnabled = filteredFees.length > VIRT_THRESHOLD;
   const selectAllRef = useRef<HTMLInputElement | null>(null);
+  const lastLoadedClientRef = useRef<string>('');
+  const loadSeqRef = useRef(0);
 
   useEffect(() => {
     if (!virtualizationEnabled) return;
@@ -254,21 +256,23 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     }
 
     let mounted = true;
+    const seq = ++loadSeqRef.current;
 
     const load = async () => {
       setIsLoading(true);
       try {
         const fees = await RateMappingApiService.getFeeForUpdate(selectedClient);
-        if (!mounted) return;
+        if (!mounted || seq !== loadSeqRef.current) return;
         setFeeRecords(fees.map(normalizeFee));
+        lastLoadedClientRef.current = selectedClient;
       } catch (error: any) {
         console.error('Failed to load fee configurations', error);
         toast.error(error?.message || 'Failed to load fee configurations');
-        if (mounted) {
+        if (mounted && seq === loadSeqRef.current) {
           setFeeRecords([]);
         }
       } finally {
-        if (mounted) {
+        if (mounted && seq === loadSeqRef.current) {
           setIsLoading(false);
         }
       }
@@ -278,16 +282,16 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
       setIsAgreementLoading(true);
       try {
         const data = await RateMappingApiService.viewPDF(selectedClient);
-        if (!mounted) return;
+        if (!mounted || seq !== loadSeqRef.current) return;
         if (Array.isArray(data) && data.length > 0 && data[0]?.file_path) {
           setAgreementUrl(String(data[0].file_path));
         } else {
           setAgreementUrl(null);
         }
       } catch (error) {
-        if (mounted) setAgreementUrl(null);
+        if (mounted && seq === loadSeqRef.current) setAgreementUrl(null);
       } finally {
-        if (mounted) setIsAgreementLoading(false);
+        if (mounted && seq === loadSeqRef.current) setIsAgreementLoading(false);
       }
     };
 
