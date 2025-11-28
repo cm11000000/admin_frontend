@@ -142,6 +142,9 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   const [isAgreementLoading, setIsAgreementLoading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [activeFee, setActiveFee] = useState<FeeRecord | null>(null);
+  const [selectedFeeIds, setSelectedFeeIds] = useState<Set<number>>(new Set());
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [isBulkSaving, setIsBulkSaving] = useState(false);
   const [remarks, setRemarks] = useState('');
   const [remarksHistory, setRemarksHistory] = useState<RemarkRecord[]>([]);
   const [isRemarksLoading, setIsRemarksLoading] = useState(false);
@@ -181,6 +184,17 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   const [isFFLoading, setIsFFLoading] = useState(false);
   const DEFAULT_GST_PERCENT = Number(process.env.NEXT_PUBLIC_DEFAULT_GST_PERCENT || 18);
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [bulkForm, setBulkForm] = useState({
+    slabFloor: 0,
+    slabCeiling: 0,
+    convchargesType: 'percentage' as 'percentage' | 'fixed',
+    convcharges: 0,
+    endPointchargesTypes: 'percentage' as 'percentage' | 'fixed',
+    endPointcharge: 0,
+    gstType: 'percentage' as 'percentage' | 'fixed',
+    convchargesApp: true,
+    epchargesApp: true
+  });
 
   const clientOptions = useMemo(
     () =>
@@ -210,6 +224,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
   const [virtViewportHeight, setVirtViewportHeight] = useState(0);
   const [virtRowHeight, setVirtRowHeight] = useState<number>(0);
   const virtualizationEnabled = filteredFees.length > VIRT_THRESHOLD;
+  const selectAllRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!virtualizationEnabled) return;
@@ -283,6 +298,19 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
       mounted = false;
     };
   }, [selectedClient]);
+
+  useEffect(() => {
+    // Clear selections when client changes
+    setSelectedFeeIds(new Set());
+  }, [selectedClient]);
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      const total = filteredFees.length;
+      const selected = filteredFees.filter((fee) => selectedFeeIds.has(fee.feeId)).length;
+      selectAllRef.current.indeterminate = selected > 0 && selected < total;
+    }
+  }, [filteredFees, selectedFeeIds]);
 
   const openEditModal = async (fee: FeeRecord) => {
     setActiveFee(fee);
@@ -376,6 +404,134 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
     } catch (error: any) {
       console.error('Failed to update fee', error);
       toast.error(error?.message || 'Failed to update fee');
+    }
+  };
+
+  const toggleFeeSelection = (feeId: number) => {
+    setSelectedFeeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(feeId)) {
+        next.delete(feeId);
+      } else {
+        next.add(feeId);
+      }
+      return next;
+    });
+  };
+
+  const toggleAllFees = () => {
+    if (filteredFees.length === 0) return;
+    const allSelected = filteredFees.every((fee) => selectedFeeIds.has(fee.feeId));
+    if (allSelected) {
+      setSelectedFeeIds(new Set());
+    } else {
+      setSelectedFeeIds(new Set(filteredFees.map((fee) => fee.feeId)));
+    }
+  };
+
+  const openBulkUpdate = () => {
+    if (selectedFeeIds.size === 0) {
+      toast.error('Select at least one fee to bulk update');
+      return;
+    }
+    const first = filteredFees.find((fee) => selectedFeeIds.has(fee.feeId)) || feeRecords.find((fee) => selectedFeeIds.has(fee.feeId));
+    if (first) {
+      setBulkForm({
+        slabFloor: first.slabFloor,
+        slabCeiling: first.slabCeiling,
+        convchargesType: first.convchargesType,
+        convcharges: first.convcharges,
+        endPointchargesTypes: first.endPointchargesTypes,
+        endPointcharge: first.endPointcharge,
+        gstType: first.gstType,
+        convchargesApp: first.convchargesApp,
+        epchargesApp: first.epchargesApp
+      });
+    } else {
+      setBulkForm({
+        slabFloor: 0,
+        slabCeiling: 0,
+        convchargesType: 'percentage',
+        convcharges: 0,
+        endPointchargesTypes: 'percentage',
+        endPointcharge: 0,
+        gstType: 'percentage',
+        convchargesApp: true,
+        epchargesApp: true
+      });
+    }
+    setIsBulkOpen(true);
+  };
+
+  const handleBulkUpdate = async () => {
+    if (!selectedClient) {
+      toast.error('Select a client before updating fees');
+      return;
+    }
+    if (selectedFeeIds.size === 0) {
+      toast.error('Select at least one fee to update');
+      return;
+    }
+    if (bulkForm.slabFloor >= bulkForm.slabCeiling) {
+      toast.error('Slab floor must be less than slab ceiling');
+      return;
+    }
+    if (bulkForm.convcharges <= 0 || bulkForm.endPointcharge <= 0) {
+      toast.error('Charges must be greater than zero');
+      return;
+    }
+
+    const targetFees = feeRecords.filter((fee) => selectedFeeIds.has(fee.feeId));
+    if (targetFees.length === 0) {
+      toast.error('No matching fees found for selection');
+      return;
+    }
+
+    setIsBulkSaving(true);
+    try {
+      const payloadForFee = (fee: FeeRecord) => ({
+        feeId: fee.feeId,
+        slabNumber: fee.slabNumber,
+        slabFloor: bulkForm.slabFloor,
+        slabCeiling: bulkForm.slabCeiling,
+        convchargesType: bulkForm.convchargesType,
+        convcharges: bulkForm.convcharges,
+        endPointchargesTypes: bulkForm.endPointchargesTypes,
+        endPointcharge: bulkForm.endPointcharge,
+        gstType: bulkForm.gstType,
+        gst: bulkForm.gstType === 'fixed' ? 0 : DEFAULT_GST_PERCENT,
+        convchargesApp: bulkForm.convchargesApp ? 1 : 0,
+        epchargesApp: bulkForm.epchargesApp ? 1 : 0
+      });
+
+      const results = await Promise.allSettled(
+        targetFees.map((fee) => RateMappingApiService.updateFeeByID(String(fee.feeId), payloadForFee(fee)))
+      );
+
+      const failed = results.filter((result) => result.status === 'rejected');
+
+      // Log ManageFee once for parity with Angular bulk update trail
+      await RateMappingApiService.approveFee({
+        approved_by: userName,
+        client_code: selectedClient,
+        approvedfor: 'ManageFee'
+      });
+
+      const refreshed = await RateMappingApiService.getFeeForUpdate(selectedClient);
+      setFeeRecords(refreshed.map(normalizeFee));
+      setSelectedFeeIds(new Set());
+      setIsBulkOpen(false);
+
+      if (failed.length > 0) {
+        toast.error(`Updated ${targetFees.length - failed.length} fee(s); ${failed.length} failed`);
+      } else {
+        toast.success(`Updated ${targetFees.length} fee${targetFees.length === 1 ? '' : 's'}`);
+      }
+    } catch (error: any) {
+      console.error('Bulk fee update failed', error);
+      toast.error(error?.message || 'Bulk fee update failed');
+    } finally {
+      setIsBulkSaving(false);
     }
   };
 
@@ -589,6 +745,22 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
           <p className="text-xs text-gray-600 mt-2 font-light" style={{ letterSpacing: '-0.01em' }}>
             Edit requires remarks and logs an audit trail. Scroll horizontally to view all columns.
           </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openBulkUpdate}
+              disabled={selectedFeeIds.size === 0 || isLoading}
+              className="min-h-[40px] touch-manipulation"
+            >
+              Bulk Update ({selectedFeeIds.size})
+            </Button>
+            {selectedFeeIds.size > 0 && (
+              <p className="text-xs text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
+                {selectedFeeIds.size} fee{selectedFeeIds.size === 1 ? '' : 's'} selected
+              </p>
+            )}
+          </div>
         </div>
         <div
           className="overflow-x-auto"
@@ -600,6 +772,16 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={filteredFees.length > 0 && filteredFees.every((fee) => selectedFeeIds.has(fee.feeId))}
+                      onChange={toggleAllFees}
+                      aria-label="Select all fees"
+                    />
+                  </th>
                   <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-extrabold uppercase tracking-wide text-gray-600" style={{ letterSpacing: '-0.01em' }}>
                     Payment Mode
                   </th>
@@ -626,7 +808,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
               <tbody className="divide-y divide-gray-100 bg-white">
                 {!isLoading && filteredFees.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
+                    <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
                       {selectedClient
                         ? 'No fee configurations available for the selected client.'
                         : 'Choose a client to load fee configurations.'}
@@ -636,7 +818,7 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
 
                 {isLoading && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center">
+                    <td colSpan={8} className="px-4 py-12 text-center">
                       <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-600" />
                     </td>
                   </tr>
@@ -656,10 +838,19 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                     return (
                       <>
                         {topPad > 0 && (
-                          <tr style={{ height: topPad }}><td colSpan={7}></td></tr>
+                          <tr style={{ height: topPad }}><td colSpan={8}></td></tr>
                         )}
                         {slice.map((fee) => (
                           <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-3 md:px-4 py-2 md:py-3">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4"
+                                checked={selectedFeeIds.has(fee.feeId)}
+                                onChange={() => toggleFeeSelection(fee.feeId)}
+                                aria-label={`Select fee ${fee.feeId}`}
+                              />
+                            </td>
                             <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900">
                               {fee.payMode || '-'}
                             </td>
@@ -735,26 +926,35 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
                                         <p>{getFeeFwdDisabledReason(fee)}</p>
                                       </TooltipContent>
                                     )}
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {bottomPad > 0 && (
-                          <tr style={{ height: bottomPad }}><td colSpan={7}></td></tr>
-                        )}
-                      </>
-                    );
-                  })()
-                ) : (
-                  !isLoading && filteredFees.map((fee) => (
-                    <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900">
-                        {fee.payMode || '-'}
-                      </td>
-                      <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600">
-                        {fee.endpoint || '-'}
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {bottomPad > 0 && (
+                      <tr style={{ height: bottomPad }}><td colSpan={8}></td></tr>
+                    )}
+                  </>
+                );
+              })()
+            ) : (
+              !isLoading && filteredFees.map((fee) => (
+                <tr key={`${fee.feeId}-${fee.slabNumber}`} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 md:px-4 py-2 md:py-3">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={selectedFeeIds.has(fee.feeId)}
+                      onChange={() => toggleFeeSelection(fee.feeId)}
+                      aria-label={`Select fee ${fee.feeId}`}
+                    />
+                  </td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900">
+                    {fee.payMode || '-'}
+                  </td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600">
+                    {fee.endpoint || '-'}
                       </td>
                       <td className="px-3 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-medium text-emerald-700">
                         ₹{fee.slabFloor.toLocaleString()} – ₹{fee.slabCeiling.toLocaleString()}
@@ -1085,6 +1285,157 @@ const ManageFeeTab: React.FC<ManageFeeTabProps> = ({ clients, userName, isAdmin 
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+      {/* Bulk Update Dialog */}
+      <Dialog open={isBulkOpen} onOpenChange={(open) => !open && setIsBulkOpen(false)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg md:text-xl font-extrabold" style={{ letterSpacing: '-0.02em' }}>
+              Bulk Update Fees
+            </DialogTitle>
+            <p className="text-xs md:text-sm text-gray-600 font-light" style={{ letterSpacing: '-0.01em' }}>
+              Applies to {selectedFeeIds.size} selected fee{selectedFeeIds.size === 1 ? '' : 's'} for client {selectedClient || '—'}.
+              This mirrors the Angular bulk update and uses the same <code>/REST/client/updateFee/{'{'}feeId{'}'}/</code> endpoint.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 md:space-y-6 py-2">
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">Slab floor (₹)</Label>
+                <Input
+                  type="number"
+                  value={bulkForm.slabFloor}
+                  onChange={(e) => setBulkForm((p) => ({ ...p, slabFloor: Number(e.target.value) }))}
+                  className="mt-1 min-h-[44px] touch-manipulation"
+                />
+              </div>
+              <div>
+                <Label className="text-xs md:text-sm">Slab ceiling (₹)</Label>
+                <Input
+                  type="number"
+                  value={bulkForm.slabCeiling}
+                  onChange={(e) => setBulkForm((p) => ({ ...p, slabCeiling: Number(e.target.value) }))}
+                  className="mt-1 min-h-[44px] touch-manipulation"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">Conv charges value</Label>
+                <Input
+                  type="number"
+                  value={bulkForm.convcharges}
+                  onChange={(e) => setBulkForm((p) => ({ ...p, convcharges: Number(e.target.value) }))}
+                  className="mt-1 min-h-[44px] touch-manipulation"
+                />
+              </div>
+              <div>
+                <Label className="text-xs md:text-sm">Conv charges type</Label>
+                <Select
+                  value={bulkForm.convchargesType}
+                  onValueChange={(value: 'percentage' | 'fixed') => setBulkForm((p) => ({ ...p, convchargesType: value }))}
+                >
+                  <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">EP charges value</Label>
+                <Input
+                  type="number"
+                  value={bulkForm.endPointcharge}
+                  onChange={(e) => setBulkForm((p) => ({ ...p, endPointcharge: Number(e.target.value) }))}
+                  className="mt-1 min-h-[44px] touch-manipulation"
+                />
+              </div>
+              <div>
+                <Label className="text-xs md:text-sm">EP charges type</Label>
+                <Select
+                  value={bulkForm.endPointchargesTypes}
+                  onValueChange={(value: 'percentage' | 'fixed') => setBulkForm((p) => ({ ...p, endPointchargesTypes: value }))}
+                >
+                  <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div>
+                <Label className="text-xs md:text-sm">GST type</Label>
+                <Select
+                  value={bulkForm.gstType}
+                  onValueChange={(value: 'percentage' | 'fixed') => setBulkForm((p) => ({ ...p, gstType: value }))}
+                >
+                  <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage ({DEFAULT_GST_PERCENT}%)</SelectItem>
+                    <SelectItem value="fixed">Fixed (₹0)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">Conv charges tax applicable</p>
+                  <p className="text-xs text-gray-600">Toggle param1 flag</p>
+                </div>
+                <Switch
+                  checked={bulkForm.convchargesApp}
+                  onCheckedChange={(checked) => setBulkForm((p) => ({ ...p, convchargesApp: Boolean(checked) }))}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">EP charge tax applicable</p>
+                  <p className="text-xs text-gray-600">Toggle param2 flag</p>
+                </div>
+                <Switch
+                  checked={bulkForm.epchargesApp}
+                  onCheckedChange={(checked) => setBulkForm((p) => ({ ...p, epchargesApp: Boolean(checked) }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setIsBulkOpen(false)}
+              className="w-full sm:w-auto min-h-[48px] touch-manipulation"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBulkUpdate}
+              disabled={!isAdmin || isBulkSaving}
+              className="w-full sm:w-auto min-h-[48px] touch-manipulation"
+            >
+              {isBulkSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Update selected →
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Slab Dialog */}
       <Dialog open={isAddOpen} onOpenChange={(open) => !open && setIsAddOpen(false)}>

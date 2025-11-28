@@ -582,7 +582,7 @@ class RateMappingApiService {
   static async findCheckFee(clientCode: string): Promise<any[]> {
     const paths = [
       `/api/rest/client_ep/Fee/${clientCode}/`,
-      `/SabPaisaAdmin/rest/client_ep/Fee/${clientCode}`
+      `/api/SabPaisaAdmin/rest/client_ep/Fee/${clientCode}`
     ]
 
     let lastError: string | undefined
