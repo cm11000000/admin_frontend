@@ -49,24 +49,33 @@ export default function RefundAnalyticsPage() {
     return { from, to };
   }, []);
 
-  // Initialize user and default range
+  // Initialize user
   useEffect(() => {
     if (typeof window === 'undefined') return;
     setUserName(resolveUserName());
-    const { from, to } = deriveRange(selectedRange);
-    setDateFrom(from);
-    setDateTo(to);
-    fetchAnalytics({ range: selectedRange });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const buildPayload = useCallback(
+    (override?: { range?: '7d' | '30d' | '90d' | '1y'; from?: string; to?: string; clientId?: string }) => {
+      const range = override?.range || selectedRange;
+      const derived = deriveRange(range);
+      const from = override?.from || dateFrom || derived.from;
+      const to = override?.to || dateTo || derived.to;
+      const clientId = override?.clientId || (selectedClient !== 'ALL' ? selectedClient : undefined);
+      const payload: any = { range, fromDate: from, endDate: to };
+      if (clientId) payload.clientId = clientId;
+      return payload;
+    },
+    [dateFrom, dateTo, deriveRange, selectedClient, selectedRange]
+  );
 
   // Update when range changes
   useEffect(() => {
     const { from, to } = deriveRange(selectedRange);
     setDateFrom(from);
     setDateTo(to);
-    fetchAnalytics({ range: selectedRange });
-  }, [selectedRange, deriveRange, fetchAnalytics]);
+    fetchAnalytics(buildPayload({ range: selectedRange, from, to }));
+  }, [selectedRange, deriveRange, fetchAnalytics, buildPayload]);
 
   // Lazy load clients
   const ensureClients = useCallback(async () => {
@@ -81,7 +90,7 @@ export default function RefundAnalyticsPage() {
   }, [clientsLoaded, userName]);
 
   const handleRefresh = () => {
-    fetchAnalytics({ range: selectedRange });
+    fetchAnalytics(buildPayload());
   };
 
   const handleExport = async () => {
