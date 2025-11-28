@@ -12,9 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import TabContentWrapper from '@/components/rate-mapping/TabContentWrapper';
+import { Combobox } from '@/components/ui/combobox';
 
 interface ClientOption {
   code: string;
@@ -665,6 +665,33 @@ interface FlagState {
   value: string;
 }
 
+const FLAG_TYPE_OPTIONS = [
+  { value: 'active', label: 'Client Status' },
+  { value: 'uibypass', label: 'UI By Pass' },
+  { value: 'roundoff', label: 'Round Off' },
+  { value: 'feefwd', label: 'Fee Fwd' },
+  { value: 'duprestriction', label: 'Duplicate Restriction' },
+  { value: 'authtype', label: 'Auth Type' },
+  { value: 'riskcategory', label: 'Risk Category' },
+  { value: 'apiversion', label: 'API Version' },
+  { value: 'mesaagebypass', label: 'Email / SMS' },
+  { value: 'forcesuccessflag', label: 'Force Success' },
+  { value: 'whitelisted', label: 'Whitelist Flag' },
+];
+
+const YES_NO_OPTIONS = [
+  { value: '1', label: 'Yes' },
+  { value: '0', label: 'No' },
+];
+
+const RISK_OPTIONS = [
+  { value: '1', label: 'Good' },
+  { value: '2', label: 'Normal' },
+  { value: '3', label: 'Low' },
+  { value: '4', label: 'Medium' },
+  { value: '5', label: 'High' },
+];
+
 const ManageFlagsTab: React.FC<{
   clients: ClientOption[];
   userName: string;
@@ -672,6 +699,18 @@ const ManageFlagsTab: React.FC<{
   const [selectedClient, setSelectedClient] = useState('');
   const [state, setState] = useState<FlagState>({ flagType: 'active', value: '1' });
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleFlagTypeChange = (flagType: string) => {
+    setState((prev) => {
+      if (flagType === 'authtype') {
+        return { flagType, value: '' };
+      }
+      if (flagType === 'riskcategory') {
+        return { flagType, value: prev.value && ['1', '2', '3', '4', '5'].includes(prev.value) ? prev.value : '1' };
+      }
+      return { flagType, value: prev.value === '0' || prev.value === '1' ? prev.value : '1' };
+    });
+  };
 
   const submit = async () => {
     if (!selectedClient) {
@@ -715,40 +754,26 @@ const ManageFlagsTab: React.FC<{
       <div className="grid gap-3 md:grid-cols-3">
         <div>
           <Label className="text-xs text-gray-700">Flag Type</Label>
-          <Select value={state.flagType} onValueChange={(v) => setState((p) => ({ ...p, flagType: v }))}>
-            <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
-              <SelectValue placeholder="Select flag type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Client Status</SelectItem>
-              <SelectItem value="uibypass">UI By Pass</SelectItem>
-              <SelectItem value="roundoff">Round Off</SelectItem>
-              <SelectItem value="feefwd">Fee Fwd</SelectItem>
-              <SelectItem value="duprestriction">Duplicate Restriction</SelectItem>
-              <SelectItem value="authtype">Auth Type</SelectItem>
-              <SelectItem value="riskcategory">Risk Category</SelectItem>
-              <SelectItem value="apiversion">API Version</SelectItem>
-              <SelectItem value="mesaagebypass">Email / SMS</SelectItem>
-              <SelectItem value="forcesuccessflag">Force Success</SelectItem>
-              <SelectItem value="whitelisted">Whitelist Flag</SelectItem>
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={FLAG_TYPE_OPTIONS}
+            value={state.flagType}
+            onChange={handleFlagTypeChange}
+            placeholder="Select flag type"
+            searchPlaceholder="Search flag type..."
+            className="mt-1 min-h-[44px] touch-manipulation"
+          />
         </div>
         <div>
           <Label className="text-xs text-gray-700">Value</Label>
           {state.flagType === 'riskcategory' ? (
-            <Select value={state.value} onValueChange={(v) => setState((p) => ({ ...p, value: v }))}>
-              <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
-                <SelectValue placeholder="Select risk category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Good</SelectItem>
-                <SelectItem value="2">Normal</SelectItem>
-                <SelectItem value="3">Low</SelectItem>
-                <SelectItem value="4">Medium</SelectItem>
-                <SelectItem value="5">High</SelectItem>
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={RISK_OPTIONS}
+              value={state.value}
+              onChange={(v) => setState((p) => ({ ...p, value: v }))}
+              placeholder="Select risk category"
+              searchPlaceholder="Search risk category..."
+              className="mt-1 min-h-[44px] touch-manipulation"
+            />
           ) : state.flagType === 'authtype' ? (
             <Input
               className="mt-1"
@@ -757,15 +782,14 @@ const ManageFlagsTab: React.FC<{
               placeholder="Enter auth type"
             />
           ) : (
-            <Select value={state.value} onValueChange={(v) => setState((p) => ({ ...p, value: v }))}>
-              <SelectTrigger className="mt-1 min-h-[44px] touch-manipulation">
-                <SelectValue placeholder="Select value" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Yes</SelectItem>
-                <SelectItem value="0">No</SelectItem>
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={YES_NO_OPTIONS}
+              value={state.value}
+              onChange={(v) => setState((p) => ({ ...p, value: v }))}
+              placeholder="Select value"
+              searchPlaceholder="Search value..."
+              className="mt-1 min-h-[44px] touch-manipulation"
+            />
           )}
         </div>
       </div>
