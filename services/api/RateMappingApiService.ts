@@ -7,9 +7,9 @@ import { adminAPI, reportAPI } from '@/lib/api-client'
 
 // Environment URLs matching Angular service
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin/'
-// Used for common-data endpoints (admin base)
-const STG_REPORT_API = process.env.NEXT_PUBLIC_STG_REPORT_API || 'https://staging-apis.13-204-100-160.sslip.io/admin/api/'
-const STAGING_URL = process.env.NEXT_PUBLIC_STAGING_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin/api/'
+// Use admin base for common-data/REST endpoints in production
+const STG_REPORT_API = (process.env.NEXT_PUBLIC_STG_REPORT_API || process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin/api/').replace(/\/$/, '/') // ensure trailing slash
+const STAGING_URL = (process.env.NEXT_PUBLIC_STAGING_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin/api/').replace(/\/$/, '/') // ensure trailing slash
 
 class RateMappingApiService {
   /**
@@ -41,11 +41,23 @@ class RateMappingApiService {
    * Matches: getClientCodeListUSP()
    */
   static async getClientCodeList(): Promise<any[]> {
-    const response = await fetch(`${STG_REPORT_API}common-data/0/0/`, {
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to fetch client codes')
-    return response.json()
+    const response = await adminAPI.get('/api/common-data/0/0/')
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch client codes')
+    }
+
+    const payload = response.data as any
+
+    if (Array.isArray(payload)) {
+      return payload
+    }
+
+    if (Array.isArray(payload?.results)) {
+      return payload.results
+    }
+
+    return []
   }
 
   /**
@@ -77,11 +89,23 @@ class RateMappingApiService {
    * Matches: getClientId(cltCode)
    */
   static async getClientId(clientCode: string): Promise<any[]> {
-    const response = await fetch(`${STG_REPORT_API}common-data/4/${clientCode}/`, {
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to fetch client ID')
-    return response.json()
+    const response = await adminAPI.get(`/api/common-data/4/${clientCode}/`)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch client ID')
+    }
+
+    const payload = response.data as any
+
+    if (Array.isArray(payload)) {
+      return payload
+    }
+
+    if (Array.isArray(payload?.results)) {
+      return payload.results
+    }
+
+    return []
   }
 
   /**
@@ -89,12 +113,30 @@ class RateMappingApiService {
    * Matches: geClientForUpdate(cltID)
    */
   static async getClientForUpdate(clientId: string): Promise<any> {
-    const clientApiURL = process.env.NEXT_PUBLIC_CLIENT_API_URL || 'https://staging-apis.13-204-100-160.sslip.io/report/rest/client_data/'
-    const response = await fetch(`${clientApiURL}${clientId}`, {
+    const base = (process.env.NEXT_PUBLIC_ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://staging-apis.13-204-100-160.sslip.io/admin').replace(/\/$/, '')
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) headers.Authorization = `Bearer ${token}`
+
+    const res = await fetch(`${base}/api/rest/client_data/${clientId}/`, {
+      method: 'GET',
+      headers,
       credentials: 'include'
     })
-    if (!response.ok) throw new Error('Failed to fetch client details')
-    return response.json()
+
+    const text = await res.text()
+    try {
+      const json = text ? JSON.parse(text) : {}
+      if (!res.ok) {
+        throw new Error(json?.error || `Failed to fetch client details (status ${res.status})`)
+      }
+      return json
+    } catch (err: any) {
+      if (!res.ok) {
+        throw new Error(`Failed to fetch client details (status ${res.status})`)
+      }
+      throw new Error(err?.message || 'Failed to parse client details response')
+    }
   }
 
   /**
@@ -102,16 +144,13 @@ class RateMappingApiService {
    * Matches: updateClientDataTable(inputData, Ids)
    */
   static async updateClientDataTable(clientId: string, data: any): Promise<any> {
-    const response = await fetch(`${STG_REPORT_API}rest/client_data/update_custom/${clientId}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to update client')
-    return response.json()
+    const response = await adminAPI.post(`/api/rest/client_data/update_custom/${clientId}/`, data)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update client')
+    }
+
+    return response.data
   }
 
   /**
@@ -205,16 +244,13 @@ class RateMappingApiService {
    * Matches: updateClientPaymode(input1, input2)
    */
   static async updateClientPaymode(clientPaymodeId: string, data: { payModeFlag: boolean }): Promise<any> {
-    const response = await fetch(`${STAGING_URL}config/updateClientPaymode/${clientPaymodeId}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to update payment mode')
-    return response.json()
+    const response = await adminAPI.post(`/api/config/updateClientPaymode/${clientPaymodeId}/`, data)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update payment mode')
+    }
+
+    return response.data
   }
 
   /**
@@ -319,11 +355,23 @@ class RateMappingApiService {
    * Matches: getMappingDetail(cltCode)
    */
   static async getMappingDetail(clientCode: string): Promise<any[]> {
-    const response = await fetch(`${STG_REPORT_API}MappingDetail/Mapping/${clientCode}/`, {
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to fetch mapping details')
-    return response.json()
+    const response = await adminAPI.get(`/api/MappingDetail/Mapping/${clientCode}/`)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch mapping details')
+    }
+
+    const payload = response.data as any
+
+    if (Array.isArray(payload)) {
+      return payload
+    }
+
+    if (Array.isArray(payload?.results)) {
+      return payload.results
+    }
+
+    return []
   }
 
   /**
@@ -336,16 +384,13 @@ class RateMappingApiService {
     epusername: string
     eppassword: string
   }): Promise<any> {
-    const response = await fetch(`${STAGING_URL}api/v2/REST/UpdateMapping/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to update mapping')
-    return response.json()
+    const response = await adminAPI.post('/api/v2/REST/UpdateMapping/', data)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update mapping')
+    }
+
+    return response.data
   }
 
   /**
@@ -353,16 +398,13 @@ class RateMappingApiService {
    * Matches: updateMappingByID(inputData, Ids)
    */
   static async updateMappingByID(ids: string, data: any): Promise<any> {
-    const response = await fetch(`${STAGING_URL}api/REST/client/updateMapping/${ids}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to update mapping')
-    return response.json()
+    const response = await adminAPI.post(`/api/REST/client/updateMapping/${ids}/`, data)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update mapping')
+    }
+
+    return response.data
   }
 
   /**
@@ -547,11 +589,23 @@ class RateMappingApiService {
    * Matches: getFeeForwardeDetail(input)
    */
   static async getFeeForwardedDetail(input: string): Promise<any[]> {
-    const response = await fetch(`${STAGING_URL}common-data/${input}`, {
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to fetch fee forwarded details')
-    return response.json()
+    const response = await adminAPI.get(`/api/common-data/${input}`)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch fee forwarded details')
+    }
+
+    const payload = response.data as any
+
+    if (Array.isArray(payload)) {
+      return payload
+    }
+
+    if (Array.isArray(payload?.results)) {
+      return payload.results
+    }
+
+    return []
   }
 
   /**
@@ -563,16 +617,13 @@ class RateMappingApiService {
     p_paymode_id: number
     p_updatedBy: string
   }): Promise<any> {
-    const response = await fetch(`${STAGING_URL}v2/getDataByCommonProc/UpdateFeeForwarded/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to update fee forwarded')
-    return response.json()
+    const response = await adminAPI.post('/api/v2/getDataByCommonProc/UpdateFeeForwarded/', data)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to update fee forwarded')
+    }
+
+    return response.data
   }
 
   /**
@@ -661,16 +712,23 @@ class RateMappingApiService {
     TypeValue: string
     upDateBy: string
   }): Promise<any[]> {
-    const response = await fetch(`${STG_REPORT_API}v2/ManageFalg/Flag/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include'
-    })
-    if (!response.ok) throw new Error('Failed to fetch flag details')
-    return response.json()
+    const response = await adminAPI.post('/api/v2/ManageFalg/Flag/', data)
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch flag details')
+    }
+
+    const payload = response.data as any
+
+    if (Array.isArray(payload)) {
+      return payload
+    }
+
+    if (Array.isArray(payload?.results)) {
+      return payload.results
+    }
+
+    return []
   }
 
   /**
